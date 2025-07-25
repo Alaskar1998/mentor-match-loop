@@ -10,6 +10,7 @@ import SearchResults from "./pages/SearchResults";
 import { CreateRequest } from "./pages/CreateRequest";
 import { RequestsFeed } from "./pages/RequestsFeed";
 import Chat from "./pages/Chat";
+import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/create-request" element={<CreateRequest />} />
             <Route path="/requests-feed" element={<RequestsFeed />} />
             <Route path="/chat/:chatId" element={<Chat />} />
+            <Route path="/dashboard/*" element={<Dashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
