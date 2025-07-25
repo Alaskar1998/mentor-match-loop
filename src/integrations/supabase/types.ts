@@ -14,6 +14,140 @@ export type Database = {
   }
   public: {
     Tables: {
+      chat_messages: {
+        Row: {
+          chat_id: string
+          created_at: string
+          id: string
+          message: string
+          sender_id: string
+        }
+        Insert: {
+          chat_id: string
+          created_at?: string
+          id?: string
+          message: string
+          sender_id: string
+        }
+        Update: {
+          chat_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chats: {
+        Row: {
+          created_at: string
+          id: string
+          skill: string
+          status: string
+          updated_at: string
+          user1_id: string
+          user2_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          skill: string
+          status?: string
+          updated_at?: string
+          user1_id: string
+          user2_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          skill?: string
+          status?: string
+          updated_at?: string
+          user1_id?: string
+          user2_id?: string
+        }
+        Relationships: []
+      }
+      invitations: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          recipient_id: string
+          sender_id: string
+          skill: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          recipient_id: string
+          sender_id: string
+          skill: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          recipient_id?: string
+          sender_id?: string
+          skill?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      learning_requests: {
+        Row: {
+          country: string
+          created_at: string
+          description: string
+          id: string
+          level: string
+          responses_count: number
+          skill: string
+          updated_at: string
+          urgency: string
+          user_id: string
+        }
+        Insert: {
+          country: string
+          created_at?: string
+          description: string
+          id?: string
+          level: string
+          responses_count?: number
+          skill: string
+          updated_at?: string
+          urgency: string
+          user_id: string
+        }
+        Update: {
+          country?: string
+          created_at?: string
+          description?: string
+          id?: string
+          level?: string
+          responses_count?: number
+          skill?: string
+          updated_at?: string
+          urgency?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           age: number | null
@@ -64,6 +198,47 @@ export type Database = {
           willing_to_teach_without_return?: boolean | null
         }
         Relationships: []
+      }
+      reviews: {
+        Row: {
+          chat_id: string | null
+          comment: string | null
+          created_at: string
+          id: string
+          rating: number
+          reviewee_id: string
+          reviewer_id: string
+          skill: string
+        }
+        Insert: {
+          chat_id?: string | null
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating: number
+          reviewee_id: string
+          reviewer_id: string
+          skill: string
+        }
+        Update: {
+          chat_id?: string | null
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating?: number
+          reviewee_id?: string
+          reviewer_id?: string
+          skill?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
