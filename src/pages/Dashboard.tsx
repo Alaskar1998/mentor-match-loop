@@ -19,6 +19,8 @@ import {
 import { GamificationDashboard } from '@/components/gamification/GamificationDashboard';
 import { CoinShopModal } from '@/components/gamification/CoinShopModal';
 import { LeaderboardModal } from '@/components/gamification/LeaderboardModal';
+import { MentorProgressTracker } from '@/components/future/MentorProgressTracker';
+import { WorkshopDashboard } from '@/components/future/WorkshopSystem';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -188,7 +190,23 @@ const Dashboard = () => {
           )}
         </div>
 
-        {/* Recent Activity */}
+        {/* Mentor Progress Tracker */}
+        {user.willingToTeachWithoutReturn && (
+          <MentorProgressTracker
+            currentExchanges={state.totalExchanges}
+            currentRating={user.rating || 5.0}
+            mentorshipSessions={Math.floor(state.totalExchanges * 0.6)} // Mock mentorship ratio
+            currentTier="basic_mentor"
+          />
+        )}
+
+        {/* Premium Workshops Preview */}
+        {user.userType === 'premium' && (
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Your Premium Workshops</h2>
+            <WorkshopDashboard />
+          </div>
+        )}
         <Card>
           <CardHeader>
             <CardTitle>Recent Activity</CardTitle>
