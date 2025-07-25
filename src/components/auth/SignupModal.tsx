@@ -40,16 +40,19 @@ const STEP_TITLES = [
   "Create Account",
   "Profile Info", 
   "Skills You Know",
-  "Skills to Learn",
   "Mentorship"
 ];
 
 const COUNTRIES = [
   "United States", "United Kingdom", "Canada", "Australia", "Germany", 
-  "France", "Spain", "Italy", "Japan", "South Korea", "India", "Brazil"
+  "France", "Spain", "Italy", "Japan", "South Korea", "India", "Brazil",
+  "United Arab Emirates", "Saudi Arabia", "Egypt", "Jordan", "Lebanon",
+  "Kuwait", "Qatar", "Bahrain", "Oman", "Morocco", "Tunisia", "Algeria",
+  "Libya", "Iraq", "Syria", "Yemen", "Palestine", "Sudan", "Iran",
+  "Turkey", "Israel", "Cyprus"
 ];
 
-const GENDERS = ["Male", "Female", "Other", "Prefer not to say"];
+const GENDERS = ["Male", "Female"];
 const SKILL_LEVELS = ["Beginner", "Intermediate", "Expert"];
 
 export const SignupModal = ({ isOpen, onClose, onSignupComplete }: SignupModalProps) => {
@@ -64,7 +67,7 @@ export const SignupModal = ({ isOpen, onClose, onSignupComplete }: SignupModalPr
   const [newLearnSkill, setNewLearnSkill] = useState("");
 
   const handleNext = () => {
-    if (currentStep < 5) {
+    if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
     } else {
       onSignupComplete(formData as SignupData);
@@ -352,49 +355,6 @@ export const SignupModal = ({ isOpen, onClose, onSignupComplete }: SignupModalPr
         return (
           <div className="space-y-6">
             <div className="text-center mb-6">
-              <h3 className="text-xl font-semibold mb-2">Skills you want to learn</h3>
-              <p className="text-muted-foreground">What would you like to learn from others?</p>
-            </div>
-
-            <div className="flex gap-2">
-              <Input
-                placeholder="e.g., Photography, Spanish, Cooking"
-                value={newLearnSkill}
-                onChange={(e) => setNewLearnSkill(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && addSkillToLearn()}
-              />
-              <Button onClick={addSkillToLearn}>
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
-
-            {formData.skillsToLearn && formData.skillsToLearn.length > 0 && (
-              <div className="space-y-3">
-                <h4 className="font-medium">Skills to Learn</h4>
-                <div className="flex flex-wrap gap-2">
-                  {formData.skillsToLearn.map((skill, index) => (
-                    <Badge key={index} variant="outline" className="flex items-center gap-1">
-                      {skill}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeSkillToLearn(index)}
-                        className="p-0 h-auto hover:bg-transparent text-destructive"
-                      >
-                        <X className="w-3 h-3" />
-                      </Button>
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        );
-
-      case 5:
-        return (
-          <div className="space-y-6">
-            <div className="text-center mb-6">
               <h3 className="text-xl font-semibold mb-2">Mentorship</h3>
               <p className="text-muted-foreground">Help shape our learning community</p>
             </div>
@@ -460,7 +420,7 @@ export const SignupModal = ({ isOpen, onClose, onSignupComplete }: SignupModalPr
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
-            <span>Step {currentStep} of 5: {STEP_TITLES[currentStep - 1]}</span>
+            <span>Step {currentStep} of 4: {STEP_TITLES[currentStep - 1]}</span>
           </DialogTitle>
         </DialogHeader>
 
@@ -468,7 +428,7 @@ export const SignupModal = ({ isOpen, onClose, onSignupComplete }: SignupModalPr
         <div className="w-full bg-muted rounded-full h-2 mb-6">
           <div 
             className="bg-gradient-primary h-2 rounded-full transition-all duration-300"
-            style={{ width: `${(currentStep / 5) * 100}%` }}
+            style={{ width: `${(currentStep / 4) * 100}%` }}
           />
         </div>
 
@@ -487,7 +447,7 @@ export const SignupModal = ({ isOpen, onClose, onSignupComplete }: SignupModalPr
             onClick={handleNext}
             className="min-w-[100px]"
           >
-            {currentStep === 5 ? "Complete" : "Next"}
+            {currentStep === 4 ? "Complete" : "Next"}
           </Button>
         </div>
       </DialogContent>
