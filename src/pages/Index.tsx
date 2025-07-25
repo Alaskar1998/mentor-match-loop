@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { SignupModal } from "@/components/auth/SignupModal";
 import { SignInModal } from "@/components/auth/SignInModal";
 import { UserAvatar } from "@/components/auth/UserAvatar";
+import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
 
 const Index = () => {
   const { isAuthenticated, logout } = useAuth();
@@ -33,7 +34,11 @@ const Index = () => {
                 <Button variant="outline">Create Request</Button>
               </Link>
               {isAuthenticated ? (
-                <UserAvatar />
+                <div className="flex items-center gap-2">
+                  <NotificationDropdown type="general" />
+                  <NotificationDropdown type="chat" />
+                  <UserAvatar />
+                </div>
               ) : (
                 <Button onClick={() => setShowSignInModal(true)}>
                   Sign In

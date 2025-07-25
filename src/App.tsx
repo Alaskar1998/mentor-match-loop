@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { GamificationProvider } from "@/hooks/useGamification";
 import { MonetizationProvider } from "@/hooks/useMonetization";
+import { NotificationProvider } from "@/hooks/useNotifications";
 import Index from "./pages/Index";
 import SearchResults from "./pages/SearchResults";
 import { CreateRequest } from "./pages/CreateRequest";
@@ -20,8 +21,9 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
-        <GamificationProvider>
-          <MonetizationProvider>
+        <NotificationProvider>
+          <GamificationProvider>
+            <MonetizationProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -39,6 +41,7 @@ const App = () => (
         </BrowserRouter>
         </MonetizationProvider>
         </GamificationProvider>
+        </NotificationProvider>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
