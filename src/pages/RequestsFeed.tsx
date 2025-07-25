@@ -76,7 +76,8 @@ export const RequestsFeed = () => {
           urgency,
           created_at,
           responses_count,
-          profiles!user_id (
+          user_id,
+          profiles!learning_requests_user_id_fkey (
             display_name,
             avatar_url
           )

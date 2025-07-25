@@ -42,10 +42,10 @@ export default function Chats() {
           created_at,
           user1_id,
           user2_id,
-          profiles!user1_id (
+          profiles1:profiles!chats_user1_id_fkey (
             display_name
           ),
-          profiles2:profiles!user2_id (
+          profiles2:profiles!chats_user2_id_fkey (
             display_name
           ),
           chat_messages (
@@ -68,7 +68,7 @@ export default function Chats() {
         const isUser1 = chat.user1_id === user?.id;
         const otherUserName = isUser1 
           ? chat.profiles2?.display_name || 'Unknown User'
-          : chat.profiles?.display_name || 'Unknown User';
+          : chat.profiles1?.display_name || 'Unknown User';
 
         // Get last message
         const lastMessage = chat.chat_messages?.[chat.chat_messages.length - 1];
