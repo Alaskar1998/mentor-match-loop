@@ -2,6 +2,7 @@ import React from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -50,6 +51,9 @@ export const FinishExchangeModal = ({
           <DialogTitle className="text-xl font-semibold text-center">
             Finish Exchange
           </DialogTitle>
+          <DialogDescription className="text-center">
+            Mark your skill exchange as complete and provide feedback.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">

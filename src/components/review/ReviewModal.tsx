@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -120,6 +121,9 @@ export const ReviewModal = ({
           <DialogTitle className="text-xl font-semibold text-center">
             Leave a Review
           </DialogTitle>
+          <DialogDescription className="text-center">
+            Rate your experience with {otherUser.name} to help improve our community.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -175,6 +176,9 @@ export const CoinShopModal = ({ isOpen, onClose }: CoinShopModalProps) => {
             <Coins className="w-6 h-6 text-accent" />
             Coin Shop
           </DialogTitle>
+          <DialogDescription className="text-center">
+            Spend your coins on premium features or purchase more coins.
+          </DialogDescription>
         </DialogHeader>
 
         {/* Current Balance */}

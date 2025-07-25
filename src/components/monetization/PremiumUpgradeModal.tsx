@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -140,6 +141,9 @@ export const PremiumUpgradeModal = ({ isOpen, onClose }: PremiumUpgradeModalProp
               <Crown className="w-6 h-6 text-yellow-500" />
               You're Premium!
             </DialogTitle>
+            <DialogDescription className="text-center">
+              Your premium subscription is active and all features are unlocked.
+            </DialogDescription>
           </DialogHeader>
           
           <div className="text-center py-8">
@@ -173,6 +177,9 @@ export const PremiumUpgradeModal = ({ isOpen, onClose }: PremiumUpgradeModalProp
             <Crown className="w-6 h-6 text-yellow-500" />
             Upgrade to Premium
           </DialogTitle>
+          <DialogDescription className="text-center">
+            Unlock unlimited learning opportunities and premium features.
+          </DialogDescription>
         </DialogHeader>
 
         {/* Pricing */}

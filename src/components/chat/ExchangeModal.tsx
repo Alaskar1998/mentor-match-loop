@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -58,6 +59,9 @@ export const ExchangeModal = ({
           <DialogTitle className="text-xl font-semibold text-center">
             What skills are you exchanging?
           </DialogTitle>
+          <DialogDescription className="text-center">
+            Select the skills you'll be teaching and learning in this exchange.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">

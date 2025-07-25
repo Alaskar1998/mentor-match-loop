@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -584,6 +584,9 @@ export const SignupModal = ({ isOpen, onClose, onSignupComplete }: SignupModalPr
           <DialogTitle className="flex items-center justify-between">
             <span>Step {currentStep} of 4: {STEP_TITLES[currentStep - 1]}</span>
           </DialogTitle>
+          <DialogDescription>
+            Complete your profile setup to join the skill exchange community.
+          </DialogDescription>
         </DialogHeader>
 
         {/* Progress Bar */}

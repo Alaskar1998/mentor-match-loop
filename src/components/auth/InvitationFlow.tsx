@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
@@ -103,6 +103,9 @@ export const InvitationFlow = ({
             <Send className="w-5 h-5" />
             Send Invitation to {recipientName}
           </DialogTitle>
+          <DialogDescription>
+            Connect with {recipientName} to start your skill exchange journey.
+          </DialogDescription>
         </DialogHeader>
 
         {!showPayment ? (

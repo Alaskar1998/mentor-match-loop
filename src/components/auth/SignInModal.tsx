@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -85,6 +85,9 @@ export const SignInModal = ({ isOpen, onClose, onSwitchToSignup }: SignInModalPr
           <DialogTitle className="text-center text-2xl font-bold">
             Welcome Back
           </DialogTitle>
+          <DialogDescription className="text-center">
+            Sign in to your account to continue with skill exchanges.
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSignIn} className="space-y-4">
