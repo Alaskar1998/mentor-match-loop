@@ -14,7 +14,7 @@ import { RequestsFeed } from "./pages/RequestsFeed";
 import Chat from "./pages/Chat";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/dashboard/Profile";
-import Skills from "./pages/dashboard/Skills";
+
 import Chats from "./pages/dashboard/Chats";
 import Invites from "./pages/dashboard/Invites";
 import Reviews from "./pages/dashboard/Reviews";
@@ -50,11 +50,6 @@ const App = () => (
             <Route path="/dashboard/profile" element={
               <DashboardLayout>
                 <Profile />
-              </DashboardLayout>
-            } />
-            <Route path="/dashboard/skills" element={
-              <DashboardLayout>
-                <Skills />
               </DashboardLayout>
             } />
             <Route path="/dashboard/chats" element={

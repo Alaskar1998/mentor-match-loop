@@ -28,7 +28,6 @@ import {
 const dashboardItems = [
   { title: "Overview", url: "/dashboard", icon: Users },
   { title: "Profile", url: "/dashboard/profile", icon: Settings },
-  { title: "Skills", url: "/dashboard/skills", icon: Zap },
   { title: "Chats", url: "/dashboard/chats", icon: MessageSquare },
   { title: "Invites", url: "/dashboard/invites", icon: Mail },
   { title: "Reviews", url: "/dashboard/reviews", icon: Star },
