@@ -108,18 +108,78 @@ export default function Invites() {
 
   const handleAcceptInvite = async (inviteId: string) => {
     try {
-      const { error } = await supabase
+      // First, get the invitation details to find the sender
+      const { data: inviteData, error: inviteError } = await supabase
+        .from('invitations')
+        .select('sender_id, recipient_id, skill')
+        .eq('id', inviteId)
+        .single();
+
+      if (inviteError || !inviteData) {
+        console.error('Error fetching invite details:', inviteError);
+        toast.error("Failed to get invitation details");
+        return;
+      }
+
+      // Check if a chat already exists between these users
+      const { data: existingChat, error: chatCheckError } = await supabase
+        .from('chats')
+        .select('id')
+        .or(`and(user1_id.eq.${inviteData.sender_id},user2_id.eq.${inviteData.recipient_id}),and(user1_id.eq.${inviteData.recipient_id},user2_id.eq.${inviteData.sender_id})`)
+        .single();
+
+      let chatId;
+      
+      if (chatCheckError && chatCheckError.code !== 'PGRST116') {
+        console.error('Error checking existing chat:', chatCheckError);
+        toast.error("Failed to check existing conversations");
+        return;
+      }
+
+      if (existingChat) {
+        // Chat already exists
+        chatId = existingChat.id;
+      } else {
+        // Create a new chat
+        const { data: newChat, error: chatError } = await supabase
+          .from('chats')
+          .insert({
+            user1_id: inviteData.sender_id,
+            user2_id: inviteData.recipient_id,
+            skill: inviteData.skill,
+            status: 'active'
+          })
+          .select('id')
+          .single();
+
+        if (chatError) {
+          console.error('Error creating chat:', chatError);
+          toast.error("Failed to create conversation");
+          return;
+        }
+
+        chatId = newChat.id;
+      }
+
+      // Update the invitation status
+      const { error: updateError } = await supabase
         .from('invitations')
         .update({ status: 'accepted' })
         .eq('id', inviteId);
 
-      if (error) {
-        console.error('Error accepting invite:', error);
+      if (updateError) {
+        console.error('Error accepting invite:', updateError);
         toast.error("Failed to accept invitation");
         return;
       }
 
-      toast.success("Invitation accepted!");
+      toast.success("Invitation accepted! Opening chat...");
+      
+      // Navigate to the chat
+      setTimeout(() => {
+        navigate(`/chat/${chatId}`);
+      }, 1000);
+      
       fetchInvitations(); // Refresh the list
     } catch (error) {
       console.error('Error:', error);
@@ -283,10 +343,14 @@ export default function Invites() {
                   {invite.status === 'accepted' && (
                     <Button 
                       size="sm"
-                      onClick={() => navigate(`/chat/chat-${invite.id}`)}
+                      onClick={() => {
+                        // Navigate to chat or show message that chat will be created
+                        toast.info("Opening conversation...");
+                        navigate(`/messages`);
+                      }}
                     >
                       <MessageCircle className="w-4 h-4 mr-1" />
-                      Open Chat
+                      View Chat
                     </Button>
                   )}
                 </div>
