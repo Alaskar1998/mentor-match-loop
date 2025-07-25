@@ -18,6 +18,8 @@ interface User {
   remainingInvites: number;
   appCoins: number;
   phoneVerified: boolean;
+  successfulExchanges: number;
+  rating: number;
 }
 
 interface AuthContextType {
@@ -76,7 +78,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       userType: "free",
       remainingInvites: 3,
       appCoins: 50,
-      phoneVerified: false
+      phoneVerified: false,
+      successfulExchanges: 15,
+      rating: 4.8
     };
 
     setUser(mockUser);
@@ -101,7 +105,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       userType: "free",
       remainingInvites: 3,
       appCoins: userData.willingToTeachWithoutReturn ? 100 : 50, // Bonus for mentors
-      phoneVerified: false
+      phoneVerified: false,
+      successfulExchanges: 0,
+      rating: 5.0 // New users start with perfect rating
     };
 
     setUser(newUser);

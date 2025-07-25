@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Send, ArrowLeft, Play, Square } from 'lucide-react';
 import { ExchangeModal } from '@/components/chat/ExchangeModal';
 import { FinishExchangeModal } from '@/components/chat/FinishExchangeModal';
+import { ReviewModal } from '@/components/review/ReviewModal';
+import { useToast } from '@/hooks/use-toast';
 
 interface ChatMessage {
   id: string;
@@ -34,10 +36,12 @@ const Chat = () => {
   const { chatId } = useParams<{ chatId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { toast } = useToast();
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [showExchangeModal, setShowExchangeModal] = useState(false);
   const [showFinishModal, setShowFinishModal] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
   const [exchange, setExchange] = useState<Exchange | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -161,12 +165,26 @@ const Chat = () => {
       id: Date.now().toString(),
       senderId: 'system',
       message: updatedExchange.status === 'completed' 
-        ? 'Exchange completed! Both users can now leave reviews.'
+        ? 'Exchange completed! Please leave a review for your learning partner.'
         : `${user.name} marked the exchange as finished.`,
       timestamp: new Date(),
       type: 'system'
     };
     setMessages(prev => [...prev, systemMessage]);
+
+    // Show review modal if both users finished
+    if (updatedExchange.status === 'completed') {
+      setTimeout(() => {
+        setShowReviewModal(true);
+      }, 1000); // Small delay for better UX
+    }
+  };
+
+  const handleReviewSubmitted = () => {
+    toast({
+      title: "Thank you!",
+      description: "Your review helps improve our community. Keep learning and teaching!",
+    });
   };
 
   const renderMessage = (msg: ChatMessage) => {
@@ -318,6 +336,15 @@ const Chat = () => {
         onConfirm={handleExchangeFinished}
         exchange={exchange}
         currentUserId={user?.id || ''}
+      />
+
+      {/* Review Modal */}
+      <ReviewModal
+        isOpen={showReviewModal}
+        onClose={() => setShowReviewModal(false)}
+        exchange={exchange}
+        otherUser={otherUser}
+        onReviewSubmitted={handleReviewSubmitted}
       />
     </div>
   );
