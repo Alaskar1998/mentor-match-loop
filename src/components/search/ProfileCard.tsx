@@ -27,7 +27,12 @@ export const ProfileCard = ({ user }: ProfileCardProps) => {
     if (!isAuthenticated) {
       setShowSignupModal(true);
     } else {
-      setShowInvitationModal(true);
+      // Simulate invitation sent - in real app, this would trigger notification to recipient
+      console.log('Invitation sent to:', user.name);
+      // For demo purposes, we'll simulate going to chat after invitation is sent
+      // In real app, this would happen after the invitation is accepted
+      const chatId = `chat-${Date.now()}`;
+      navigate(`/chat/${chatId}`);
     }
   };
 

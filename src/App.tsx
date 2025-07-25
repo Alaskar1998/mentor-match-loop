@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import SearchResults from "./pages/SearchResults";
 import { CreateRequest } from "./pages/CreateRequest";
 import { RequestsFeed } from "./pages/RequestsFeed";
+import Chat from "./pages/Chat";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
             <Route path="/search" element={<SearchResults />} />
             <Route path="/create-request" element={<CreateRequest />} />
             <Route path="/requests-feed" element={<RequestsFeed />} />
+            <Route path="/chat/:chatId" element={<Chat />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
