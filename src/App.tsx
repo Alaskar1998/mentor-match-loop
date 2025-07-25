@@ -13,6 +13,15 @@ import { CreateRequest } from "./pages/CreateRequest";
 import { RequestsFeed } from "./pages/RequestsFeed";
 import Chat from "./pages/Chat";
 import Dashboard from "./pages/Dashboard";
+import Profile from "./pages/dashboard/Profile";
+import Skills from "./pages/dashboard/Skills";
+import Chats from "./pages/dashboard/Chats";
+import Invites from "./pages/dashboard/Invites";
+import Reviews from "./pages/dashboard/Reviews";
+import Gamification from "./pages/dashboard/Gamification";
+import Map from "./pages/dashboard/Map";
+import Events from "./pages/dashboard/Events";
+import { DashboardLayout } from "./components/dashboard/DashboardLayout";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,8 +42,51 @@ const App = () => (
             <Route path="/create-request" element={<CreateRequest />} />
             <Route path="/requests-feed" element={<RequestsFeed />} />
             <Route path="/chat/:chatId" element={<Chat />} />
-            <Route path="/dashboard/*" element={<Dashboard />} />
-            <Route path="/profile" element={<Dashboard />} />
+            <Route path="/dashboard" element={
+              <DashboardLayout>
+                <Dashboard />
+              </DashboardLayout>
+            } />
+            <Route path="/dashboard/profile" element={
+              <DashboardLayout>
+                <Profile />
+              </DashboardLayout>
+            } />
+            <Route path="/dashboard/skills" element={
+              <DashboardLayout>
+                <Skills />
+              </DashboardLayout>
+            } />
+            <Route path="/dashboard/chats" element={
+              <DashboardLayout>
+                <Chats />
+              </DashboardLayout>
+            } />
+            <Route path="/dashboard/invites" element={
+              <DashboardLayout>
+                <Invites />
+              </DashboardLayout>
+            } />
+            <Route path="/dashboard/reviews" element={
+              <DashboardLayout>
+                <Reviews />
+              </DashboardLayout>
+            } />
+            <Route path="/dashboard/gamification" element={
+              <DashboardLayout>
+                <Gamification />
+              </DashboardLayout>
+            } />
+            <Route path="/dashboard/map" element={
+              <DashboardLayout>
+                <Map />
+              </DashboardLayout>
+            } />
+            <Route path="/dashboard/events" element={
+              <DashboardLayout>
+                <Events />
+              </DashboardLayout>
+            } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
