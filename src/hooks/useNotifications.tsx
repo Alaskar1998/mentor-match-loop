@@ -126,8 +126,8 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
       // Set up real-time updates simulation
       const cleanup = notificationService.simulateRealTimeUpdates(user.id);
       
-      // Poll for updates every 30 seconds
-      const pollInterval = setInterval(loadNotifications, 30000);
+      // Poll for updates every 10 seconds for more responsive notifications
+      const pollInterval = setInterval(loadNotifications, 10000);
       
       return () => {
         cleanup();

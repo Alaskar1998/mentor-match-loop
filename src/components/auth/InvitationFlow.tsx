@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { notificationService } from "@/services/notificationService";
 
 interface InvitationFlowProps {
   isOpen: boolean;
@@ -55,6 +56,35 @@ export const InvitationFlow = ({
         toast.error("Failed to send invitation");
         console.error('Invitation error:', error);
         return;
+      }
+
+      // Get sender's display name for better notification
+      const { data: senderProfile } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('id', user.id)
+        .single();
+
+      const senderName = senderProfile?.display_name || user.email || 'Someone';
+
+      // Create notification for the recipient
+      try {
+        await notificationService.createNotification({
+          userId: recipientId,
+          title: 'New Invitation Received',
+          message: `${senderName} wants to learn from you`,
+          isRead: false,
+          type: 'invitation_received',
+          actionUrl: '/dashboard/invites',
+          metadata: { 
+            senderId: user.id, 
+            senderName: senderName,
+            skill: 'General'
+          }
+        });
+      } catch (notificationError) {
+        console.error('Failed to create notification:', notificationError);
+        // Don't fail the invitation if notification creation fails
       }
 
       toast.success(`Invitation sent to ${recipientName}!`);
