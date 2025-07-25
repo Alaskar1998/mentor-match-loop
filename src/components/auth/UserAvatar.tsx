@@ -17,7 +17,7 @@ export const UserAvatar = () => {
   if (!user) return null;
 
   const handleProfileClick = () => {
-    navigate("/profile");
+    navigate("/dashboard");
   };
 
   const handleSettingsClick = () => {
