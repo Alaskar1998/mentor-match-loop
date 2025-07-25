@@ -1,42 +1,111 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MessageCircle, Clock, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
-const mockChats = [
-  {
-    id: 'chat-1',
-    recipientName: 'John Doe',
-    skill: 'React Development',
-    status: 'active',
-    lastMessage: 'Thanks for helping me with React hooks!',
-    timestamp: '2 hours ago',
-    unreadCount: 2
-  },
-  {
-    id: 'chat-2', 
-    recipientName: 'Sarah Wilson',
-    skill: 'Python',
-    status: 'completed',
-    lastMessage: 'Great session! Thanks for the help.',
-    timestamp: '1 day ago',
-    unreadCount: 0
-  },
-  {
-    id: 'chat-3',
-    recipientName: 'Mike Johnson',
-    skill: 'UI/UX Design',
-    status: 'pending',
-    lastMessage: 'Looking forward to our session!',
-    timestamp: '3 days ago',
-    unreadCount: 1
-  }
-];
+interface Chat {
+  id: string;
+  recipientName: string;
+  skill: string;
+  status: string;
+  lastMessage: string;
+  timestamp: string;
+  unreadCount: number;
+}
 
 export default function Chats() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [chats, setChats] = useState<Chat[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (user) {
+      fetchChats();
+    }
+  }, [user]);
+
+  const fetchChats = async () => {
+    try {
+      setLoading(true);
+      const { data: chatsData, error } = await supabase
+        .from('chats')
+        .select(`
+          id,
+          skill,
+          status,
+          created_at,
+          user1_id,
+          user2_id,
+          profiles!user1_id (
+            display_name
+          ),
+          profiles2:profiles!user2_id (
+            display_name
+          ),
+          chat_messages (
+            message,
+            created_at,
+            sender_id
+          )
+        `)
+        .or(`user1_id.eq.${user?.id},user2_id.eq.${user?.id}`)
+        .order('updated_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching chats:', error);
+        toast.error("Failed to load chats");
+        return;
+      }
+
+      const formattedChats: Chat[] = chatsData?.map(chat => {
+        // Determine the other user
+        const isUser1 = chat.user1_id === user?.id;
+        const otherUserName = isUser1 
+          ? chat.profiles2?.display_name || 'Unknown User'
+          : chat.profiles?.display_name || 'Unknown User';
+
+        // Get last message
+        const lastMessage = chat.chat_messages?.[chat.chat_messages.length - 1];
+        const lastMessageText = lastMessage?.message || 'No messages yet';
+        
+        // Calculate time ago
+        const timeAgo = chat.created_at ? formatTimeAgo(new Date(chat.created_at)) : 'Unknown';
+
+        return {
+          id: chat.id,
+          recipientName: otherUserName,
+          skill: chat.skill,
+          status: chat.status,
+          lastMessage: lastMessageText,
+          timestamp: timeAgo,
+          unreadCount: 0 // TODO: Calculate actual unread count
+        };
+      }) || [];
+
+      setChats(formattedChats);
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error("Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatTimeAgo = (date: Date) => {
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return "Just now";
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays}d ago`;
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -77,7 +146,13 @@ export default function Chats() {
       </div>
 
       <div className="space-y-4">
-        {mockChats.map((chat) => (
+        {loading ? (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <div className="text-muted-foreground">Loading chats...</div>
+            </CardContent>
+          </Card>
+        ) : chats.map((chat) => (
           <Card key={chat.id} className="cursor-pointer hover:shadow-md transition-shadow">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -126,7 +201,7 @@ export default function Chats() {
         ))}
       </div>
 
-      {mockChats.length === 0 && (
+      {!loading && chats.length === 0 && (
         <Card>
           <CardContent className="text-center py-12">
             <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />

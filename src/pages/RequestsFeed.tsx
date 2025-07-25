@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Clock, MapPin, Plus, Search, Star, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface LearningRequest {
   id: string;
@@ -25,58 +26,6 @@ interface LearningRequest {
   postedAt: Date;
   responses: number;
 }
-
-// Mock data - in real app, this would come from API
-const mockRequests: LearningRequest[] = [
-  {
-    id: "1",
-    user: {
-      name: "Sarah Chen",
-      avatar: "",
-      rating: 4.8,
-      isVerified: true
-    },
-    skill: "Spanish Conversation",
-    level: "Beginner",
-    description: "I'm planning a trip to Spain next month and need help with basic conversational Spanish. Looking for someone patient who can help me practice ordering food, asking for directions, and basic social interactions.",
-    country: "United States",
-    urgency: "urgent",
-    postedAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-    responses: 3
-  },
-  {
-    id: "2",
-    user: {
-      name: "Ahmed Hassan",
-      avatar: "",
-      rating: 4.9,
-      isVerified: true
-    },
-    skill: "Guitar Fingerpicking",
-    level: "Intermediate",
-    description: "I've been playing guitar for 2 years and can play basic chords and strumming patterns. Now I want to learn fingerpicking techniques, especially for folk and classical styles.",
-    country: "Egypt",
-    urgency: "flexible",
-    postedAt: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6 hours ago
-    responses: 1
-  },
-  {
-    id: "3",
-    user: {
-      name: "Emma Thompson",
-      avatar: "",
-      rating: 4.7,
-      isVerified: false
-    },
-    skill: "React Development",
-    level: "Beginner",
-    description: "I'm a designer who wants to transition to frontend development. I know HTML/CSS basics but need help understanding React concepts like components, props, and state management.",
-    country: "United Kingdom",
-    urgency: "soon",
-    postedAt: new Date(Date.now() - 12 * 60 * 60 * 1000), // 12 hours ago
-    responses: 5
-  }
-];
 
 const getUrgencyColor = (urgency: string) => {
   switch (urgency) {
@@ -103,10 +52,68 @@ const formatTimeAgo = (date: Date) => {
 
 export const RequestsFeed = () => {
   const navigate = useNavigate();
-  const [requests, setRequests] = useState(mockRequests);
+  const [requests, setRequests] = useState<LearningRequest[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCountry, setFilterCountry] = useState("all");
   const [filterUrgency, setFilterUrgency] = useState("all");
+
+  useEffect(() => {
+    fetchRequests();
+  }, []);
+
+  const fetchRequests = async () => {
+    try {
+      setLoading(true);
+      const { data: requestsData, error } = await supabase
+        .from('learning_requests')
+        .select(`
+          id,
+          skill,
+          level,
+          description,
+          country,
+          urgency,
+          created_at,
+          responses_count,
+          profiles!user_id (
+            display_name,
+            avatar_url
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching requests:', error);
+        toast.error("Failed to load learning requests");
+        return;
+      }
+
+      const formattedRequests: LearningRequest[] = requestsData?.map(req => ({
+        id: req.id,
+        user: {
+          name: req.profiles?.display_name || 'Anonymous User',
+          avatar: req.profiles?.avatar_url || '',
+          rating: 4.5, // Default rating - could be calculated from reviews
+          isVerified: true // Default - could be based on actual verification status
+        },
+        skill: req.skill,
+        level: req.level,
+        description: req.description,
+        country: req.country,
+        urgency: req.urgency as "urgent" | "soon" | "flexible",
+        postedAt: new Date(req.created_at),
+        responses: req.responses_count
+      })) || [];
+
+      setRequests(formattedRequests);
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error("Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleRespond = (requestId: string) => {
     // TODO: Implement response functionality
@@ -184,7 +191,13 @@ export const RequestsFeed = () => {
 
         {/* Results */}
         <div className="space-y-4">
-          {filteredRequests.map((request) => (
+          {loading ? (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <div className="text-muted-foreground">Loading learning requests...</div>
+              </CardContent>
+            </Card>
+          ) : filteredRequests.map((request) => (
             <Card key={request.id} className="hover:shadow-lg transition-shadow">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">

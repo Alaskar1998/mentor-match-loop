@@ -1,63 +1,118 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Star, MessageSquare, User, Calendar } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
-const mockReviews = {
-  received: [
-    {
-      id: 'rev-1',
-      reviewerName: 'Sarah Johnson',
-      skill: 'React Development',
-      rating: 5,
-      comment: 'Excellent teacher! Really helped me understand React hooks and state management.',
-      timestamp: '2 days ago',
-      exchangeDate: 'Jan 15, 2024'
-    },
-    {
-      id: 'rev-2',
-      reviewerName: 'Mike Chen',
-      skill: 'JavaScript',
-      rating: 4,
-      comment: 'Great session on advanced JavaScript concepts. Very patient and knowledgeable.',
-      timestamp: '1 week ago',
-      exchangeDate: 'Jan 8, 2024'
-    },
-    {
-      id: 'rev-3',
-      reviewerName: 'Emily Davis',
-      skill: 'CSS',
-      rating: 5,
-      comment: 'Amazing help with CSS Grid and Flexbox. Clear explanations and practical examples.',
-      timestamp: '2 weeks ago',
-      exchangeDate: 'Dec 28, 2023'
-    }
-  ],
-  given: [
-    {
-      id: 'rev-4',
-      recipientName: 'John Smith',
-      skill: 'Python',
-      rating: 5,
-      comment: 'John is an excellent Python teacher! Learned so much about data structures.',
-      timestamp: '3 days ago',
-      exchangeDate: 'Jan 12, 2024'
-    },
-    {
-      id: 'rev-5',
-      recipientName: 'Alice Wilson',
-      skill: 'UI/UX Design',
-      rating: 4,
-      comment: 'Great design insights and feedback. Really improved my design thinking.',
-      timestamp: '1 week ago',
-      exchangeDate: 'Jan 6, 2024'
-    }
-  ]
-};
+interface Review {
+  id: string;
+  reviewerName?: string;
+  recipientName?: string;
+  skill: string;
+  rating: number;
+  comment: string;
+  timestamp: string;
+  exchangeDate: string;
+}
 
 export default function Reviews() {
+  const { user } = useAuth();
+  const [receivedReviews, setReceivedReviews] = useState<Review[]>([]);
+  const [givenReviews, setGivenReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (user) {
+      fetchReviews();
+    }
+  }, [user]);
+
+  const fetchReviews = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch reviews received by the user
+      const { data: receivedData, error: receivedError } = await supabase
+        .from('reviews')
+        .select(`
+          id,
+          skill,
+          rating,
+          comment,
+          created_at,
+          profiles!reviewer_id (
+            display_name
+          )
+        `)
+        .eq('reviewee_id', user?.id)
+        .order('created_at', { ascending: false });
+
+      // Fetch reviews given by the user
+      const { data: givenData, error: givenError } = await supabase
+        .from('reviews')
+        .select(`
+          id,
+          skill,
+          rating,
+          comment,
+          created_at,
+          profiles!reviewee_id (
+            display_name
+          )
+        `)
+        .eq('reviewer_id', user?.id)
+        .order('created_at', { ascending: false });
+
+      if (receivedError || givenError) {
+        console.error('Error fetching reviews:', receivedError || givenError);
+        toast.error("Failed to load reviews");
+        return;
+      }
+
+      const formatReviews = (data: any[], type: 'received' | 'given'): Review[] => {
+        return data?.map(review => ({
+          id: review.id,
+          [type === 'received' ? 'reviewerName' : 'recipientName']: 
+            review.profiles?.display_name || 'Unknown User',
+          skill: review.skill,
+          rating: review.rating,
+          comment: review.comment || '',
+          timestamp: formatTimeAgo(new Date(review.created_at)),
+          exchangeDate: formatDate(new Date(review.created_at))
+        })) || [];
+      };
+
+      setReceivedReviews(formatReviews(receivedData, 'received'));
+      setGivenReviews(formatReviews(givenData, 'given'));
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error("Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatTimeAgo = (date: Date) => {
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return "Just now";
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays}d ago`;
+  };
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
+    });
+  };
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
       <Star
@@ -71,7 +126,9 @@ export default function Reviews() {
     ));
   };
 
-  const averageRating = mockReviews.received.reduce((acc, review) => acc + review.rating, 0) / mockReviews.received.length;
+  const averageRating = receivedReviews.length > 0 
+    ? receivedReviews.reduce((acc, review) => acc + review.rating, 0) / receivedReviews.length 
+    : 0;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -88,18 +145,20 @@ export default function Reviews() {
         <CardContent>
           <div className="flex items-center gap-6">
             <div className="text-center">
-              <div className="text-4xl font-bold text-primary">{averageRating.toFixed(1)}</div>
+              <div className="text-4xl font-bold text-primary">
+                {receivedReviews.length > 0 ? averageRating.toFixed(1) : '-'}
+              </div>
               <div className="flex items-center justify-center gap-1 mt-1">
                 {renderStars(Math.round(averageRating))}
               </div>
               <div className="text-sm text-muted-foreground mt-1">
-                Based on {mockReviews.received.length} reviews
+                Based on {receivedReviews.length} reviews
               </div>
             </div>
             <div className="flex-1 space-y-2">
               {[5, 4, 3, 2, 1].map((stars) => {
-                const count = mockReviews.received.filter(r => r.rating === stars).length;
-                const percentage = mockReviews.received.length > 0 ? (count / mockReviews.received.length) * 100 : 0;
+                const count = receivedReviews.filter(r => r.rating === stars).length;
+                const percentage = receivedReviews.length > 0 ? (count / receivedReviews.length) * 100 : 0;
                 return (
                   <div key={stars} className="flex items-center gap-2 text-sm">
                     <span className="w-3">{stars}</span>
@@ -122,15 +181,21 @@ export default function Reviews() {
       <Tabs defaultValue="received" className="space-y-6">
         <TabsList>
           <TabsTrigger value="received">
-            Reviews I Received ({mockReviews.received.length})
+            Reviews I Received ({receivedReviews.length})
           </TabsTrigger>
           <TabsTrigger value="given">
-            Reviews I Gave ({mockReviews.given.length})
+            Reviews I Gave ({givenReviews.length})
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="received" className="space-y-4">
-          {mockReviews.received.map((review) => (
+          {loading ? (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <div className="text-muted-foreground">Loading reviews...</div>
+              </CardContent>
+            </Card>
+          ) : receivedReviews.map((review) => (
             <Card key={review.id}>
               <CardContent className="p-6">
                 <div className="flex items-start gap-4">
@@ -169,7 +234,13 @@ export default function Reviews() {
         </TabsContent>
 
         <TabsContent value="given" className="space-y-4">
-          {mockReviews.given.map((review) => (
+          {loading ? (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <div className="text-muted-foreground">Loading reviews...</div>
+              </CardContent>
+            </Card>
+          ) : givenReviews.map((review) => (
             <Card key={review.id}>
               <CardContent className="p-6">
                 <div className="flex items-start gap-4">

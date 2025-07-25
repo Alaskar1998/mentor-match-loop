@@ -1,63 +1,151 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Mail, Clock, CheckCircle2, X, MessageCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
-const mockInvites = {
-  received: [
-    {
-      id: 'inv-1',
-      senderName: 'Alice Chen',
-      skill: 'JavaScript',
-      message: 'Hi! I saw your profile and would love to learn React from you. I can teach you Python in return!',
-      timestamp: '2 hours ago',
-      status: 'pending'
-    },
-    {
-      id: 'inv-2',
-      senderName: 'David Miller',
-      skill: 'UI/UX Design',
-      message: 'Would you be interested in a design-for-code skill exchange?',
-      timestamp: '1 day ago',
-      status: 'pending'
-    }
-  ],
-  sent: [
-    {
-      id: 'inv-3',
-      recipientName: 'Emma Thompson',
-      skill: 'Machine Learning',
-      message: 'Hello! I\'d love to learn ML from you. I can help with web development!',
-      timestamp: '3 days ago',
-      status: 'pending'
-    },
-    {
-      id: 'inv-4',
-      recipientName: 'John Smith',
-      skill: 'Photography',
-      message: 'Interested in photography lessons in exchange for coding help!',
-      timestamp: '5 days ago',
-      status: 'accepted'
-    }
-  ]
-};
+interface Invitation {
+  id: string;
+  senderName?: string;
+  recipientName?: string;
+  skill: string;
+  message: string;
+  timestamp: string;
+  status: string;
+}
 
 export default function Invites() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [receivedInvites, setReceivedInvites] = useState<Invitation[]>([]);
+  const [sentInvites, setSentInvites] = useState<Invitation[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleAcceptInvite = (inviteId: string) => {
-    console.log('Accepting invite:', inviteId);
-    // Here you would accept the invitation and create a chat
-    const chatId = `chat-${Date.now()}`;
-    navigate(`/chat/${chatId}`);
+  useEffect(() => {
+    if (user) {
+      fetchInvitations();
+    }
+  }, [user]);
+
+  const fetchInvitations = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch received invitations
+      const { data: receivedData, error: receivedError } = await supabase
+        .from('invitations')
+        .select(`
+          id,
+          skill,
+          message,
+          status,
+          created_at,
+          profiles!sender_id (
+            display_name
+          )
+        `)
+        .eq('recipient_id', user?.id)
+        .order('created_at', { ascending: false });
+
+      // Fetch sent invitations
+      const { data: sentData, error: sentError } = await supabase
+        .from('invitations')
+        .select(`
+          id,
+          skill,
+          message,
+          status,
+          created_at,
+          profiles!recipient_id (
+            display_name
+          )
+        `)
+        .eq('sender_id', user?.id)
+        .order('created_at', { ascending: false });
+
+      if (receivedError || sentError) {
+        console.error('Error fetching invitations:', receivedError || sentError);
+        toast.error("Failed to load invitations");
+        return;
+      }
+
+      const formatInvitations = (data: any[], type: 'received' | 'sent'): Invitation[] => {
+        return data?.map(invite => ({
+          id: invite.id,
+          [type === 'received' ? 'senderName' : 'recipientName']: 
+            invite.profiles?.display_name || 'Unknown User',
+          skill: invite.skill,
+          message: invite.message,
+          status: invite.status,
+          timestamp: formatTimeAgo(new Date(invite.created_at))
+        })) || [];
+      };
+
+      setReceivedInvites(formatInvitations(receivedData, 'received'));
+      setSentInvites(formatInvitations(sentData, 'sent'));
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error("Something went wrong");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDeclineInvite = (inviteId: string) => {
-    console.log('Declining invite:', inviteId);
-    // Here you would decline the invitation
+  const formatTimeAgo = (date: Date) => {
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return "Just now";
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays}d ago`;
+  };
+
+  const handleAcceptInvite = async (inviteId: string) => {
+    try {
+      const { error } = await supabase
+        .from('invitations')
+        .update({ status: 'accepted' })
+        .eq('id', inviteId);
+
+      if (error) {
+        console.error('Error accepting invite:', error);
+        toast.error("Failed to accept invitation");
+        return;
+      }
+
+      toast.success("Invitation accepted!");
+      fetchInvitations(); // Refresh the list
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error("Something went wrong");
+    }
+  };
+
+  const handleDeclineInvite = async (inviteId: string) => {
+    try {
+      const { error } = await supabase
+        .from('invitations')
+        .update({ status: 'declined' })
+        .eq('id', inviteId);
+
+      if (error) {
+        console.error('Error declining invite:', error);
+        toast.error("Failed to decline invitation");
+        return;
+      }
+
+      toast.success("Invitation declined");
+      fetchInvitations(); // Refresh the list
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error("Something went wrong");
+    }
   };
 
   const getStatusIcon = (status: string) => {
@@ -96,15 +184,21 @@ export default function Invites() {
       <Tabs defaultValue="received" className="space-y-6">
         <TabsList>
           <TabsTrigger value="received">
-            Received ({mockInvites.received.length})
+            Received ({receivedInvites.length})
           </TabsTrigger>
           <TabsTrigger value="sent">
-            Sent ({mockInvites.sent.length})
+            Sent ({sentInvites.length})
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="received" className="space-y-4">
-          {mockInvites.received.map((invite) => (
+          {loading ? (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <div className="text-muted-foreground">Loading invitations...</div>
+              </CardContent>
+            </Card>
+          ) : receivedInvites.map((invite) => (
             <Card key={invite.id}>
               <CardContent className="p-6">
                 <div className="flex items-start justify-between">
@@ -155,7 +249,13 @@ export default function Invites() {
         </TabsContent>
 
         <TabsContent value="sent" className="space-y-4">
-          {mockInvites.sent.map((invite) => (
+          {loading ? (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <div className="text-muted-foreground">Loading invitations...</div>
+              </CardContent>
+            </Card>
+          ) : sentInvites.map((invite) => (
             <Card key={invite.id}>
               <CardContent className="p-6">
                 <div className="flex items-start justify-between">
@@ -196,7 +296,7 @@ export default function Invites() {
         </TabsContent>
       </Tabs>
 
-      {mockInvites.received.length === 0 && mockInvites.sent.length === 0 && (
+      {!loading && receivedInvites.length === 0 && sentInvites.length === 0 && (
         <Card>
           <CardContent className="text-center py-12">
             <Mail className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
