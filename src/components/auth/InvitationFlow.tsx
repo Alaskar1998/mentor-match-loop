@@ -152,61 +152,7 @@ export const InvitationFlow = ({
               />
             </div>
 
-            {/* Cost Information for Free Users */}
-            {userType === "free" && (
-              <Card className="border-accent/20 bg-accent/5">
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <Lock className="w-5 h-5 text-accent mt-0.5" />
-                    <div className="flex-1">
-                      <h4 className="font-medium text-accent mb-2">Message Cost</h4>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span>Send message:</span>
-                          <span className="font-medium">{messageCost} coins</span>
-                        </div>
-                        {remainingInvites <= 0 && (
-                          <div className="flex justify-between">
-                            <span>Extra invite:</span>
-                            <span className="font-medium">{inviteCost} coins</span>
-                          </div>
-                        )}
-                        <Separator />
-                        <div className="flex justify-between font-medium">
-                          <span>Total cost:</span>
-                          <span>{messageCost + (remainingInvites <= 0 ? inviteCost : 0)} coins</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
 
-            {/* Premium Benefits */}
-            {userType === "free" && (
-              <Card className="border-primary/20 bg-primary/5">
-                <CardContent className="p-4">
-                  <div className="text-center space-y-3">
-                    <Crown className="w-8 h-8 text-primary mx-auto" />
-                    <div>
-                      <h4 className="font-semibold text-primary">Upgrade to Premium</h4>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Unlimited invites & messages, priority support, and more!
-                      </p>
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={handleUpgradeToPremium}
-                      className="w-full border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-                    >
-                      Upgrade Now
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
 
             {/* Action Buttons */}
             <div className="flex gap-3">
