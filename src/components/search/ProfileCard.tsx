@@ -1,9 +1,13 @@
+import { useState } from "react";
 import { Star, MessageCircle, Eye, MapPin, Award } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { UserProfile } from "@/pages/SearchResults";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { SignupModal } from "@/components/auth/SignupModal";
+import { InvitationFlow } from "@/components/auth/InvitationFlow";
 
 interface ProfileCardProps {
   user: UserProfile;
@@ -11,14 +15,26 @@ interface ProfileCardProps {
 
 export const ProfileCard = ({ user }: ProfileCardProps) => {
   const navigate = useNavigate();
+  const { isAuthenticated, user: currentUser, signup } = useAuth();
+  const [showSignupModal, setShowSignupModal] = useState(false);
+  const [showInvitationModal, setShowInvitationModal] = useState(false);
 
   const handleViewProfile = () => {
     navigate(`/profile/${user.id}`);
   };
 
   const handleSendInvitation = () => {
-    console.log(`Sending invitation to ${user.name}`);
-    // This would trigger the invitation flow
+    if (!isAuthenticated) {
+      setShowSignupModal(true);
+    } else {
+      setShowInvitationModal(true);
+    }
+  };
+
+  const handleSignupComplete = async (userData: any) => {
+    await signup(userData);
+    setShowSignupModal(false);
+    setShowInvitationModal(true);
   };
 
   const renderStars = (rating: number) => {
@@ -154,6 +170,24 @@ export const ProfileCard = ({ user }: ProfileCardProps) => {
           </Button>
         </div>
       </CardContent>
+
+      {/* Modals */}
+      <SignupModal
+        isOpen={showSignupModal}
+        onClose={() => setShowSignupModal(false)}
+        onSignupComplete={handleSignupComplete}
+      />
+
+      {isAuthenticated && currentUser && (
+        <InvitationFlow
+          isOpen={showInvitationModal}
+          onClose={() => setShowInvitationModal(false)}
+          recipientName={user.name}
+          userType={currentUser.userType}
+          remainingInvites={currentUser.remainingInvites}
+          appCoins={currentUser.appCoins}
+        />
+      )}
     </Card>
   );
 };
