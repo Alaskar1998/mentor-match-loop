@@ -10,6 +10,7 @@ import { InvitationFlow } from '@/components/auth/InvitationFlow';
 import { SignupModal } from '@/components/auth/SignupModal';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { notificationService } from '@/services/notificationService';
 
 interface UserProfile {
   id: string;
@@ -41,8 +42,12 @@ export default function ProfileView() {
   useEffect(() => {
     if (id) {
       fetchUserProfile();
+      // Create profile view notification (but not for viewing own profile)
+      if (currentUser && currentUser.id !== id) {
+        createProfileViewNotification();
+      }
     }
-  }, [id]);
+  }, [id, currentUser]);
 
   const fetchUserProfile = async () => {
     try {
@@ -90,6 +95,37 @@ export default function ProfileView() {
       navigate('/');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const createProfileViewNotification = async () => {
+    try {
+      if (!currentUser || !id) return;
+
+      // Get the viewer's name
+      const { data: viewerProfile } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('id', currentUser.id)
+        .single();
+
+      const viewerName = viewerProfile?.display_name || 'Someone';
+
+      await notificationService.createNotification({
+        userId: id,
+        title: 'Profile Viewed',
+        message: `${viewerName} viewed your profile`,
+        isRead: false,
+        type: 'profile_viewed',
+        actionUrl: '/dashboard/profile',
+        metadata: { 
+          viewerId: currentUser.id,
+          viewerName: viewerName
+        }
+      });
+    } catch (error) {
+      console.error('Failed to create profile view notification:', error);
+      // Don't show error to user as this is a background operation
     }
   };
   

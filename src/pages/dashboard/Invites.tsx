@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { notificationService } from '@/services/notificationService';
 
 interface Invitation {
   id: string;
@@ -171,6 +172,34 @@ export default function Invites() {
         console.error('Error accepting invite:', updateError);
         toast.error("Failed to accept invitation");
         return;
+      }
+
+      // Create notification for the sender that their invitation was accepted
+      try {
+        const { data: recipientProfile } = await supabase
+          .from('profiles')
+          .select('display_name')
+          .eq('id', inviteData.recipient_id)
+          .single();
+
+        const recipientName = recipientProfile?.display_name || 'Someone';
+
+        await notificationService.createNotification({
+          userId: inviteData.sender_id,
+          title: 'Invitation Accepted!',
+          message: `${recipientName} accepted your invitation to learn ${inviteData.skill}`,
+          isRead: false,
+          type: 'invitation_accepted',
+          actionUrl: `/chat/${chatId}`,
+          metadata: { 
+            recipientId: inviteData.recipient_id,
+            recipientName: recipientName,
+            skill: inviteData.skill,
+            chatId: chatId
+          }
+        });
+      } catch (notificationError) {
+        console.error('Failed to create acceptance notification:', notificationError);
       }
 
       toast.success("Invitation accepted! Opening chat...");

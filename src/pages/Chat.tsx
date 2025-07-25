@@ -11,6 +11,7 @@ import { ExchangeModal } from '@/components/chat/ExchangeModal';
 import { FinishExchangeModal } from '@/components/chat/FinishExchangeModal';
 import { ReviewModal } from '@/components/review/ReviewModal';
 import { useToast } from '@/hooks/use-toast';
+import { notificationService } from '@/services/notificationService';
 
 interface ChatMessage {
   id: string;
@@ -100,6 +101,27 @@ const Chat = () => {
 
     setMessages(prev => [...prev, newMessage]);
     setMessage('');
+
+    // Create notification for the other user about new message
+    (async () => {
+      try {
+        await notificationService.createNotification({
+          userId: otherUser.id,
+          title: 'New Message',
+          message: `${user?.name || 'Someone'}: ${message.trim().substring(0, 50)}${message.trim().length > 50 ? '...' : ''}`,
+          isRead: false,
+          type: 'new_message',
+          actionUrl: `/chat/${chatId}`,
+          metadata: { 
+            senderId: user?.id,
+            senderName: user?.name || 'Someone',
+            chatId: chatId
+          }
+        });
+      } catch (notificationError) {
+        console.error('Failed to create message notification:', notificationError);
+      }
+    })();
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -133,6 +155,29 @@ const Chat = () => {
     setExchange(newExchange);
     setShowExchangeModal(false);
 
+    // Create notification for the other user about exchange start
+    (async () => {
+      try {
+        await notificationService.createNotification({
+          userId: otherUser.id,
+          title: 'Exchange Started!',
+          message: `${user?.name || 'Someone'} started a skill exchange with you`,
+          isRead: false,
+          type: 'learning_match',
+          actionUrl: `/chat/${chatId}`,
+          metadata: { 
+            initiatorId: user?.id,
+            initiatorName: user?.name || 'Someone',
+            skill: originalSkill,
+            recipientSkill: exchangeData.recipientSkill,
+            isMentorship: exchangeData.isMentorship
+          }
+        });
+      } catch (notificationError) {
+        console.error('Failed to create exchange start notification:', notificationError);
+      }
+    })();
+
     // Add system message
     const systemMessage: ChatMessage = {
       id: Date.now().toString(),
@@ -159,6 +204,29 @@ const Chat = () => {
 
     setExchange(updatedExchange);
     setShowFinishModal(false);
+
+    // Create notification for the other user if exchange is completed
+    if (updatedExchange.status === 'completed') {
+      (async () => {
+        try {
+          await notificationService.createNotification({
+            userId: otherUser.id,
+            title: 'Exchange Completed!',
+            message: `Your skill exchange with ${user?.name || 'Someone'} has been completed`,
+            isRead: false,
+            type: 'exchange_completed',
+            actionUrl: `/chat/${chatId}`,
+            metadata: { 
+              partnerId: user?.id,
+              partnerName: user?.name || 'Someone',
+              skill: exchange.initiatorSkill
+            }
+          });
+        } catch (notificationError) {
+          console.error('Failed to create exchange completion notification:', notificationError);
+        }
+      })();
+    }
 
     // Add system message
     const systemMessage: ChatMessage = {

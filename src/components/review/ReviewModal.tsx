@@ -14,6 +14,7 @@ import { StarRating } from "@/components/ui/star-rating";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useGamification } from "@/hooks/useGamification";
+import { notificationService } from "@/services/notificationService";
 
 interface Exchange {
   id: string;
@@ -87,6 +88,26 @@ export const ReviewModal = ({
       updateUser({
         successfulExchanges: (user as any).successfulExchanges ? (user as any).successfulExchanges + 1 : 1
       });
+
+      // Create notification for the reviewed user
+      try {
+        await notificationService.createNotification({
+          userId: otherUser.id,
+          title: 'New Review Received',
+          message: `${user.email || 'Someone'} left you a ${averageRating.toFixed(1)}-star review`,
+          isRead: false,
+          type: 'exchange_completed',
+          actionUrl: '/dashboard/reviews',
+          metadata: { 
+            reviewerId: user.id,
+            reviewerName: user.email || 'Someone',
+            rating: averageRating,
+            skill: exchange.initiatorSkill
+          }
+        });
+      } catch (notificationError) {
+        console.error('Failed to create review notification:', notificationError);
+      }
 
       // Show success message
       toast({
