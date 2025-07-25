@@ -21,7 +21,7 @@ import { RequestsFeed } from "./pages/RequestsFeed";
 import Chat from "./pages/Chat";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/dashboard/Profile";
-
+import Messages from "./pages/Messages";
 import Chats from "./pages/dashboard/Chats";
 import Invites from "./pages/dashboard/Invites";
 import Reviews from "./pages/dashboard/Reviews";
@@ -57,9 +57,15 @@ const App = () => (
                 <Route path="/create-request" element={<CreateRequest />} />
                 <Route path="/requests-feed" element={<RequestsFeed />} />
                 <Route path="/chat/:chatId" element={<Chat />} />
+                <Route path="/messages" element={<Messages />} />
                 <Route path="/dashboard" element={
                   <DashboardLayout>
                     <Dashboard />
+                  </DashboardLayout>
+                } />
+                <Route path="/dashboard/messages" element={
+                  <DashboardLayout>
+                    <Messages />
                   </DashboardLayout>
                 } />
                 <Route path="/dashboard/profile" element={
