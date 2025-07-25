@@ -33,7 +33,6 @@ const dashboardItems = [
   { title: "Invites", url: "/dashboard/invites", icon: Mail },
   { title: "Reviews", url: "/dashboard/reviews", icon: Star },
   { title: "Coins & Badges", url: "/dashboard/gamification", icon: Coins },
-  { title: "Map Search", url: "/dashboard/map", icon: MapPin, premiumOnly: true },
   { title: "Events", url: "/dashboard/events", icon: Calendar, premiumOnly: true },
 ];
 

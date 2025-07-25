@@ -19,8 +19,8 @@ import Chats from "./pages/dashboard/Chats";
 import Invites from "./pages/dashboard/Invites";
 import Reviews from "./pages/dashboard/Reviews";
 import Gamification from "./pages/dashboard/Gamification";
-import Map from "./pages/dashboard/Map";
 import Events from "./pages/dashboard/Events";
+import ProfileView from "./pages/ProfileView";
 import { DashboardLayout } from "./components/dashboard/DashboardLayout";
 import NotFound from "./pages/NotFound";
 
@@ -77,16 +77,12 @@ const App = () => (
                 <Gamification />
               </DashboardLayout>
             } />
-            <Route path="/dashboard/map" element={
-              <DashboardLayout>
-                <Map />
-              </DashboardLayout>
-            } />
             <Route path="/dashboard/events" element={
               <DashboardLayout>
                 <Events />
               </DashboardLayout>
             } />
+            <Route path="/profile/:id" element={<ProfileView />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

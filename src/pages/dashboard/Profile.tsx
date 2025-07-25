@@ -16,6 +16,9 @@ export default function Profile() {
     name: user?.name || '',
     bio: user?.bio || '',
     country: user?.country || '',
+    age: (user as any)?.age || '',
+    gender: (user as any)?.gender || '',
+    phone: (user as any)?.phone || '',
   });
 
   const handleSave = () => {
@@ -72,6 +75,30 @@ export default function Profile() {
                   onChange={(e) => setFormData({...formData, country: e.target.value})}
                 />
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">Age</label>
+                  <Input
+                    type="number"
+                    value={formData.age}
+                    onChange={(e) => setFormData({...formData, age: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Gender</label>
+                  <Input
+                    value={formData.gender}
+                    onChange={(e) => setFormData({...formData, gender: e.target.value})}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Phone</label>
+                <Input
+                  value={formData.phone}
+                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                />
+              </div>
               <Button onClick={handleSave}>
                 <Save className="w-4 h-4 mr-2" />
                 Save Changes
@@ -87,6 +114,20 @@ export default function Profile() {
                 <h3 className="font-medium">Country</h3>
                 <p className="text-muted-foreground">{user?.country || 'No country specified'}</p>
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="font-medium">Age</h3>
+                  <p className="text-muted-foreground">{(user as any)?.age || 'No age specified'}</p>
+                </div>
+                <div>
+                  <h3 className="font-medium">Gender</h3>
+                  <p className="text-muted-foreground">{(user as any)?.gender || 'No gender specified'}</p>
+                </div>
+              </div>
+              <div>
+                <h3 className="font-medium">Phone</h3>
+                <p className="text-muted-foreground">{(user as any)?.phone || 'No phone number'}</p>
+              </div>
               <div>
                 <h3 className="font-medium">Account Type</h3>
                 <Badge variant="secondary">{user?.userType}</Badge>
@@ -99,30 +140,15 @@ export default function Profile() {
       {/* Skills Section */}
       <Card>
         <CardHeader>
-          <CardTitle>Skills</CardTitle>
+          <CardTitle>Skills to Teach</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div>
-              <h3 className="font-medium mb-2">Skills to Teach</h3>
-              <div className="flex flex-wrap gap-2">
-                {user?.skillsToTeach?.map((skill, index) => (
-                  <Badge key={index} variant="outline">
-                    {skill.name} - {skill.level}
-                  </Badge>
-                )) || <p className="text-muted-foreground">No skills to teach added yet.</p>}
-              </div>
-            </div>
-            <div>
-              <h3 className="font-medium mb-2">Skills to Learn</h3>
-              <div className="flex flex-wrap gap-2">
-                {user?.skillsToLearn?.map((skill, index) => (
-                  <Badge key={index} variant="secondary">
-                    {skill}
-                  </Badge>
-                )) || <p className="text-muted-foreground">No skills to learn added yet.</p>}
-              </div>
-            </div>
+          <div className="flex flex-wrap gap-2">
+            {user?.skillsToTeach?.map((skill, index) => (
+              <Badge key={index} variant="outline">
+                {skill.name} - {skill.level}
+              </Badge>
+            )) || <p className="text-muted-foreground">No skills to teach added yet.</p>}
           </div>
         </CardContent>
       </Card>
