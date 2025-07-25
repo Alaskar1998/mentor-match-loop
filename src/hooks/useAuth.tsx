@@ -60,37 +60,41 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         setSession(session);
         if (session?.user) {
-          // Fetch user profile from database
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-          
-          if (profile) {
-            const userData: User = {
-              id: profile.id,
-              email: profile.email || session.user.email || '',
-              name: profile.display_name || '',
-              profilePicture: profile.avatar_url,
-              bio: profile.bio,
-              country: profile.country,
-              skillsToTeach: Array.isArray(profile.skills_to_teach) ? profile.skills_to_teach as Array<{name: string; level: string; description: string}> : [],
-              skillsToLearn: profile.skills_to_learn || [],
-              willingToTeachWithoutReturn: profile.willing_to_teach_without_return || false,
-              userType: "free",
-              remainingInvites: 3,
-              appCoins: 50,
-              phoneVerified: false,
-              successfulExchanges: 0,
-              rating: 5.0
-            };
-            setUser(userData);
-            setIsAuthenticated(true);
-          }
+          // Use setTimeout to prevent auth deadlock
+          setTimeout(() => {
+            // Fetch user profile from database
+            supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single()
+              .then(({ data: profile }) => {
+                if (profile) {
+                  const userData: User = {
+                    id: profile.id,
+                    email: profile.email || session.user.email || '',
+                    name: profile.display_name || '',
+                    profilePicture: profile.avatar_url,
+                    bio: profile.bio,
+                    country: profile.country,
+                    skillsToTeach: Array.isArray(profile.skills_to_teach) ? profile.skills_to_teach as Array<{name: string; level: string; description: string}> : [],
+                    skillsToLearn: profile.skills_to_learn || [],
+                    willingToTeachWithoutReturn: profile.willing_to_teach_without_return || false,
+                    userType: "free",
+                    remainingInvites: 3,
+                    appCoins: 50,
+                    phoneVerified: false,
+                    successfulExchanges: 0,
+                    rating: 5.0
+                  };
+                  setUser(userData);
+                  setIsAuthenticated(true);
+                }
+              });
+          }, 0);
         } else {
           setUser(null);
           setIsAuthenticated(false);
