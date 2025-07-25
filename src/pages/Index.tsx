@@ -1,6 +1,3 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { HeroSection } from "@/components/HeroSection";
 import { HowItWorksSection } from "@/components/HowItWorksSection";
 import { LatestExchangesSection } from "@/components/LatestExchangesSection";
@@ -9,49 +6,12 @@ import { JoinCommunitySection } from "@/components/JoinCommunitySection";
 import { FAQSection } from "@/components/FAQSection";
 import { GamificationHeader } from "@/components/gamification/GamificationHeader";
 import { useAuth } from "@/hooks/useAuth";
-import { SignupModal } from "@/components/auth/SignupModal";
-import { SignInModal } from "@/components/auth/SignInModal";
-import { UserAvatar } from "@/components/auth/UserAvatar";
-import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
 
 const Index = () => {
-  const { isAuthenticated, logout } = useAuth();
-  const [showSignupModal, setShowSignupModal] = useState(false);
-  const [showSignInModal, setShowSignInModal] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   return (
     <div className="min-h-screen">
-      {/* Navigation Header */}
-      <nav className="bg-background/80 backdrop-blur-sm border-b sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="font-bold text-xl">SkillExchange</div>
-            <div className="flex items-center gap-4">
-              <Link to="/requests-feed">
-                <Button variant="ghost">Browse Requests</Button>
-              </Link>
-              <Link to="/create-request">
-                <Button variant="outline">Create Request</Button>
-              </Link>
-              <Link to="/pricing">
-                <Button variant="ghost">Pricing</Button>
-              </Link>
-              {isAuthenticated ? (
-                <div className="flex items-center gap-2">
-                  <NotificationDropdown type="general" />
-                  <NotificationDropdown type="chat" />
-                  <UserAvatar />
-                </div>
-              ) : (
-                <Button onClick={() => setShowSignInModal(true)}>
-                  Sign In
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-      </nav>
-
       {/* Gamification Header for logged-in users */}
       {isAuthenticated && (
         <div className="container mx-auto px-4 py-4">
@@ -65,24 +25,6 @@ const Index = () => {
       <TopContributorsSection />
       <JoinCommunitySection />
       <FAQSection />
-      
-      <SignInModal 
-        isOpen={showSignInModal} 
-        onClose={() => setShowSignInModal(false)}
-        onSwitchToSignup={() => {
-          setShowSignInModal(false);
-          setShowSignupModal(true);
-        }}
-      />
-      
-      <SignupModal 
-        isOpen={showSignupModal} 
-        onClose={() => setShowSignupModal(false)}
-        onSignupComplete={(userData) => {
-          console.log('Signup completed:', userData);
-          setShowSignupModal(false);
-        }}
-      />
     </div>
   );
 };

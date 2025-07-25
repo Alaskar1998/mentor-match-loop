@@ -9,6 +9,7 @@ import { MonetizationProvider } from "@/hooks/useMonetization";
 import { NotificationProvider } from "@/hooks/useNotifications";
 import Index from "./pages/Index";
 import Pricing from "./pages/Pricing";
+import { Header } from "./components/Header";
 import SearchResults from "./pages/SearchResults";
 import { CreateRequest } from "./pages/CreateRequest";
 import { RequestsFeed } from "./pages/RequestsFeed";
@@ -37,6 +38,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <Header />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/pricing" element={<Pricing />} />
