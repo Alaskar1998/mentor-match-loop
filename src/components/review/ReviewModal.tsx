@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { StarRating } from "@/components/ui/star-rating";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useGamification } from "@/hooks/useGamification";
 
 interface Exchange {
   id: string;
@@ -46,6 +47,7 @@ export const ReviewModal = ({
 }: ReviewModalProps) => {
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
+  const { completeExchange } = useGamification();
   
   const [skillRating, setSkillRating] = useState(0);
   const [personalRating, setPersonalRating] = useState(0);
@@ -77,7 +79,10 @@ export const ReviewModal = ({
         reviewerUserId: user.id
       });
 
-      // Update current user's successful exchanges count
+      // Update current user's successful exchanges count and award coins
+      const isMentor = user.willingToTeachWithoutReturn || false;
+      completeExchange(isMentor);
+      
       updateUser({
         successfulExchanges: (user as any).successfulExchanges ? (user as any).successfulExchanges + 1 : 1
       });
