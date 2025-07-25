@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { HeroSection } from "@/components/HeroSection";
@@ -8,9 +9,11 @@ import { JoinCommunitySection } from "@/components/JoinCommunitySection";
 import { FAQSection } from "@/components/FAQSection";
 import { GamificationHeader } from "@/components/gamification/GamificationHeader";
 import { useAuth } from "@/hooks/useAuth";
+import { SignupModal } from "@/components/auth/SignupModal";
 
 const Index = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
+  const [showSignupModal, setShowSignupModal] = useState(false);
 
   return (
     <div className="min-h-screen">
@@ -26,7 +29,15 @@ const Index = () => {
               <Link to="/create-request">
                 <Button variant="outline">Create Request</Button>
               </Link>
-              <Button>Sign In</Button>
+              {isAuthenticated ? (
+                <Button onClick={logout} variant="outline">
+                  Sign Out
+                </Button>
+              ) : (
+                <Button onClick={() => setShowSignupModal(true)}>
+                  Sign In
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -45,6 +56,15 @@ const Index = () => {
       <TopContributorsSection />
       <JoinCommunitySection />
       <FAQSection />
+      
+      <SignupModal 
+        isOpen={showSignupModal} 
+        onClose={() => setShowSignupModal(false)}
+        onSignupComplete={(userData) => {
+          console.log('Signup completed:', userData);
+          setShowSignupModal(false);
+        }}
+      />
     </div>
   );
 };

@@ -151,12 +151,12 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (user) {
       localStorage.setItem(`gamification_${user.id}`, JSON.stringify(state));
-      // Sync coins with user profile
+      // Sync coins with user profile only if different to avoid infinite loop
       if (user.appCoins !== state.appCoins) {
         updateUser({ appCoins: state.appCoins });
       }
     }
-  }, [state, user, updateUser]);
+  }, [state.appCoins, user?.id]); // Only depend on specific values to prevent infinite loop
 
   const earnCoins = (amount: number, source: string) => {
     setState(prev => ({
