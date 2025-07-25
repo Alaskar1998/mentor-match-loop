@@ -225,26 +225,26 @@ const Chat = () => {
     setShowFinishModal(true);
   };
 
-  const handleExchangeAgreed = (exchangeData: any) => {
+  const handleExchangeAgreed = async (exchangeData: any) => {
     if (!user || !otherUser || !chatData) return;
 
-    const newExchange: Exchange = {
-      id: Date.now().toString(),
-      status: 'pending',
-      initiatorSkill: chatData.skill,
-      recipientSkill: exchangeData.recipientSkill,
-      isMentorship: exchangeData.isMentorship,
-      initiatorAgreed: true,
-      recipientAgreed: false,
-      initiatorFinished: false,
-      recipientFinished: false
-    };
+    try {
+      const newExchange: Exchange = {
+        id: Date.now().toString(),
+        status: 'pending',
+        initiatorSkill: chatData.skill,
+        recipientSkill: exchangeData.recipientSkill,
+        isMentorship: exchangeData.isMentorship,
+        initiatorAgreed: true,
+        recipientAgreed: false,
+        initiatorFinished: false,
+        recipientFinished: false
+      };
 
-    setExchange(newExchange);
-    setShowExchangeModal(false);
+      setExchange(newExchange);
+      setShowExchangeModal(false);
 
-    // Create notification for the other user about exchange start
-    (async () => {
+      // Create notification for the other user about exchange start
       try {
         await notificationService.createNotification({
           userId: otherUser.id,
@@ -264,17 +264,20 @@ const Chat = () => {
       } catch (notificationError) {
         console.error('Failed to create exchange start notification:', notificationError);
       }
-    })();
 
-    // Add system message
-    const systemMessage: ChatMessage = {
-      id: Date.now().toString(),
-      senderId: 'system',
-      message: `Exchange started! ${user?.email} will teach ${chatData.skill}${exchangeData.isMentorship ? ' (Mentorship)' : ` in exchange for ${exchangeData.recipientSkill}`}`,
-      timestamp: new Date(),
-      type: 'system'
-    };
-    setMessages(prev => [...prev, systemMessage]);
+      // Add system message
+      const systemMessage: ChatMessage = {
+        id: Date.now().toString(),
+        senderId: 'system',
+        message: `Exchange started! ${user?.email} will teach ${chatData.skill}${exchangeData.isMentorship ? ' (Mentorship)' : ` in exchange for ${exchangeData.recipientSkill}`}`,
+        timestamp: new Date(),
+        type: 'system'
+      };
+      setMessages(prev => [...prev, systemMessage]);
+    } catch (error) {
+      console.error('Error starting exchange:', error);
+      toast.error("Failed to start exchange. Please try again.");
+    }
   };
 
   const handleExchangeFinished = () => {
@@ -505,6 +508,8 @@ const Chat = () => {
         recipientName={otherUser.display_name}
         initiatorSkill={chatData.skill}
         recipientSkills={otherUser.skills_to_teach || []}
+        initiatorId={user?.id || ''}
+        recipientId={otherUser.id}
       />
 
       {/* Finish Exchange Modal */}

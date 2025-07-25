@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
@@ -25,6 +26,8 @@ interface ExchangeModalProps {
   recipientName: string;
   initiatorSkill: string;
   recipientSkills: Skill[];
+  initiatorId: string;
+  recipientId: string;
 }
 
 export const ExchangeModal = ({
@@ -34,8 +37,11 @@ export const ExchangeModal = ({
   initiatorName,
   recipientName,
   initiatorSkill,
-  recipientSkills
+  recipientSkills,
+  initiatorId,
+  recipientId
 }: ExchangeModalProps) => {
+  const navigate = useNavigate();
   const [selectedSkill, setSelectedSkill] = useState<string>('');
   const [isMentorship, setIsMentorship] = useState(false);
 
@@ -68,7 +74,12 @@ export const ExchangeModal = ({
           {/* Initiator's skill (pre-populated) */}
           <div className="space-y-2">
             <label className="text-sm font-medium">
-              {initiatorName} will teach:
+              <button 
+                onClick={() => navigate(`/profile/${initiatorId}`)}
+                className="text-primary hover:underline font-medium"
+              >
+                {initiatorName}
+              </button> will teach:
             </label>
             <div className="p-3 bg-muted rounded-lg">
               <Badge variant="secondary" className="text-sm">
@@ -80,7 +91,12 @@ export const ExchangeModal = ({
           {/* Recipient's skill selection */}
           <div className="space-y-3">
             <label className="text-sm font-medium">
-              {recipientName} will teach:
+              <button 
+                onClick={() => navigate(`/profile/${recipientId}`)}
+                className="text-primary hover:underline font-medium"
+              >
+                {recipientName}
+              </button> will teach:
             </label>
             
             {/* Skill selection dropdown */}
