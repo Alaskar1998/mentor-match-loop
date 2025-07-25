@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useNavigate } from "react-router-dom";
 import heroImage from "@/assets/hero-image.jpg";
 
 const popularSkills = [
@@ -15,12 +16,12 @@ const popularSkills = [
 
 export const HeroSection = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
 
   const handleSearch = (skill?: string) => {
     const query = skill || searchQuery;
     if (query) {
-      console.log(`Searching for: ${query}`);
-      // Navigation logic would go here
+      navigate(`/search?q=${encodeURIComponent(query)}`);
     }
   };
 
