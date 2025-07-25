@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Star, MessageSquare, ArrowLeft, MapPin, Calendar, Mail, Phone } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { InvitationFlow } from '@/components/auth/InvitationFlow';
+import { SignupModal } from '@/components/auth/SignupModal';
 
 // This would normally fetch user data based on the ID from the URL
 // For now, using mock data
@@ -36,6 +39,9 @@ const getUserById = (id: string) => {
 export default function ProfileView() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { isAuthenticated, user: currentUser } = useAuth();
+  const [showSignupModal, setShowSignupModal] = useState(false);
+  const [showInvitationModal, setShowInvitationModal] = useState(false);
   
   if (!id) {
     navigate('/');
@@ -43,6 +49,20 @@ export default function ProfileView() {
   }
 
   const user = getUserById(id);
+
+  const handleSendInvitation = () => {
+    if (!isAuthenticated) {
+      setShowSignupModal(true);
+    } else {
+      setShowInvitationModal(true);
+    }
+  };
+
+  const handleSignupComplete = async (userData: any) => {
+    console.log('Signup completed:', userData);
+    setShowSignupModal(false);
+    setShowInvitationModal(true);
+  };
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
@@ -109,7 +129,7 @@ export default function ProfileView() {
                     <MessageSquare className="w-4 h-4 mr-2" />
                     Send Message
                   </Button>
-                  <Button variant="outline">
+                  <Button variant="outline" onClick={handleSendInvitation}>
                     <Mail className="w-4 h-4 mr-2" />
                     Send Invitation
                   </Button>
@@ -185,6 +205,25 @@ export default function ProfileView() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Modals */}
+      <SignupModal
+        isOpen={showSignupModal}
+        onClose={() => setShowSignupModal(false)}
+        onSignupComplete={handleSignupComplete}
+      />
+
+      {isAuthenticated && currentUser && (
+        <InvitationFlow
+          isOpen={showInvitationModal}
+          onClose={() => setShowInvitationModal(false)}
+          recipientId={user.id}
+          recipientName={user.name}
+          userType={currentUser.userType}
+          remainingInvites={currentUser.remainingInvites}
+          appCoins={currentUser.appCoins}
+        />
+      )}
     </div>
   );
 }

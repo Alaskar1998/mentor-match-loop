@@ -6,10 +6,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Coins, Send, Lock, Crown } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 interface InvitationFlowProps {
   isOpen: boolean;
   onClose: () => void;
+  recipientId: string;
   recipientName: string;
   userType: "free" | "premium";
   remainingInvites?: number;
@@ -19,6 +24,7 @@ interface InvitationFlowProps {
 export const InvitationFlow = ({ 
   isOpen, 
   onClose, 
+  recipientId,
   recipientName, 
   userType,
   remainingInvites = 3,
@@ -26,31 +32,67 @@ export const InvitationFlow = ({
 }: InvitationFlowProps) => {
   const [message, setMessage] = useState("");
   const [showPayment, setShowPayment] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const sendInvitation = async () => {
+    if (!user || !message.trim()) return;
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from('invitations')
+        .insert({
+          sender_id: user.id,
+          recipient_id: recipientId,
+          skill: 'General', // You could make this dynamic based on the context
+          message: message.trim(),
+          status: 'pending'
+        });
+
+      if (error) {
+        toast.error("Failed to send invitation");
+        console.error('Invitation error:', error);
+        return;
+      }
+
+      toast.success(`Invitation sent to ${recipientName}!`);
+      onClose();
+      setMessage("");
+      setShowPayment(false);
+      
+      // Optionally navigate to invites page
+      setTimeout(() => {
+        navigate('/dashboard/invites');
+      }, 1000);
+    } catch (error) {
+      toast.error("Failed to send invitation");
+      console.error('Invitation error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSendInvite = () => {
     if (userType === "free") {
-      if (remainingInvites <= 0) {
-        setShowPayment(true);
-        return;
-      }
-      // For free users, show payment for message
-      setShowPayment(true);
+      // For free users, don't allow invitations without payment
+      toast.error("Upgrade to Premium to send invitations");
+      return;
     } else {
       // Premium users can send directly
-      console.log("Sending invitation to", recipientName);
-      onClose();
+      sendInvitation();
     }
   };
 
   const handlePayment = () => {
-    console.log("Processing payment for message");
-    // Handle payment logic here
-    onClose();
+    // TODO: Implement actual coin payment logic here
+    toast.error("Payment system not implemented yet. Please upgrade to Premium.");
   };
 
   const handleUpgradeToPremium = () => {
-    console.log("Redirecting to premium upgrade");
-    // Handle premium upgrade
+    navigate('/pricing');
+    onClose();
   };
 
   const messageCost = 5; // App coins
@@ -176,10 +218,10 @@ export const InvitationFlow = ({
               </Button>
               <Button 
                 onClick={handleSendInvite} 
-                disabled={!message.trim()}
+                disabled={!message.trim() || isLoading}
                 className="flex-1"
               >
-                {userType === "premium" ? "Send Invitation" : "Continue"}
+                {isLoading ? "Sending..." : userType === "premium" ? "Send Invitation" : "Upgrade Required"}
               </Button>
             </div>
           </div>

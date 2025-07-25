@@ -83,7 +83,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                     skillsToTeach: Array.isArray(profile.skills_to_teach) ? profile.skills_to_teach as Array<{name: string; level: string; description: string}> : [],
                     skillsToLearn: profile.skills_to_learn || [],
                     willingToTeachWithoutReturn: profile.willing_to_teach_without_return || false,
-                    userType: "free",
+                    userType: "free", // TODO: Check subscription status from database
                     remainingInvites: 3,
                     appCoins: 50,
                     phoneVerified: false,

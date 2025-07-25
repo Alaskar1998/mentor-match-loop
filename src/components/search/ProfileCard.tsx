@@ -187,6 +187,7 @@ export const ProfileCard = ({ user }: ProfileCardProps) => {
         <InvitationFlow
           isOpen={showInvitationModal}
           onClose={() => setShowInvitationModal(false)}
+          recipientId={user.id}
           recipientName={user.name}
           userType={currentUser.userType}
           remainingInvites={currentUser.remainingInvites}
