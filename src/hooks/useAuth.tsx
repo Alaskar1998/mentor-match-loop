@@ -1,4 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
 interface User {
   id: string;
@@ -24,10 +26,14 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
+  session: Session | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  signup: (userData: any) => Promise<void>;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<{ error?: string }>;
+  signup: (userData: any) => Promise<{ error?: string }>;
+  signInWithGoogle: () => Promise<{ error?: string }>;
+  signInWithFacebook: () => Promise<{ error?: string }>;
+  signInWithApple: () => Promise<{ error?: string }>;
+  logout: () => Promise<void>;
   updateUser: (updates: Partial<User>) => void;
 }
 
@@ -47,94 +53,207 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Check for existing session on mount
+  // Set up auth state listener and check for existing session
   useEffect(() => {
-    const savedUser = localStorage.getItem("user");
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-      setIsAuthenticated(true);
-    }
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        if (session?.user) {
+          // Fetch user profile from database
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (profile) {
+            const userData: User = {
+              id: profile.id,
+              email: profile.email || session.user.email || '',
+              name: profile.display_name || '',
+              profilePicture: profile.avatar_url,
+              bio: profile.bio,
+              country: profile.country,
+              skillsToTeach: Array.isArray(profile.skills_to_teach) ? profile.skills_to_teach as Array<{name: string; level: string; description: string}> : [],
+              skillsToLearn: profile.skills_to_learn || [],
+              willingToTeachWithoutReturn: profile.willing_to_teach_without_return || false,
+              userType: "free",
+              remainingInvites: 3,
+              appCoins: 50,
+              phoneVerified: false,
+              successfulExchanges: 0,
+              rating: 5.0
+            };
+            setUser(userData);
+            setIsAuthenticated(true);
+          }
+        } else {
+          setUser(null);
+          setIsAuthenticated(false);
+        }
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setSession(session);
+        // The auth state change listener will handle the rest
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
-    // Simulate API call
-    console.log("Logging in:", email);
-    
-    // Mock user data
-    const mockUser: User = {
-      id: "user-1",
-      email,
-      name: "John Doe",
-      profilePicture: "👨‍💻",
-      bio: "Passionate learner and teacher",
-      country: "United States",
-      skillsToTeach: [
-        { name: "JavaScript", level: "Expert", description: "Full-stack development" }
-      ],
-      skillsToLearn: ["Spanish", "Guitar"],
-      willingToTeachWithoutReturn: false,
-      userType: "free",
-      remainingInvites: 3,
-      appCoins: 50,
-      phoneVerified: false,
-      successfulExchanges: 15,
-      rating: 4.8
-    };
-
-    setUser(mockUser);
-    setIsAuthenticated(true);
-    localStorage.setItem("user", JSON.stringify(mockUser));
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) {
+        return { error: error.message };
+      }
+      
+      return {};
+    } catch (error) {
+      return { error: 'An unexpected error occurred' };
+    }
   };
 
   const signup = async (userData: any) => {
-    console.log("Signing up:", userData);
-    
-    // Create new user
-    const newUser: User = {
-      id: `user-${Date.now()}`,
-      email: userData.email,
-      name: userData.name,
-      profilePicture: "👤",
-      bio: userData.bio,
-      country: userData.country,
-      skillsToTeach: userData.skillsToTeach || [],
-      skillsToLearn: userData.skillsToLearn || [],
-      willingToTeachWithoutReturn: userData.willingToTeachWithoutReturn || false,
-      userType: "free",
-      remainingInvites: 3,
-      appCoins: userData.willingToTeachWithoutReturn ? 100 : 50, // Bonus for mentors
-      phoneVerified: false,
-      successfulExchanges: 0,
-      rating: 5.0 // New users start with perfect rating
-    };
+    try {
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { error } = await supabase.auth.signUp({
+        email: userData.email,
+        password: userData.password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            full_name: userData.name
+          }
+        }
+      });
+      
+      if (error) {
+        return { error: error.message };
+      }
 
-    setUser(newUser);
-    setIsAuthenticated(true);
-    localStorage.setItem("user", JSON.stringify(newUser));
+      // Note: Profile will be created by the trigger
+      // We can update it with additional info if needed
+      
+      return {};
+    } catch (error) {
+      return { error: 'An unexpected error occurred' };
+    }
   };
 
-  const logout = () => {
+  const signInWithGoogle = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/`
+        }
+      });
+      
+      if (error) {
+        return { error: error.message };
+      }
+      
+      return {};
+    } catch (error) {
+      return { error: 'An unexpected error occurred' };
+    }
+  };
+
+  const signInWithFacebook = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'facebook',
+        options: {
+          redirectTo: `${window.location.origin}/`
+        }
+      });
+      
+      if (error) {
+        return { error: error.message };
+      }
+      
+      return {};
+    } catch (error) {
+      return { error: 'An unexpected error occurred' };
+    }
+  };
+
+  const signInWithApple = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'apple',
+        options: {
+          redirectTo: `${window.location.origin}/`
+        }
+      });
+      
+      if (error) {
+        return { error: error.message };
+      }
+      
+      return {};
+    } catch (error) {
+      return { error: 'An unexpected error occurred' };
+    }
+  };
+
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
+    setSession(null);
     setIsAuthenticated(false);
-    localStorage.removeItem("user");
   };
 
-  const updateUser = (updates: Partial<User>) => {
-    if (user) {
+  const updateUser = async (updates: Partial<User>) => {
+    if (user && session) {
+      // Update local state
       const updatedUser = { ...user, ...updates };
       setUser(updatedUser);
-      localStorage.setItem("user", JSON.stringify(updatedUser));
+
+      // Update database profile
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          display_name: updatedUser.name,
+          bio: updatedUser.bio,
+          country: updatedUser.country,
+          avatar_url: updatedUser.profilePicture,
+          skills_to_teach: updatedUser.skillsToTeach,
+          skills_to_learn: updatedUser.skillsToLearn,
+          willing_to_teach_without_return: updatedUser.willingToTeachWithoutReturn
+        })
+        .eq('id', user.id);
+
+      if (error) {
+        console.error('Profile update error:', error);
+      }
     }
   };
 
   return (
     <AuthContext.Provider value={{
       user,
+      session,
       isAuthenticated,
       login,
       signup,
+      signInWithGoogle,
+      signInWithFacebook,
+      signInWithApple,
       logout,
       updateUser
     }}>

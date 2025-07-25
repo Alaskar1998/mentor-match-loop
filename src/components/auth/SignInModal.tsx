@@ -17,7 +17,7 @@ export const SignInModal = ({ isOpen, onClose, onSwitchToSignup }: SignInModalPr
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, signInWithGoogle, signInWithFacebook, signInWithApple } = useAuth();
   const { toast } = useToast();
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -25,29 +25,56 @@ export const SignInModal = ({ isOpen, onClose, onSwitchToSignup }: SignInModalPr
     
     if (!email || !password) {
       toast({
-        title: "Error",
-        description: "Please fill in all fields",
+        title: "Please fill in all fields",
         variant: "destructive"
       });
       return;
     }
 
     setIsLoading(true);
-    try {
-      await login(email, password);
-      toast({
-        title: "Welcome back!",
-        description: "You have successfully signed in.",
-      });
-      onClose();
-    } catch (error) {
+    
+    const result = await login(email, password);
+    setIsLoading(false);
+    
+    if (result.error) {
       toast({
         title: "Sign in failed",
-        description: "Please check your credentials and try again.",
+        description: result.error,
         variant: "destructive"
       });
-    } finally {
-      setIsLoading(false);
+    } else {
+      toast({
+        title: "Welcome back!",
+        description: "You have successfully signed in."
+      });
+      onClose();
+    }
+  };
+
+  const handleSocialAuth = async (provider: 'google' | 'facebook' | 'apple') => {
+    setIsLoading(true);
+    let result;
+    
+    switch (provider) {
+      case 'google':
+        result = await signInWithGoogle();
+        break;
+      case 'facebook':
+        result = await signInWithFacebook();
+        break;
+      case 'apple':
+        result = await signInWithApple();
+        break;
+    }
+    
+    setIsLoading(false);
+    
+    if (result.error) {
+      toast({
+        title: "Authentication failed",
+        description: result.error,
+        variant: "destructive"
+      });
     }
   };
 
@@ -86,21 +113,67 @@ export const SignInModal = ({ isOpen, onClose, onSwitchToSignup }: SignInModalPr
           </div>
 
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Signing in..." : "Sign In"}
+            {isLoading ? "Signing In..." : "Sign In"}
           </Button>
         </form>
 
         <Separator />
 
-        <div className="text-center text-sm text-muted-foreground">
-          Don't have an account?{" "}
-          <Button
-            variant="link"
-            className="p-0 h-auto text-primary"
-            onClick={onSwitchToSignup}
-          >
-            Sign up here
-          </Button>
+        <div className="space-y-3">
+          <p className="text-sm text-center text-muted-foreground">Or continue with</p>
+          <div className="grid grid-cols-3 gap-3">
+            <Button 
+              variant="outline" 
+              className="w-full" 
+              onClick={() => handleSocialAuth('google')}
+              disabled={isLoading}
+            >
+              <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              </svg>
+              Google
+            </Button>
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => handleSocialAuth('facebook')}
+              disabled={isLoading}
+            >
+              <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+              </svg>
+              Facebook
+            </Button>
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => handleSocialAuth('apple')}
+              disabled={isLoading}
+            >
+              <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09z"/>
+                <path fill="currentColor" d="M15.53 3.83c.893-1.09 1.491-2.58 1.326-4.08-1.281.039-2.831.857-3.75 1.935-.831.948-1.56 2.4-1.365 3.847 1.443.104 2.913-.728 3.789-1.702z"/>
+              </svg>
+              Apple
+            </Button>
+          </div>
+        </div>
+
+        <Separator />
+
+        <div className="text-center">
+          <p className="text-sm text-muted-foreground">
+            Don't have an account?{" "}
+            <button
+              onClick={onSwitchToSignup}
+              className="text-primary hover:underline font-medium"
+            >
+              Sign up
+            </button>
+          </p>
         </div>
       </DialogContent>
     </Dialog>
