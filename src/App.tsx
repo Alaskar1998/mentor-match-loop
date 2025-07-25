@@ -8,6 +8,7 @@ import { GamificationProvider } from "@/hooks/useGamification";
 import { MonetizationProvider } from "@/hooks/useMonetization";
 import { NotificationProvider } from "@/hooks/useNotifications";
 import Index from "./pages/Index";
+import Pricing from "./pages/Pricing";
 import SearchResults from "./pages/SearchResults";
 import { CreateRequest } from "./pages/CreateRequest";
 import { RequestsFeed } from "./pages/RequestsFeed";
@@ -38,6 +39,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/pricing" element={<Pricing />} />
             <Route path="/search" element={<SearchResults />} />
             <Route path="/create-request" element={<CreateRequest />} />
             <Route path="/requests-feed" element={<RequestsFeed />} />

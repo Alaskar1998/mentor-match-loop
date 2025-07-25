@@ -9,9 +9,10 @@ import {
   Trophy,
   MapPin,
   Calendar,
-  Zap
+  Zap,
+  Crown
 } from 'lucide-react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, Link } from 'react-router-dom';
 import {
   Sidebar,
   SidebarContent,
@@ -24,6 +25,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 
 const dashboardItems = [
   { title: "Overview", url: "/dashboard", icon: Users },
@@ -68,6 +70,28 @@ export function DashboardSidebar() {
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        
+        {/* Upgrade Section */}
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <div className="px-2 py-4">
+              <div className="bg-gradient-primary rounded-lg p-4 text-white">
+                <div className="flex items-center gap-2 mb-2">
+                  <Crown className="w-5 h-5" />
+                  <span className="font-semibold">Upgrade to Premium</span>
+                </div>
+                <p className="text-sm text-white/80 mb-3">
+                  Unlock unlimited exchanges and premium features
+                </p>
+                <Link to="/pricing">
+                  <Button variant="secondary" size="sm" className="w-full">
+                    View Plans
+                  </Button>
+                </Link>
+              </div>
+            </div>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>

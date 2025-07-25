@@ -33,6 +33,9 @@ const Index = () => {
               <Link to="/create-request">
                 <Button variant="outline">Create Request</Button>
               </Link>
+              <Link to="/pricing">
+                <Button variant="ghost">Pricing</Button>
+              </Link>
               {isAuthenticated ? (
                 <div className="flex items-center gap-2">
                   <NotificationDropdown type="general" />
