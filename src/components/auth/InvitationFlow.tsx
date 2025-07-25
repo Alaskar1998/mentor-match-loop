@@ -75,14 +75,11 @@ export const InvitationFlow = ({
   };
 
   const handleSendInvite = () => {
-    if (userType === "free") {
-      // For free users, don't allow invitations without payment
-      toast.error("Upgrade to Premium to send invitations");
+    if (!message.trim()) {
+      toast.error("Please enter a message");
       return;
-    } else {
-      // Premium users can send directly
-      sendInvitation();
     }
+    sendInvitation();
   };
 
   const handlePayment = () => {
@@ -145,33 +142,14 @@ export const InvitationFlow = ({
 
             {/* Message Compose */}
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">Your message to {recipientName}</label>
-                {userType === "free" && (
-                  <div className="flex items-center gap-1 text-xs text-accent">
-                    <Crown className="w-3 h-3" />
-                    Premium Only
-                  </div>
-                )}
-              </div>
-              <div className="relative">
-                <Textarea
-                  placeholder={userType === "free" ? "Upgrade to Premium to send personalized messages..." : "Hi! I'd love to learn from you. Let's exchange skills!"}
-                  value={userType === "free" ? "" : message}
-                  onChange={(e) => userType === "premium" ? setMessage(e.target.value) : null}
-                  rows={4}
-                  className={`resize-none ${userType === "free" ? "bg-muted/50 cursor-not-allowed" : ""}`}
-                  disabled={userType === "free"}
-                />
-                {userType === "free" && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-muted/30 rounded-md">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Lock className="w-4 h-4" />
-                      Premium feature
-                    </div>
-                  </div>
-                )}
-              </div>
+              <label className="text-sm font-medium">Your message to {recipientName}</label>
+              <Textarea
+                placeholder="Hi! I'd love to learn from you. Let's exchange skills!"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                rows={4}
+                className="resize-none"
+              />
             </div>
 
             {/* Cost Information for Free Users */}
@@ -237,10 +215,10 @@ export const InvitationFlow = ({
               </Button>
               <Button 
                 onClick={handleSendInvite} 
-                disabled={userType === "free" || (userType === "premium" && (!message.trim() || isLoading))}
+                disabled={!message.trim() || isLoading}
                 className="flex-1"
               >
-                {isLoading ? "Sending..." : userType === "premium" ? "Send Invitation" : "Upgrade Required"}
+                {isLoading ? "Sending..." : "Send Invitation"}
               </Button>
             </div>
           </div>
