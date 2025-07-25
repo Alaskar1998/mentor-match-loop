@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Search, Settings } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { SignupModal } from "@/components/auth/SignupModal";
 import { SignInModal } from "@/components/auth/SignInModal";
@@ -9,39 +11,102 @@ import { NotificationDropdown } from "@/components/notifications/NotificationDro
 
 export const Header = () => {
   const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [showSignupModal, setShowSignupModal] = useState(false);
   const [showSignInModal, setShowSignInModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery("");
+    }
+  };
 
   return (
     <>
       {/* Navigation Header */}
       <nav className="bg-background/80 backdrop-blur-sm border-b sticky top-0 z-50">
         <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <Link to="/" className="font-bold text-xl hover:text-primary transition-colors">
+          <div className="flex items-center justify-between gap-4">
+            <Link to="/" className="font-bold text-xl hover:text-primary transition-colors flex-shrink-0">
               SkillExchange
             </Link>
-            <div className="flex items-center gap-4">
-              <Link to="/requests-feed">
-                <Button variant="ghost">Browse Requests</Button>
-              </Link>
-              <Link to="/create-request">
-                <Button variant="outline">Create Request</Button>
-              </Link>
-              <Link to="/pricing">
-                <Button variant="ghost">Pricing</Button>
-              </Link>
+            
+            {/* Search Bar - Center */}
+            <div className="hidden md:flex flex-1 max-w-md mx-4">
+              <div className="relative w-full">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <Input
+                  type="text"
+                  placeholder="Search for skills..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                  className="pl-10 pr-4"
+                />
+                {searchQuery && (
+                  <Button
+                    size="sm"
+                    onClick={handleSearch}
+                    className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 px-3"
+                  >
+                    Search
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 md:gap-4">
+              {/* Navigation Links */}
+              <div className="hidden lg:flex items-center gap-2">
+                <Link to="/requests-feed">
+                  <Button variant="ghost" size="sm">Browse</Button>
+                </Link>
+                <Link to="/create-request">
+                  <Button variant="ghost" size="sm">Create</Button>
+                </Link>
+                <Link to="/pricing">
+                  <Button variant="ghost" size="sm">Pricing</Button>
+                </Link>
+              </div>
+
               {isAuthenticated ? (
                 <div className="flex items-center gap-2">
                   <NotificationDropdown type="general" />
                   <NotificationDropdown type="chat" />
+                  <Link to="/settings">
+                    <Button variant="ghost" size="sm" className="p-2">
+                      <Settings className="w-4 h-4" />
+                    </Button>
+                  </Link>
                   <UserAvatar />
                 </div>
               ) : (
-                <Button onClick={() => setShowSignInModal(true)}>
-                  Sign In
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Link to="/help">
+                    <Button variant="ghost" size="sm">Help</Button>
+                  </Link>
+                  <Button onClick={() => setShowSignInModal(true)} size="sm">
+                    Sign In
+                  </Button>
+                </div>
               )}
+            </div>
+          </div>
+
+          {/* Mobile Search Bar */}
+          <div className="md:hidden mt-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                type="text"
+                placeholder="Search for skills..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                className="pl-10"
+              />
             </div>
           </div>
         </div>

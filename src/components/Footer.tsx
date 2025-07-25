@@ -37,18 +37,18 @@ export const Footer = () => {
           <div className="space-y-4">
             <h4 className="font-semibold">Support</h4>
             <nav className="flex flex-col space-y-2">
+              <Link to="/help" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                Help Center
+              </Link>
               <a href="mailto:support@skillexchange.com" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Contact Support
               </a>
               <a href="mailto:feedback@skillexchange.com" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Send Feedback
               </a>
-              <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Help Center
-              </a>
-              <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Community Guidelines
-              </a>
+              <Link to="/settings" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                Settings
+              </Link>
             </nav>
           </div>
 

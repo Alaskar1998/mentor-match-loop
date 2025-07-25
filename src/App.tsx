@@ -11,6 +11,8 @@ import Index from "./pages/Index";
 import Pricing from "./pages/Pricing";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfUse from "./pages/TermsOfUse";
+import Settings from "./pages/Settings";
+import Help from "./pages/Help";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 import SearchResults from "./pages/SearchResults";
@@ -49,6 +51,8 @@ const App = () => (
                 <Route path="/pricing" element={<Pricing />} />
                 <Route path="/privacy" element={<PrivacyPolicy />} />
                 <Route path="/terms" element={<TermsOfUse />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/help" element={<Help />} />
                 <Route path="/search" element={<SearchResults />} />
                 <Route path="/create-request" element={<CreateRequest />} />
                 <Route path="/requests-feed" element={<RequestsFeed />} />
