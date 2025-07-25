@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { GamificationProvider } from "@/hooks/useGamification";
+import { MonetizationProvider } from "@/hooks/useMonetization";
 import Index from "./pages/Index";
 import SearchResults from "./pages/SearchResults";
 import { CreateRequest } from "./pages/CreateRequest";
@@ -20,6 +21,7 @@ const App = () => (
     <TooltipProvider>
       <AuthProvider>
         <GamificationProvider>
+          <MonetizationProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -34,6 +36,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
+        </MonetizationProvider>
         </GamificationProvider>
       </AuthProvider>
     </TooltipProvider>

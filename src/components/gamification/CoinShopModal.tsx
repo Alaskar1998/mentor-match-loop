@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { useGamification } from "@/hooks/useGamification";
+import { useMonetization } from "@/hooks/useMonetization";
 import { useAuth } from "@/hooks/useAuth";
 import { 
   Coins, 
@@ -33,6 +34,7 @@ interface CoinShopModalProps {
 
 export const CoinShopModal = ({ isOpen, onClose }: CoinShopModalProps) => {
   const { state, spendCoins, purchaseCoins } = useGamification();
+  const { getCoinPrice, canUseFeature } = useMonetization();
   const { user } = useAuth();
   const [selectedPack, setSelectedPack] = useState<string | null>(null);
 
@@ -68,7 +70,7 @@ export const CoinShopModal = ({ isOpen, onClose }: CoinShopModalProps) => {
       id: 'profile-boost',
       name: 'Profile Boost (24h)',
       description: 'Feature your profile for 24 hours',
-      price: user?.userType === 'premium' ? 100 : 150,
+      price: getCoinPrice('profile-boost', user?.userType === 'premium' ? 100 : 150),
       icon: <Zap className="w-5 h-5" />,
       availability: 'available',
       category: 'boost'
@@ -77,7 +79,7 @@ export const CoinShopModal = ({ isOpen, onClose }: CoinShopModalProps) => {
       id: 'pinned-review',
       name: 'Pinned Review',
       description: 'Pin your best review to the top of your profile',
-      price: 200,
+      price: getCoinPrice('pinned-review', 200),
       icon: <Pin className="w-5 h-5" />,
       availability: 'available',
       category: 'boost'
