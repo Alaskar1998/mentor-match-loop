@@ -9,7 +9,10 @@ import { MonetizationProvider } from "@/hooks/useMonetization";
 import { NotificationProvider } from "@/hooks/useNotifications";
 import Index from "./pages/Index";
 import Pricing from "./pages/Pricing";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfUse from "./pages/TermsOfUse";
 import { Header } from "./components/Header";
+import { Footer } from "./components/Footer";
 import SearchResults from "./pages/SearchResults";
 import { CreateRequest } from "./pages/CreateRequest";
 import { RequestsFeed } from "./pages/RequestsFeed";
@@ -38,53 +41,60 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Header />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/pricing" element={<Pricing />} />
-            <Route path="/search" element={<SearchResults />} />
-            <Route path="/create-request" element={<CreateRequest />} />
-            <Route path="/requests-feed" element={<RequestsFeed />} />
-            <Route path="/chat/:chatId" element={<Chat />} />
-            <Route path="/dashboard" element={
-              <DashboardLayout>
-                <Dashboard />
-              </DashboardLayout>
-            } />
-            <Route path="/dashboard/profile" element={
-              <DashboardLayout>
-                <Profile />
-              </DashboardLayout>
-            } />
-            <Route path="/dashboard/chats" element={
-              <DashboardLayout>
-                <Chats />
-              </DashboardLayout>
-            } />
-            <Route path="/dashboard/invites" element={
-              <DashboardLayout>
-                <Invites />
-              </DashboardLayout>
-            } />
-            <Route path="/dashboard/reviews" element={
-              <DashboardLayout>
-                <Reviews />
-              </DashboardLayout>
-            } />
-            <Route path="/dashboard/gamification" element={
-              <DashboardLayout>
-                <Gamification />
-              </DashboardLayout>
-            } />
-            <Route path="/dashboard/events" element={
-              <DashboardLayout>
-                <Events />
-              </DashboardLayout>
-            } />
-            <Route path="/profile/:id" element={<ProfileView />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <div className="min-h-screen flex flex-col">
+            <Header />
+            <main className="flex-1">
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/pricing" element={<Pricing />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/terms" element={<TermsOfUse />} />
+                <Route path="/search" element={<SearchResults />} />
+                <Route path="/create-request" element={<CreateRequest />} />
+                <Route path="/requests-feed" element={<RequestsFeed />} />
+                <Route path="/chat/:chatId" element={<Chat />} />
+                <Route path="/dashboard" element={
+                  <DashboardLayout>
+                    <Dashboard />
+                  </DashboardLayout>
+                } />
+                <Route path="/dashboard/profile" element={
+                  <DashboardLayout>
+                    <Profile />
+                  </DashboardLayout>
+                } />
+                <Route path="/dashboard/chats" element={
+                  <DashboardLayout>
+                    <Chats />
+                  </DashboardLayout>
+                } />
+                <Route path="/dashboard/invites" element={
+                  <DashboardLayout>
+                    <Invites />
+                  </DashboardLayout>
+                } />
+                <Route path="/dashboard/reviews" element={
+                  <DashboardLayout>
+                    <Reviews />
+                  </DashboardLayout>
+                } />
+                <Route path="/dashboard/gamification" element={
+                  <DashboardLayout>
+                    <Gamification />
+                  </DashboardLayout>
+                } />
+                <Route path="/dashboard/events" element={
+                  <DashboardLayout>
+                    <Events />
+                  </DashboardLayout>
+                } />
+                <Route path="/profile/:id" element={<ProfileView />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </main>
+            <Footer />
+          </div>
         </BrowserRouter>
         </MonetizationProvider>
         </GamificationProvider>
