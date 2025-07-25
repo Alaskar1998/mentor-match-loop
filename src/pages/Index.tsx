@@ -10,10 +10,13 @@ import { FAQSection } from "@/components/FAQSection";
 import { GamificationHeader } from "@/components/gamification/GamificationHeader";
 import { useAuth } from "@/hooks/useAuth";
 import { SignupModal } from "@/components/auth/SignupModal";
+import { SignInModal } from "@/components/auth/SignInModal";
+import { UserAvatar } from "@/components/auth/UserAvatar";
 
 const Index = () => {
   const { isAuthenticated, logout } = useAuth();
   const [showSignupModal, setShowSignupModal] = useState(false);
+  const [showSignInModal, setShowSignInModal] = useState(false);
 
   return (
     <div className="min-h-screen">
@@ -30,11 +33,9 @@ const Index = () => {
                 <Button variant="outline">Create Request</Button>
               </Link>
               {isAuthenticated ? (
-                <Button onClick={logout} variant="outline">
-                  Sign Out
-                </Button>
+                <UserAvatar />
               ) : (
-                <Button onClick={() => setShowSignupModal(true)}>
+                <Button onClick={() => setShowSignInModal(true)}>
                   Sign In
                 </Button>
               )}
@@ -56,6 +57,15 @@ const Index = () => {
       <TopContributorsSection />
       <JoinCommunitySection />
       <FAQSection />
+      
+      <SignInModal 
+        isOpen={showSignInModal} 
+        onClose={() => setShowSignInModal(false)}
+        onSwitchToSignup={() => {
+          setShowSignInModal(false);
+          setShowSignupModal(true);
+        }}
+      />
       
       <SignupModal 
         isOpen={showSignupModal} 
