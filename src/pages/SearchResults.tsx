@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { SearchResults } from "@/components/search/SearchResults";
 import { FilterBar } from "@/components/search/FilterBar";
 import { SearchHeader } from "@/components/search/SearchHeader";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface UserProfile {
   id: string;
@@ -117,8 +118,9 @@ const mockUsers: UserProfile[] = [
 
 const SearchResultsPage = () => {
   const [searchParams] = useSearchParams();
-  const [users, setUsers] = useState<UserProfile[]>(mockUsers);
-  const [filteredUsers, setFilteredUsers] = useState<UserProfile[]>(mockUsers);
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<UserProfile[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<SearchFilters>({
     country: "",
     skillLevel: "",
@@ -129,6 +131,55 @@ const SearchResultsPage = () => {
   const [isPremium] = useState(false); // Mock user subscription status
 
   const searchQuery = searchParams.get("q") || "";
+
+  // Fetch users from Supabase
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const { data: profiles, error } = await supabase
+          .from('profiles')
+          .select('*');
+
+        if (error) {
+          console.error('Error fetching profiles:', error);
+          return;
+        }
+
+        // Transform Supabase data to UserProfile format
+        const transformedUsers: UserProfile[] = (profiles || []).map(profile => {
+          // Extract skills from skills_to_teach array
+          const skills = Array.isArray(profile.skills_to_teach) 
+            ? profile.skills_to_teach.map((skill: any) => 
+                typeof skill === 'object' ? skill.name : skill
+              ).filter(Boolean)
+            : [];
+
+          return {
+            id: profile.id,
+            name: profile.display_name || 'Anonymous User',
+            profilePicture: profile.avatar_url || '👤',
+            isMentor: profile.willing_to_teach_without_return || false,
+            rating: 4.5, // Default rating - you could calculate this from reviews
+            successfulExchanges: 0, // Default - you could track this
+            skillLevel: "Intermediate" as const, // Default - you could derive this from experience
+            bio: profile.bio || '',
+            skills: skills,
+            country: profile.country || '',
+            gender: (profile.gender || 'Other') as "Male" | "Female" | "Other",
+            willingToTeachWithoutReturn: profile.willing_to_teach_without_return || false
+          };
+        });
+
+        setUsers(transformedUsers);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
 
   useEffect(() => {
     // Filter users based on search query and filters
@@ -187,7 +238,11 @@ const SearchResultsPage = () => {
 
           {/* Search Results */}
           <div className="flex-1">
-            <SearchResults users={filteredUsers} searchQuery={searchQuery} />
+            {loading ? (
+              <div className="text-center py-8">Loading...</div>
+            ) : (
+              <SearchResults users={filteredUsers} searchQuery={searchQuery} />
+            )}
           </div>
         </div>
       </div>

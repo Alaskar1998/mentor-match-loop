@@ -6,25 +6,132 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Plus, Trash2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Skills() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [newSkillToTeach, setNewSkillToTeach] = useState({ name: '', level: '', description: '' });
   const [newSkillToLearn, setNewSkillToLearn] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const addSkillToTeach = () => {
-    if (newSkillToTeach.name && newSkillToTeach.level) {
-      // Here you would add the skill to the user's profile
-      console.log('Adding skill to teach:', newSkillToTeach);
-      setNewSkillToTeach({ name: '', level: '', description: '' });
+  const addSkillToTeach = async () => {
+    if (newSkillToTeach.name && newSkillToTeach.level && user) {
+      setLoading(true);
+      try {
+        // Get current skills
+        const { data: profile, error: fetchError } = await supabase
+          .from('profiles')
+          .select('skills_to_teach')
+          .eq('id', user.id)
+          .single();
+
+        if (fetchError) {
+          console.error('Error fetching current skills:', fetchError);
+          toast({
+            title: "Error",
+            description: "Failed to fetch current skills",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        const currentSkills = Array.isArray(profile?.skills_to_teach) ? profile.skills_to_teach : [];
+        const newSkill = {
+          name: newSkillToTeach.name,
+          level: newSkillToTeach.level,
+          description: newSkillToTeach.description
+        };
+
+        // Add new skill to the array
+        const updatedSkills = [...currentSkills, newSkill];
+
+        const { error } = await supabase
+          .from('profiles')
+          .update({ skills_to_teach: updatedSkills })
+          .eq('id', user.id);
+
+        if (error) {
+          console.error('Error adding skill:', error);
+          toast({
+            title: "Error",
+            description: "Failed to add skill",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Success",
+            description: "Skill added successfully!"
+          });
+          setNewSkillToTeach({ name: '', level: '', description: '' });
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        toast({
+          title: "Error",
+          description: "Something went wrong",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
-  const addSkillToLearn = () => {
-    if (newSkillToLearn) {
-      // Here you would add the skill to the user's profile
-      console.log('Adding skill to learn:', newSkillToLearn);
-      setNewSkillToLearn('');
+  const addSkillToLearn = async () => {
+    if (newSkillToLearn && user) {
+      setLoading(true);
+      try {
+        // Get current skills
+        const { data: profile, error: fetchError } = await supabase
+          .from('profiles')
+          .select('skills_to_learn')
+          .eq('id', user.id)
+          .single();
+
+        if (fetchError) {
+          console.error('Error fetching current skills:', fetchError);
+          toast({
+            title: "Error",
+            description: "Failed to fetch current skills",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        const currentSkills = Array.isArray(profile?.skills_to_learn) ? profile.skills_to_learn : [];
+        const updatedSkills = [...currentSkills, newSkillToLearn];
+
+        const { error } = await supabase
+          .from('profiles')
+          .update({ skills_to_learn: updatedSkills })
+          .eq('id', user.id);
+
+        if (error) {
+          console.error('Error adding skill:', error);
+          toast({
+            title: "Error",
+            description: "Failed to add skill to learn",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Success",
+            description: "Skill to learn added successfully!"
+          });
+          setNewSkillToLearn('');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        toast({
+          title: "Error",
+          description: "Something went wrong",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -77,9 +184,9 @@ export default function Skills() {
                   <SelectItem value="Expert">Expert</SelectItem>
                 </SelectContent>
               </Select>
-              <Button onClick={addSkillToTeach}>
+              <Button onClick={addSkillToTeach} disabled={loading}>
                 <Plus className="w-4 h-4 mr-2" />
-                Add
+                {loading ? 'Adding...' : 'Add'}
               </Button>
             </div>
             <Input
@@ -120,9 +227,9 @@ export default function Skills() {
                 onChange={(e) => setNewSkillToLearn(e.target.value)}
                 className="flex-1"
               />
-              <Button onClick={addSkillToLearn}>
+              <Button onClick={addSkillToLearn} disabled={loading}>
                 <Plus className="w-4 h-4 mr-2" />
-                Add
+                {loading ? 'Adding...' : 'Add'}
               </Button>
             </div>
           </div>
