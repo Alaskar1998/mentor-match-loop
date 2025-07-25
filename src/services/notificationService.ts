@@ -25,52 +25,77 @@ class MockNotificationService implements NotificationService {
   }
 
   private generateMockNotifications() {
+    // Only generate initial notifications if storage is empty
     if (this.notifications.length === 0) {
-      const mockNotifications: Omit<Notification, 'id' | 'createdAt'>[] = [
-        {
-          userId: 'user-1',
-          title: 'New Invitation Received',
-          message: 'Sarah Johnson wants to learn JavaScript from you',
-          isRead: false,
-          type: 'invitation_received',
-          actionUrl: '/dashboard/invitations',
-          metadata: { inviterId: 'user-2', skill: 'JavaScript' }
-        },
-        {
-          userId: 'user-1',
-          title: 'Learning Match Found',
-          message: 'Found 3 new users who can teach Spanish in your area',
-          isRead: false,
-          type: 'learning_match',
-          actionUrl: '/search?skill=Spanish',
-          metadata: { skill: 'Spanish', matches: 3 }
-        },
-        {
-          userId: 'user-1',
-          title: 'New Message',
-          message: 'Hey! When can we start the JavaScript lessons?',
-          isRead: false,
-          type: 'new_message',
-          actionUrl: '/chat/chat-1'
-        } as any,
-        {
-          userId: 'user-1',
-          title: 'Exchange Completed',
-          message: 'Your exchange with Mike Brown has been marked as completed',
-          isRead: true,
-          type: 'exchange_completed',
-          actionUrl: '/dashboard/exchanges',
-          metadata: { partnerId: 'user-3', partnerName: 'Mike Brown' }
-        }
-      ];
-
-      mockNotifications.forEach(notification => {
-        this.createNotification(notification);
-      });
+      // We'll generate notifications when a user first logs in
+      // This will be handled in the createDemoNotifications method
     }
   }
 
+  // Public method to create demo notifications for a specific user
+  createDemoNotifications(userId: string) {
+    // Check if user already has notifications
+    const existingUserNotifications = this.notifications.filter(n => n.userId === userId);
+    if (existingUserNotifications.length > 0) {
+      return; // User already has notifications
+    }
+
+    const mockNotifications: Omit<Notification, 'id' | 'createdAt'>[] = [
+      {
+        userId: userId,
+        title: 'Welcome to SkillExchange!',
+        message: 'Complete your profile to start connecting with other learners',
+        isRead: false,
+        type: 'system_announcement',
+        actionUrl: '/dashboard/profile',
+        metadata: { type: 'welcome' }
+      },
+      {
+        userId: userId,
+        title: 'New Invitation Received',
+        message: 'Someone wants to learn JavaScript from you',
+        isRead: false,
+        type: 'invitation_received',
+        actionUrl: '/dashboard/invites',
+        metadata: { skill: 'JavaScript' }
+      },
+      {
+        userId: userId,
+        title: 'Learning Match Found',
+        message: 'Found 3 new users who can teach Spanish in your area',
+        isRead: false,
+        type: 'learning_match',
+        actionUrl: '/search?skill=Spanish',
+        metadata: { skill: 'Spanish', matches: 3 }
+      },
+      {
+        userId: userId,
+        title: 'New Message',
+        message: 'Hey! When can we start the JavaScript lessons?',
+        isRead: false,
+        type: 'new_message',
+        actionUrl: '/messages'
+      } as any,
+      {
+        userId: userId,
+        title: 'Profile Viewed',
+        message: 'Someone viewed your profile today',
+        isRead: true,
+        type: 'profile_viewed',
+        actionUrl: '/dashboard/profile',
+        metadata: { viewCount: 5 }
+      }
+    ];
+
+    mockNotifications.forEach(notification => {
+      this.createNotification(notification);
+    });
+  }
+
   async getNotifications(userId: string, type?: 'general' | 'chat'): Promise<Notification[]> {
+    // Create demo notifications for new users
+    this.createDemoNotifications(userId);
+    
     let filtered = this.notifications.filter(n => n.userId === userId);
     
     if (type === 'general') {
