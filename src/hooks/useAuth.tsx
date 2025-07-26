@@ -9,6 +9,9 @@ interface User {
   profilePicture?: string;
   bio?: string;
   country?: string;
+  age?: number;
+  gender?: string;
+  phone?: string;
   skillsToTeach: Array<{
     name: string;
     level: string;
@@ -80,6 +83,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                     profilePicture: profile.avatar_url,
                     bio: profile.bio,
                     country: profile.country,
+                    age: profile.age,
+                    gender: profile.gender,
+                    phone: profile.phone,
                     skillsToTeach: Array.isArray(profile.skills_to_teach) ? profile.skills_to_teach as Array<{name: string; level: string; description: string}> : [],
                     skillsToLearn: profile.skills_to_learn || [],
                     willingToTeachWithoutReturn: profile.willing_to_teach_without_return || false,
@@ -235,6 +241,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           display_name: updatedUser.name,
           bio: updatedUser.bio,
           country: updatedUser.country,
+          age: updatedUser.age,
+          gender: updatedUser.gender,
+          phone: updatedUser.phone,
           avatar_url: updatedUser.profilePicture,
           skills_to_teach: updatedUser.skillsToTeach,
           skills_to_learn: updatedUser.skillsToLearn,

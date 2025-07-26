@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Settings } from "lucide-react";
+import { Search, Settings, Mail } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { SignupModal } from "@/components/auth/SignupModal";
 import { SignInModal } from "@/components/auth/SignInModal";
@@ -32,7 +32,20 @@ export const Header = () => {
             <Link to="/" className="font-bold text-xl hover:text-primary transition-colors flex-shrink-0">
               SkillExchange
             </Link>
-            
+
+            {/* Navigation Links - Left of Search Bar */}
+            <div className="hidden lg:flex items-center gap-2">
+              <Link to="/requests-feed">
+                <Button variant="ghost" size="sm">Requests Feed</Button>
+              </Link>
+              <Link to="/create-request">
+                <Button variant="ghost" size="sm">Create Request</Button>
+              </Link>
+              <Link to="/pricing">
+                <Button variant="ghost" size="sm">Pricing</Button>
+              </Link>
+            </div>
+
             {/* Search Bar - Center */}
             <div className="hidden md:flex flex-1 max-w-md mx-4">
               <div className="relative w-full">
@@ -58,26 +71,12 @@ export const Header = () => {
             </div>
 
             <div className="flex items-center gap-2 md:gap-4">
-              {/* Navigation Links */}
-              <div className="hidden lg:flex items-center gap-2">
-                <Link to="/requests-feed">
-                  <Button variant="ghost" size="sm">Browse</Button>
-                </Link>
-                <Link to="/create-request">
-                  <Button variant="ghost" size="sm">Create</Button>
-                </Link>
-                <Link to="/pricing">
-                  <Button variant="ghost" size="sm">Pricing</Button>
-                </Link>
-              </div>
-
               {isAuthenticated ? (
                 <div className="flex items-center gap-2">
                   <NotificationDropdown type="general" />
-                  <NotificationDropdown type="chat" />
-                  <Link to="/settings">
+                  <Link to="/messages">
                     <Button variant="ghost" size="sm" className="p-2">
-                      <Settings className="w-4 h-4" />
+                      <Mail className="w-5 h-5" />
                     </Button>
                   </Link>
                   <UserAvatar />

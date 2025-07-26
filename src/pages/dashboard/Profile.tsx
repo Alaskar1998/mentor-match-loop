@@ -26,14 +26,76 @@ const COUNTRIES = [
 const GENDERS = ["Male", "Female"];
 const SKILL_LEVELS = ["Beginner", "Intermediate", "Expert"];
 
+// Example categories and skills
+const SKILL_CATEGORIES = [
+  {
+    category: "Programming",
+    skills: ["Python", "JavaScript", "Java", "C++", "Web Development", "Mobile Apps", "Go", "Rust", "PHP", "Ruby", "Swift", "Kotlin", "C#", "TypeScript", "SQL", "DevOps", "Machine Learning", "AI"]
+  },
+  {
+    category: "Languages",
+    skills: ["English", "Spanish", "French", "German", "Mandarin", "Arabic", "Russian", "Japanese", "Korean", "Italian", "Portuguese", "Hindi", "Turkish", "Dutch", "Swedish"]
+  },
+  {
+    category: "Music",
+    skills: ["Guitar", "Piano", "Singing", "Drums", "Violin", "Bass", "Saxophone", "Trumpet", "DJing", "Music Production"]
+  },
+  {
+    category: "Art & Design",
+    skills: ["Drawing", "Painting", "Graphic Design", "Photography", "Illustration", "Animation", "3D Modeling", "Fashion Design", "Interior Design"]
+  },
+  {
+    category: "Business",
+    skills: ["Marketing", "Public Speaking", "Entrepreneurship", "Finance", "Accounting", "Project Management", "Sales", "Negotiation", "Leadership"]
+  },
+  {
+    category: "Fitness & Wellness",
+    skills: ["Yoga", "Fitness", "Swimming", "Meditation", "Pilates", "Running", "Cycling", "Personal Training", "Nutrition"]
+  },
+  {
+    category: "Cooking",
+    skills: ["Baking", "Cooking", "Nutrition", "Vegan Cooking", "Grilling", "Pastry", "Meal Prep"]
+  },
+  {
+    category: "STEM",
+    skills: ["Mathematics", "Physics", "Chemistry", "Biology", "Statistics", "Data Science", "Robotics", "Astronomy"]
+  },
+  {
+    category: "Crafts & DIY",
+    skills: ["Knitting", "Sewing", "Woodworking", "Pottery", "Origami", "Jewelry Making", "Scrapbooking"]
+  },
+  {
+    category: "Sports",
+    skills: ["Soccer", "Basketball", "Tennis", "Martial Arts", "Golf", "Baseball", "Table Tennis", "Volleyball", "Chess"]
+  },
+  {
+    category: "Life Skills",
+    skills: ["Time Management", "Productivity", "Mindfulness", "Parenting", "First Aid", "Self Defense", "Financial Planning"]
+  },
+  {
+    category: "Technology",
+    skills: ["Cloud Computing", "Cybersecurity", "Blockchain", "UI/UX Design", "AR/VR", "Game Development", "IoT"]
+  },
+  {
+    category: "Writing & Communication",
+    skills: ["Creative Writing", "Copywriting", "Blogging", "Editing", "Storytelling", "Resume Writing", "Speech Writing"]
+  },
+  {
+    category: "Travel & Culture",
+    skills: ["Travel Planning", "Cultural Awareness", "History", "Geography", "World Cuisine"]
+  },
+];
+
 export default function Profile() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [countryOpen, setCountryOpen] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const [newSkill, setNewSkill] = useState({ name: "", level: "", description: "" });
+  const [newSkill, setNewSkill] = useState({ category: '', name: '', level: '', description: '' });
   const [loading, setLoading] = useState(false);
+  const [categoryOpen, setCategoryOpen] = useState(false);
+  const [skillOpen, setSkillOpen] = useState(false);
   
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -47,12 +109,12 @@ export default function Profile() {
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file || !user) return;
 
     setUploadingAvatar(true);
     
     try {
-      const fileName = `${Date.now()}-${file.name}`;
+      const fileName = `${user.id}/${Date.now()}-${file.name}`;
       
       const { error: uploadError } = await supabase.storage
         .from('avatars')
@@ -128,7 +190,7 @@ export default function Profile() {
             title: "Success",
             description: "Skill added successfully!"
           });
-          setNewSkill({ name: '', level: '', description: '' });
+          setNewSkill({ category: '', name: '', level: '', description: '' });
         }
       } catch (error) {
         console.error('Error:', error);
@@ -213,6 +275,16 @@ export default function Profile() {
           variant: "destructive"
         });
       } else {
+        // Update the user context so UI reflects changes
+        updateUser({
+          name: formData.name,
+          bio: formData.bio,
+          country: formData.country,
+          age: parseInt(formData.age) || undefined,
+          gender: formData.gender,
+          phone: formData.phone,
+          profilePicture: formData.profilePicture,
+        });
         toast({
           title: "Success",
           description: "Profile updated successfully!"
@@ -450,12 +522,77 @@ export default function Profile() {
           {/* Add new skill */}
           <div className="border-t pt-4 space-y-3">
             <h3 className="font-medium">Add New Skill</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <Input
-                placeholder="Skill name"
-                value={newSkill.name}
-                onChange={(e) => setNewSkill({...newSkill, name: e.target.value})}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+              {/* Category Dropdown */}
+              <Popover open={categoryOpen} onOpenChange={setCategoryOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={categoryOpen}
+                    className="w-full justify-between"
+                  >
+                    {newSkill.category ? newSkill.category : "Select category"}
+                    <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64 p-0">
+                  <Command>
+                    <CommandInput placeholder="Search category..." />
+                    <CommandList>
+                      {SKILL_CATEGORIES.map(cat => (
+                        <CommandItem
+                          key={cat.category}
+                          value={cat.category}
+                          onSelect={() => {
+                            setNewSkill({ ...newSkill, category: cat.category, name: '' });
+                            setCategoryOpen(false);
+                          }}
+                        >
+                          {cat.category}
+                        </CommandItem>
+                      ))}
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+
+              {/* Skill Dropdown (filtered by category) */}
+              <Popover open={skillOpen} onOpenChange={setSkillOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={skillOpen}
+                    className="w-full justify-between"
+                    disabled={!newSkill.category}
+                  >
+                    {newSkill.name ? newSkill.name : newSkill.category ? "Select skill" : "Select category first"}
+                    <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64 p-0">
+                  <Command>
+                    <CommandInput placeholder="Search skill..." />
+                    <CommandList>
+                      {(SKILL_CATEGORIES.find(cat => cat.category === newSkill.category)?.skills || []).map(skill => (
+                        <CommandItem
+                          key={skill}
+                          value={skill}
+                          onSelect={() => {
+                            setNewSkill({ ...newSkill, name: skill });
+                            setSkillOpen(false);
+                          }}
+                        >
+                          {skill}
+                        </CommandItem>
+                      ))}
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+
+              {/* Level Dropdown */}
               <Select 
                 value={newSkill.level} 
                 onValueChange={(value) => setNewSkill({...newSkill, level: value})}
@@ -469,7 +606,7 @@ export default function Profile() {
                   ))}
                 </SelectContent>
               </Select>
-              <Button onClick={addSkillToTeach} disabled={loading}>
+              <Button onClick={addSkillToTeach} disabled={loading || !newSkill.category || !newSkill.name || !newSkill.level}>
                 <Plus className="w-4 h-4 mr-2" />
                 {loading ? 'Adding...' : 'Add'}
               </Button>
@@ -477,7 +614,7 @@ export default function Profile() {
             <Input
               placeholder="Description (optional)"
               value={newSkill.description}
-              onChange={(e) => setNewSkill({...newSkill, description: e.target.value})}
+              onChange={(e) => setNewSkill({ ...newSkill, description: e.target.value })}
             />
           </div>
         </CardContent>

@@ -12,6 +12,20 @@ const popularSkills = [
   { emoji: "🎨", name: "Design" },
   { emoji: "📷", name: "Photography" },
   { emoji: "🎯", name: "Marketing" },
+  { emoji: "🧑‍🏫", name: "Public Speaking" },
+  { emoji: "📝", name: "Writing" },
+  { emoji: "🗣️", name: "Language Learning" },
+  { emoji: "🎹", name: "Piano" },
+  { emoji: "🏊", name: "Swimming" },
+  { emoji: "🏋️", name: "Fitness" },
+  { emoji: "🎭", name: "Acting" },
+  { emoji: "🎤", name: "Singing" },
+  { emoji: "🧘", name: "Yoga" },
+  { emoji: "📊", name: "Data Analysis" },
+  { emoji: "🧑‍💻", name: "Web Development" },
+  { emoji: "📚", name: "Tutoring" },
+  { emoji: "🧑‍🍳", name: "Baking" },
+  { emoji: "🎮", name: "Game Development" },
 ];
 
 export const HeroSection = () => {

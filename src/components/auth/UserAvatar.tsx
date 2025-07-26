@@ -21,7 +21,7 @@ export const UserAvatar = () => {
   };
 
   const handleSettingsClick = () => {
-    navigate("/dashboard/settings");
+    navigate("/settings");
   };
 
   const handleLogout = () => {
