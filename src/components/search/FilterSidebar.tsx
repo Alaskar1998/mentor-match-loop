@@ -5,8 +5,8 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { X, Filter, Lock } from 'lucide-react';
+
+import { X, Filter } from 'lucide-react';
 import { SearchFilters } from '@/pages/SearchResults';
 
 interface FilterSidebarProps {
@@ -44,32 +44,15 @@ const ratingOptions = [
 
 const genderOptions = ["Male", "Female"];
 
-// Premium lock indicator component
-const PremiumLockIndicator = ({ children }: { children: React.ReactNode }) => (
-  <div className="flex items-center gap-2">
-    {children}
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Lock className="w-4 h-4 text-muted-foreground cursor-help" />
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>Premium Feature – Unlock with Premium</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  </div>
-);
+
 
 export const FilterSidebar = ({ filters, onFiltersChange, isPremium, isOpen, onClose }: FilterSidebarProps) => {
-  // Block all filter updates for free users
+  // All filters are now available for free
   const updateFilters = (key: keyof SearchFilters, value: any) => {
-    if (!isPremium) return;
     onFiltersChange({ ...filters, [key]: value });
   };
 
   const updateGenderFilter = (gender: string, checked: boolean) => {
-    if (!isPremium) return;
     const newGenderFilters = checked
       ? [...filters.gender, gender]
       : filters.gender.filter(g => g !== gender);
@@ -77,7 +60,6 @@ export const FilterSidebar = ({ filters, onFiltersChange, isPremium, isOpen, onC
   };
 
   const clearAllFilters = () => {
-    if (!isPremium) return;
     onFiltersChange({
       country: "",
       skillLevel: "",
@@ -151,31 +133,19 @@ export const FilterSidebar = ({ filters, onFiltersChange, isPremium, isOpen, onC
               </Button>
             </div>
             
-            {/* Premium status badge */}
-            {!isPremium && (
-              <Badge variant="outline" className="text-xs bg-orange-100 text-orange-700 border-orange-200 mt-2">
-                Free Plan - All Filters Locked
-              </Badge>
-            )}
+
           </CardHeader>
 
           <CardContent className="p-6 space-y-6 overflow-y-auto h-[calc(100vh-120px)] lg:h-[calc(100vh-200px)]">
-            {/* Country Filter - Premium Only */}
+            {/* Country Filter */}
             <div className="space-y-3">
-              <PremiumLockIndicator>
-                <Label className={`text-sm font-medium ${!isPremium ? 'text-muted-foreground' : 'text-foreground'}`}>
-                  Country
-                </Label>
-              </PremiumLockIndicator>
+              <Label className="text-sm font-medium text-foreground">
+                Country
+              </Label>
               <select
                 value={filters.country}
                 onChange={(e) => updateFilters("country", e.target.value)}
-                disabled={!isPremium}
-                className={`w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary ${
-                  isPremium 
-                    ? 'bg-background text-foreground' 
-                    : 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'
-                }`}
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
               >
                 <option value="">All Countries</option>
                 {countries.map(country => (
@@ -186,20 +156,13 @@ export const FilterSidebar = ({ filters, onFiltersChange, isPremium, isOpen, onC
 
             {/* Skill Level Filter */}
             <div className="space-y-3">
-              <PremiumLockIndicator>
-                <Label className={`text-sm font-medium ${!isPremium ? 'text-muted-foreground' : 'text-foreground'}`}>
-                  Skill Level
-                </Label>
-              </PremiumLockIndicator>
+              <Label className="text-sm font-medium text-foreground">
+                Skill Level
+              </Label>
               <select
                 value={filters.skillLevel}
                 onChange={(e) => updateFilters("skillLevel", e.target.value)}
-                disabled={!isPremium}
-                className={`w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary ${
-                  isPremium 
-                    ? 'bg-background text-foreground' 
-                    : 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'
-                }`}
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
               >
                 <option value="">Any Level</option>
                 {skillLevels.map(level => (
@@ -210,20 +173,13 @@ export const FilterSidebar = ({ filters, onFiltersChange, isPremium, isOpen, onC
 
             {/* Rating Filter */}
             <div className="space-y-3">
-              <PremiumLockIndicator>
-                <Label className={`text-sm font-medium ${!isPremium ? 'text-muted-foreground' : 'text-foreground'}`}>
-                  Minimum Rating
-                </Label>
-              </PremiumLockIndicator>
+              <Label className="text-sm font-medium text-foreground">
+                Minimum Rating
+              </Label>
               <select
                 value={filters.rating}
                 onChange={(e) => updateFilters("rating", e.target.value)}
-                disabled={!isPremium}
-                className={`w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary ${
-                  isPremium 
-                    ? 'bg-background text-foreground' 
-                    : 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'
-                }`}
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
               >
                 {ratingOptions.map(option => (
                   <option key={option.value} value={option.value}>{option.label}</option>
@@ -233,11 +189,9 @@ export const FilterSidebar = ({ filters, onFiltersChange, isPremium, isOpen, onC
 
             {/* Gender Filter */}
             <div className="space-y-3">
-              <PremiumLockIndicator>
-                <Label className={`text-sm font-medium ${!isPremium ? 'text-muted-foreground' : 'text-foreground'}`}>
-                  Gender
-                </Label>
-              </PremiumLockIndicator>
+              <Label className="text-sm font-medium text-foreground">
+                Gender
+              </Label>
               <div className="space-y-2">
                 {genderOptions.map(gender => (
                   <div key={gender} className="flex items-center space-x-2">
@@ -245,12 +199,10 @@ export const FilterSidebar = ({ filters, onFiltersChange, isPremium, isOpen, onC
                       id={`gender-${gender}`}
                       checked={filters.gender.includes(gender)}
                       onCheckedChange={(checked) => updateGenderFilter(gender, checked as boolean)}
-                      disabled={!isPremium}
-                      className={!isPremium ? 'opacity-50' : ''}
                     />
                     <Label
                       htmlFor={`gender-${gender}`}
-                      className={`text-sm ${!isPremium ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer'}`}
+                      className="text-sm cursor-pointer"
                     >
                       {gender}
                     </Label>
@@ -262,16 +214,12 @@ export const FilterSidebar = ({ filters, onFiltersChange, isPremium, isOpen, onC
             {/* Mentor Only Filter */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <PremiumLockIndicator>
-                  <Label className={`text-sm font-medium ${!isPremium ? 'text-muted-foreground' : 'text-foreground'}`}>
-                    Mentors Only
-                  </Label>
-                </PremiumLockIndicator>
+                <Label className="text-sm font-medium text-foreground">
+                  Mentors Only
+                </Label>
                 <Switch
                   checked={filters.mentorOnly}
                   onCheckedChange={(checked) => updateFilters("mentorOnly", checked)}
-                  disabled={!isPremium}
-                  className={!isPremium ? 'opacity-50' : ''}
                 />
               </div>
               <p className="text-xs text-muted-foreground">
@@ -279,22 +227,8 @@ export const FilterSidebar = ({ filters, onFiltersChange, isPremium, isOpen, onC
               </p>
             </div>
 
-            {/* Premium Upgrade CTA for Free Users */}
-            {!isPremium && (
-              <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg">
-                <h4 className="font-semibold text-blue-900 mb-2">Unlock All Filters</h4>
-                <p className="text-xs text-blue-700 mb-3">
-                  Upgrade to Premium to use country, skill level, rating, gender, and mentor filters.
-                </p>
-                <Button size="sm" className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                  Upgrade to Premium - $4.99/month
-                </Button>
-              </div>
-            )}
-
-            {/* Active Filters Summary & Clear All - Premium Only */}
-            {isPremium && (
-              <div className="space-y-3 pt-4 border-t border-border">
+            {/* Active Filters Summary & Clear All */}
+            <div className="space-y-3 pt-4 border-t border-border">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Active Filters</span>
                   <Button
@@ -338,7 +272,6 @@ export const FilterSidebar = ({ filters, onFiltersChange, isPremium, isOpen, onC
                   )}
                 </div>
               </div>
-            )}
           </CardContent>
         </Card>
       </div>

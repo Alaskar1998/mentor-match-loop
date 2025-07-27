@@ -9,10 +9,13 @@ import { Star, Clock, MapPin } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { notificationService } from '@/services/notificationService';
+
 
 interface LearningRequest {
   id: string;
   user: {
+    id: string;
     name: string;
     avatar: string;
     rating: number;
@@ -31,7 +34,7 @@ interface ResponseModalProps {
   isOpen: boolean;
   onClose: () => void;
   request: LearningRequest | null;
-  onResponseSubmitted?: () => void;
+  onResponseSubmitted?: (requestId: string) => void;
 }
 
 export const ResponseModal = ({ isOpen, onClose, request, onResponseSubmitted }: ResponseModalProps) => {
@@ -53,12 +56,91 @@ export const ResponseModal = ({ isOpen, onClose, request, onResponseSubmitted }:
     setIsSubmitting(true);
 
     try {
-      // TODO: Submit response to database once learning_responses table is available
-      console.log('Submitting response:', {
+      console.log('Submitting response to database:', {
         learning_request_id: request.id,
         responder_id: user.id,
         message: message.trim()
       });
+
+      // Submit response to database using type assertion
+      console.log('Submitting response to database...');
+      
+      try {
+        // Insert response into learning_responses table using type assertion
+        const { data: response, error: insertError } = await (supabase as any)
+          .from('learning_responses')
+          .insert({
+            learning_request_id: request.id,
+            responder_id: user.id,
+            message: message.trim(),
+            status: 'pending'
+          })
+          .select()
+          .single();
+
+        if (insertError) {
+          console.error('Error inserting response:', insertError);
+          console.error('Error details:', {
+            code: insertError.code,
+            message: insertError.message,
+            details: insertError.details,
+            hint: insertError.hint
+          });
+          
+          // Provide more specific error messages
+          if (insertError.code === '23505') {
+            toast.error("You have already responded to this request");
+          } else if (insertError.code === '23503') {
+            toast.error("Invalid request or user data");
+          } else {
+            toast.error(`Failed to save response: ${insertError.message}`);
+          }
+          return;
+        }
+
+        console.log('Response saved successfully to database:', response);
+      } catch (error) {
+        console.error('Error saving response:', error);
+        console.error('Full error object:', error);
+        toast.error("Failed to save response - please try again");
+        return;
+      }
+
+      // Get responder's display name for notification
+      const { data: responderProfile } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('id', user.id)
+        .single();
+
+      const responderName = responderProfile?.display_name || user.email || 'Someone';
+
+      // Create notification for the request creator about the response
+      try {
+        // Create a descriptive message with request details
+        const requestSnippet = request.description.length > 50 
+          ? request.description.substring(0, 50) + '...' 
+          : request.description;
+        
+        await notificationService.createNotification({
+          userId: request.user.id, // Request creator's ID
+          title: '📩 New Response to Your Request',
+          message: `${responderName} responded to your "${request.skill}" request: "${requestSnippet}"`,
+          isRead: false,
+          type: 'invitation_received', // Using existing type for now
+          actionUrl: '/my-exchanges?tab=responses',
+          metadata: { 
+            responderId: user.id,
+            responderName: responderName,
+            skill: request.skill,
+            requestId: request.id,
+            requestSnippet: requestSnippet
+          }
+        });
+      } catch (notificationError) {
+        console.error('Failed to create response notification:', notificationError);
+        // Don't fail the response submission if notification creation fails
+      }
 
       // For now, just show success message
       toast.success("✅ Response submitted successfully!");
@@ -69,7 +151,7 @@ export const ResponseModal = ({ isOpen, onClose, request, onResponseSubmitted }:
       
       // Callback to refresh data
       if (onResponseSubmitted) {
-        onResponseSubmitted();
+        onResponseSubmitted(request.id);
       }
       
     } catch (error) {

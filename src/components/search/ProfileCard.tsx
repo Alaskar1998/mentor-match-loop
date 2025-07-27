@@ -1,20 +1,24 @@
 import { useState } from "react";
 import { Star, MessageCircle, Eye, MapPin, Award } from "lucide-react";
+import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserProfile } from "@/pages/SearchResults";
+import { SearchResult } from "@/services/searchService";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { SignupModal } from "@/components/auth/SignupModal";
 import { InvitationFlow } from "@/components/auth/InvitationFlow";
+import { AuthModal } from "@/components/auth/AuthModal";
 
 interface ProfileCardProps {
   user: UserProfile;
   isBlurred?: boolean;
+  searchResult?: SearchResult;
 }
 
-export const ProfileCard = ({ user, isBlurred = false }: ProfileCardProps) => {
+export const ProfileCard = ({ user, isBlurred = false, searchResult }: ProfileCardProps) => {
   const navigate = useNavigate();
   const { isAuthenticated, user: currentUser, signup } = useAuth();
   const [showSignupModal, setShowSignupModal] = useState(false);
@@ -27,15 +31,32 @@ export const ProfileCard = ({ user, isBlurred = false }: ProfileCardProps) => {
   const handleSendInvitation = () => {
     if (!isAuthenticated) {
       setShowSignupModal(true);
-    } else {
+      return;
+    }
+
+    // For authenticated users, show invitation modal
+    if (user.id === currentUser?.id) {
+      toast.error("You cannot send an invitation to yourself");
+      return;
+    }
+
+    setShowInvitationModal(true);
+  };
+
+  const handleSignupComplete = async (userData: any) => {
+    // After successful signup, show the invitation modal
+    setShowSignupModal(false);
+    if (userData) {
       setShowInvitationModal(true);
     }
   };
 
-  const handleSignupComplete = async (userData: any) => {
-    await signup(userData);
+  const handleAuthComplete = async (userData?: any) => {
+    // After successful authentication, show the invitation modal
     setShowSignupModal(false);
-    setShowInvitationModal(true);
+    if (userData) {
+      setShowInvitationModal(true);
+    }
   };
 
   const renderStars = (rating: number) => {
@@ -64,18 +85,62 @@ export const ProfileCard = ({ user, isBlurred = false }: ProfileCardProps) => {
     }
   };
 
+  // Highlight matched skills
+  const getSkillDisplay = (skill: string) => {
+    if (!searchResult) return skill;
+    
+    const isMatched = searchResult.matchedSkills.some(
+      matchedSkill => matchedSkill.toLowerCase() === skill.toLowerCase()
+    );
+    
+    if (isMatched) {
+      return (
+        <span className="bg-yellow-200 text-yellow-800 px-1 rounded font-medium">
+          {skill}
+        </span>
+      );
+    }
+    
+    return skill;
+  };
+
+  // Get match type badge
+  const getMatchTypeBadge = () => {
+    if (!searchResult) return null;
+    
+    const badgeConfig = {
+      exact: { label: 'Exact Match', className: 'bg-green-100 text-green-800 border-green-200' },
+      prefix: { label: 'Prefix Match', className: 'bg-purple-100 text-purple-800 border-purple-200' },
+      suffix: { label: 'Suffix Match', className: 'bg-orange-100 text-orange-800 border-orange-200' },
+      partial: { label: 'Partial Match', className: 'bg-gray-100 text-gray-800 border-gray-200' }
+    };
+    
+    const config = badgeConfig[searchResult.matchType];
+    if (!config) return null;
+    
+    return (
+      <Badge variant="outline" className={`text-xs ${config.className}`}>
+        {config.label}
+      </Badge>
+    );
+  };
+
   return (
-    <Card className={`group shadow-card hover:shadow-elegant transition-all duration-300 hover:scale-[1.02] border-0 bg-gradient-to-br from-card to-muted overflow-hidden relative ${
-      isBlurred ? 'blur-sm pointer-events-none' : ''
-    }`}>
+    <Card className="group shadow-card hover:shadow-elegant transition-all duration-300 hover:scale-[1.02] border-0 bg-gradient-to-br from-card to-muted overflow-hidden relative">
       <CardContent className="p-6">
         {/* Header */}
         <div className="flex items-start gap-4 mb-4">
           {/* Profile Picture */}
           <div className="relative">
-            <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center text-2xl shadow-elegant group-hover:shadow-glow transition-all duration-300">
-              {user.profilePicture}
-            </div>
+            <Avatar className="w-16 h-16 shadow-elegant group-hover:shadow-glow transition-all duration-300">
+              <AvatarImage 
+                src={user.profilePicture.startsWith('http') ? user.profilePicture : undefined} 
+                alt={user.name} 
+              />
+              <AvatarFallback className="bg-gradient-primary text-2xl">
+                {user.profilePicture.startsWith('http') ? user.name.charAt(0) : user.profilePicture}
+              </AvatarFallback>
+            </Avatar>
             {user.isMentor && (
               <div className="absolute -top-1 -right-1 w-6 h-6 bg-accent rounded-full flex items-center justify-center text-sm">
                 🌟
@@ -99,6 +164,7 @@ export const ProfileCard = ({ user, isBlurred = false }: ProfileCardProps) => {
                   🌟 Mentor
                 </Badge>
               )}
+              {getMatchTypeBadge()}
             </div>
             
             <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
@@ -145,7 +211,7 @@ export const ProfileCard = ({ user, isBlurred = false }: ProfileCardProps) => {
                 key={skill}
                 className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full"
               >
-                {skill}
+                {getSkillDisplay(skill)}
               </span>
             ))}
             {user.skills.length > 3 && (
@@ -163,39 +229,29 @@ export const ProfileCard = ({ user, isBlurred = false }: ProfileCardProps) => {
             size="sm" 
             onClick={handleViewProfile}
             className="flex-1 hover:bg-muted"
-            disabled={isBlurred}
           >
             <Eye className="w-4 h-4 mr-2" />
             View Profile
           </Button>
-          <Button 
-            variant="default" 
-            size="sm" 
-            onClick={handleSendInvitation}
-            className="flex-1"
-            disabled={isBlurred}
-          >
-            <MessageCircle className="w-4 h-4 mr-2" />
-            Send Invitation
-          </Button>
+          {!isAuthenticated && (
+            <Button 
+              variant="default" 
+              size="sm" 
+              onClick={handleSendInvitation}
+              className="flex-1"
+            >
+              <MessageCircle className="w-4 h-4 mr-2" />
+              Send Invitation
+            </Button>
+          )}
         </div>
-        
-        {/* Blur Overlay */}
-        {isBlurred && (
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background/80 flex items-end justify-center pb-4">
-            <div className="text-center">
-              <div className="text-2xl mb-2">🔒</div>
-              <p className="text-sm font-medium">Premium Required</p>
-            </div>
-          </div>
-        )}
       </CardContent>
 
       {/* Modals */}
-      <SignupModal
+      <AuthModal
         isOpen={showSignupModal}
         onClose={() => setShowSignupModal(false)}
-        onSignupComplete={handleSignupComplete}
+        onAuthComplete={handleAuthComplete}
       />
 
       {isAuthenticated && currentUser && (

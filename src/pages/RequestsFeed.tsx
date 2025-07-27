@@ -6,14 +6,16 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Clock, MapPin, Plus, Search, Star, MessageCircle, RefreshCw } from "lucide-react";
+import { Clock, MapPin, Plus, Search, Star, MessageCircle, RefreshCw, Check } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ResponseModal } from "@/components/requests/ResponseModal";
+import { useAuth } from "@/hooks/useAuth";
 
 interface LearningRequest {
   id: string;
   user: {
+    id: string;
     name: string;
     avatar: string;
     rating: number;
@@ -53,6 +55,7 @@ const formatTimeAgo = (date: Date) => {
 
 export const RequestsFeed = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [requests, setRequests] = useState<LearningRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -60,6 +63,7 @@ export const RequestsFeed = () => {
   const [filterUrgency, setFilterUrgency] = useState("all");
   const [responseModalOpen, setResponseModalOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<LearningRequest | null>(null);
+  const [respondedRequests, setRespondedRequests] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchRequests();
@@ -75,11 +79,35 @@ export const RequestsFeed = () => {
     return () => window.removeEventListener('focus', handleFocus);
   }, []);
 
+  // Check for existing responses when user changes
+  useEffect(() => {
+    if (user?.id) {
+      checkExistingResponses();
+    }
+  }, [user?.id]);
+
+  const checkExistingResponses = async () => {
+    if (!user?.id) return;
+
+    try {
+      // TODO: Once learning_responses table is available, check for existing responses
+      // For now, we'll use localStorage to persist responded requests
+      const savedResponses = localStorage.getItem(`responded_requests_${user.id}`);
+      if (savedResponses) {
+        const responseIds = JSON.parse(savedResponses);
+        setRespondedRequests(new Set(responseIds));
+      }
+    } catch (error) {
+      console.error('Error checking existing responses:', error);
+    }
+  };
+
   const fetchRequests = async () => {
     try {
       setLoading(true);
       console.log('Fetching learning requests...');
       
+      // First, fetch the learning requests
       const { data: requestsData, error } = await supabase
         .from('learning_requests')
         .select(`
@@ -91,11 +119,7 @@ export const RequestsFeed = () => {
           urgency,
           created_at,
           responses_count,
-          user_id,
-          profiles!learning_requests_user_id_fkey (
-            display_name,
-            avatar_url
-          )
+          user_id
         `)
         .order('created_at', { ascending: false });
 
@@ -107,22 +131,51 @@ export const RequestsFeed = () => {
 
       console.log('Raw requests data:', requestsData);
 
-      const formattedRequests: LearningRequest[] = requestsData?.map(req => ({
-        id: req.id,
-        user: {
-          name: req.profiles?.display_name || 'Anonymous User',
-          avatar: req.profiles?.avatar_url || '',
-          rating: 4.5, // Default rating - could be calculated from reviews
-          isVerified: true // Default - could be based on actual verification status
-        },
-        skill: req.skill,
-        level: req.level,
-        description: req.description,
-        country: req.country,
-        urgency: req.urgency as "urgent" | "soon" | "flexible",
-        postedAt: new Date(req.created_at),
-        responses: req.responses_count
-      })) || [];
+      if (!requestsData || requestsData.length === 0) {
+        setRequests([]);
+        return;
+      }
+
+      // Get unique user IDs to fetch profiles
+      const userIds = [...new Set(requestsData.map(req => req.user_id))];
+      
+      // Fetch profiles separately for better performance
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, display_name, avatar_url')
+        .in('id', userIds);
+
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+        // Continue without profiles rather than failing completely
+      }
+
+      // Create a map for quick profile lookup
+      const profilesMap = new Map();
+      profilesData?.forEach(profile => {
+        profilesMap.set(profile.id, profile);
+      });
+
+      const formattedRequests: LearningRequest[] = requestsData.map(req => {
+        const profile = profilesMap.get(req.user_id);
+        return {
+          id: req.id,
+          user: {
+            id: req.user_id,
+            name: profile?.display_name || 'Anonymous User',
+            avatar: profile?.avatar_url || '',
+            rating: 4.5, // Default rating
+            isVerified: true // Default verification status
+          },
+          skill: req.skill,
+          level: req.level,
+          description: req.description,
+          country: req.country,
+          urgency: req.urgency as "urgent" | "soon" | "flexible",
+          postedAt: new Date(req.created_at),
+          responses: req.responses_count || 0
+        };
+      });
 
       console.log('Formatted requests:', formattedRequests);
       setRequests(formattedRequests);
@@ -135,11 +188,29 @@ export const RequestsFeed = () => {
   };
 
   const handleRespond = (request: LearningRequest) => {
+    // Prevent responding to own requests
+    if (request.user.id === user?.id) {
+      toast.error("You cannot respond to your own request");
+      return;
+    }
+    
     setSelectedRequest(request);
     setResponseModalOpen(true);
   };
 
-  const handleResponseSubmitted = () => {
+  const handleResponseSubmitted = (requestId: string) => {
+    // Mark this request as responded to
+    setRespondedRequests(prev => {
+      const newSet = new Set([...prev, requestId]);
+      
+      // Save to localStorage for persistence
+      if (user?.id) {
+        localStorage.setItem(`responded_requests_${user.id}`, JSON.stringify([...newSet]));
+      }
+      
+      return newSet;
+    });
+    
     // Refresh the requests data
     fetchRequests();
   };
@@ -291,8 +362,23 @@ export const RequestsFeed = () => {
                       <MessageCircle className="w-4 h-4" />
                       {request.responses} response{request.responses !== 1 ? 's' : ''}
                     </div>
-                    <Button onClick={() => handleRespond(request)} size="sm">
-                      Respond to Request
+                    <Button 
+                      onClick={() => handleRespond(request)} 
+                      size="sm"
+                      disabled={respondedRequests.has(request.id) || request.user.id === user?.id}
+                      variant={respondedRequests.has(request.id) ? "outline" : "default"}
+                      className={respondedRequests.has(request.id) || request.user.id === user?.id ? "opacity-60 cursor-not-allowed" : ""}
+                    >
+                      {respondedRequests.has(request.id) ? (
+                        <>
+                          <Check className="w-4 h-4 mr-1" />
+                          Response Sent
+                        </>
+                      ) : request.user.id === user?.id ? (
+                        "Your Request"
+                      ) : (
+                        "Respond to Request"
+                      )}
                     </Button>
                   </div>
                 </div>
@@ -324,7 +410,7 @@ export const RequestsFeed = () => {
             setSelectedRequest(null);
           }}
           request={selectedRequest}
-          onResponseSubmitted={handleResponseSubmitted}
+          onResponseSubmitted={() => handleResponseSubmitted(selectedRequest.id)}
         />
       )}
     </div>

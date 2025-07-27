@@ -15,6 +15,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useGamification } from "@/hooks/useGamification";
 import { notificationService } from "@/services/notificationService";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Exchange {
   id: string;
@@ -89,18 +90,27 @@ export const ReviewModal = ({
         successfulExchanges: (user as any).successfulExchanges ? (user as any).successfulExchanges + 1 : 1
       });
 
+      // Get reviewer's display name for notification
+      const { data: reviewerProfile } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('id', user.id)
+        .single();
+
+      const reviewerName = reviewerProfile?.display_name || 'Someone';
+
       // Create notification for the reviewed user
       try {
         await notificationService.createNotification({
           userId: otherUser.id,
           title: 'New Review Received',
-          message: `${user.email || 'Someone'} left you a ${averageRating.toFixed(1)}-star review`,
+          message: `${reviewerName} left you a ${averageRating.toFixed(1)}-star review`,
           isRead: false,
           type: 'exchange_completed',
           actionUrl: '/dashboard',
           metadata: { 
             reviewerId: user.id,
-            reviewerName: user.email || 'Someone',
+            reviewerName: reviewerName,
             rating: averageRating,
             skill: exchange.initiatorSkill
           }

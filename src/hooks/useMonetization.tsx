@@ -45,54 +45,35 @@ export const useMonetization = () => {
 export const MonetizationProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   
-  const userTier = user?.userType || 'free';
+  // Temporarily make all features free for testing
+  const userTier = 'premium'; // Force premium for all users
   
-  // Premium features configuration
+  // All features available for free
   const features: PremiumFeatures = {
-    unlimitedInvites: userTier === 'premium',
-    worldwideSearch: userTier === 'premium',
-    mapSearch: userTier === 'premium',
-    fullFilters: userTier === 'premium',
-    noAds: userTier === 'premium',
-    earlyEventAccess: userTier === 'premium',
-    freeRequestPosts: userTier === 'premium' ? 3 : 0,
-    monthlyCoinStipend: userTier === 'premium' ? 0 : 0, // Removed coin stipend
-    discountedCoinCosts: userTier === 'premium'
+    unlimitedInvites: true,
+    worldwideSearch: true,
+    mapSearch: true,
+    fullFilters: true,
+    noAds: true,
+    earlyEventAccess: true,
+    freeRequestPosts: 10, // Give more free posts
+    monthlyCoinStipend: 100, // Give some coins
+    discountedCoinCosts: true
   };
 
-  // Free tier limitations
+  // No limitations for now
   const limitations: TierLimitations = {
-    maxInvitesPerMonth: userTier === 'free' ? 3 : Infinity,
-    searchScope: userTier === 'free' ? 'country' : 'worldwide',
-    mapSearchEnabled: userTier === 'premium',
-    mentorFilterEnabled: userTier === 'premium',
-    adsVisible: userTier === 'free',
-    requestPostsPerMonth: userTier === 'free' ? 0 : 3
+    maxInvitesPerMonth: Infinity,
+    searchScope: 'worldwide',
+    mapSearchEnabled: true,
+    mentorFilterEnabled: true,
+    adsVisible: false,
+    requestPostsPerMonth: 10
   };
 
   const canUseFeature = (feature: string): boolean => {
-    switch (feature) {
-      case 'unlimited_invites':
-        return features.unlimitedInvites;
-      case 'worldwide_search':
-        return features.worldwideSearch;
-      case 'map_search':
-        return features.mapSearch;
-      case 'full_filters':
-        return features.fullFilters;
-      case 'country_filter':
-        return userTier === 'premium';
-      case 'mentor_filter':
-        return limitations.mentorFilterEnabled;
-      case 'no_ads':
-        return features.noAds;
-      case 'early_events':
-        return features.earlyEventAccess;
-      case 'free_request_posts':
-        return features.freeRequestPosts > 0;
-      default:
-        return false;
-    }
+    // All features are available for free now
+    return true;
   };
 
   const getRemainingInvites = (): number => {
@@ -101,8 +82,7 @@ export const MonetizationProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const getRemainingRequestPosts = (): number => {
-    if (userTier === 'free') return 0;
-    // In real app, this would track monthly usage
+    // All users get free request posts now
     return features.freeRequestPosts;
   };
 

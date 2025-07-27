@@ -6,9 +6,10 @@ import { useNavigate } from "react-router-dom";
 
 interface SearchHeaderProps {
   searchQuery: string;
+  disabled?: boolean;
 }
 
-export const SearchHeader = ({ searchQuery }: SearchHeaderProps) => {
+export const SearchHeader = ({ searchQuery, disabled = false }: SearchHeaderProps) => {
   const [query, setQuery] = useState(searchQuery);
   const navigate = useNavigate();
 
@@ -24,22 +25,24 @@ export const SearchHeader = ({ searchQuery }: SearchHeaderProps) => {
         <div className="max-w-4xl mx-auto">
           {/* Search Bar */}
           <div className="mb-6">
-            <div className="relative flex items-center bg-white rounded-lg shadow-card">
+            <div className={`relative flex items-center bg-white rounded-lg shadow-card ${disabled ? 'opacity-50' : ''}`}>
               <Input
                 type="text"
-                placeholder="What do you want to learn?"
+                placeholder={disabled ? "Search disabled for your account" : "What skill do you want to learn?"}
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => !disabled && setQuery(e.target.value)}
                 className="flex-1 border-0 focus-visible:ring-0 text-lg px-6 py-4 bg-transparent"
-                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                onKeyDown={(e) => !disabled && e.key === "Enter" && handleSearch()}
+                disabled={disabled}
               />
               <Button 
                 variant="default" 
-                onClick={handleSearch}
+                onClick={disabled ? undefined : handleSearch}
                 className="rounded-r-lg rounded-l-none px-8"
+                disabled={disabled}
               >
                 <Search className="w-5 h-5 mr-2" />
-                Search
+                {disabled ? 'Disabled' : 'Search'}
               </Button>
             </div>
           </div>
@@ -48,7 +51,7 @@ export const SearchHeader = ({ searchQuery }: SearchHeaderProps) => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-foreground mb-2">
-                {searchQuery ? `Results for "${searchQuery}"` : "All Skills"}
+                {searchQuery ? `People who teach "${searchQuery}"` : "All Skills"}
               </h1>
             </div>
             

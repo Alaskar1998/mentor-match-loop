@@ -8,15 +8,44 @@ import { SignupModal } from "@/components/auth/SignupModal";
 import { SignInModal } from "@/components/auth/SignInModal";
 import { UserAvatar } from "@/components/auth/UserAvatar";
 import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
+import { toast } from "sonner";
 
 export const Header = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const [showSignupModal, setShowSignupModal] = useState(false);
   const [showSignInModal, setShowSignInModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Function to check if search should be disabled based on user name
+  const isSearchDisabled = () => {
+    if (!user?.name) return false;
+    
+    // List of usernames that should have search disabled
+    const disabledUsernames = [
+      'test',
+      'demo',
+      'admin',
+      'moderator',
+      'system',
+      'blocked',
+      'suspended',
+      'banned',
+      'restricted'
+    ];
+    
+    return disabledUsernames.some(disabledName => 
+      user.name.toLowerCase().includes(disabledName.toLowerCase())
+    );
+  };
+
   const handleSearch = () => {
+    // Prevent search if user is disabled
+    if (isSearchDisabled()) {
+      toast.error("Search is disabled for your account type");
+      return;
+    }
+    
     if (searchQuery.trim()) {
       navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
       setSearchQuery("");
@@ -48,17 +77,18 @@ export const Header = () => {
 
             {/* Search Bar - Center */}
             <div className="hidden md:flex flex-1 max-w-md mx-4">
-              <div className="relative w-full">
+              <div className={`relative w-full ${isSearchDisabled() ? 'opacity-50' : ''}`}>
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input
                   type="text"
-                  placeholder="Search for skills..."
+                  placeholder={isSearchDisabled() ? "Search disabled" : "Search for skills only..."}
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                  onChange={(e) => !isSearchDisabled() && setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => !isSearchDisabled() && e.key === "Enter" && handleSearch()}
                   className="pl-10 pr-4"
+                  disabled={isSearchDisabled()}
                 />
-                {searchQuery && (
+                {searchQuery && !isSearchDisabled() && (
                   <Button
                     size="sm"
                     onClick={handleSearch}
@@ -104,15 +134,16 @@ export const Header = () => {
 
           {/* Mobile Search Bar */}
           <div className="md:hidden mt-3">
-            <div className="relative">
+            <div className={`relative ${isSearchDisabled() ? 'opacity-50' : ''}`}>
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
                 type="text"
-                placeholder="Search for skills..."
+                placeholder={isSearchDisabled() ? "Search disabled" : "Search for skills only..."}
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                onChange={(e) => !isSearchDisabled() && setSearchQuery(e.target.value)}
+                onKeyDown={(e) => !isSearchDisabled() && e.key === "Enter" && handleSearch()}
                 className="pl-10"
+                disabled={isSearchDisabled()}
               />
             </div>
           </div>

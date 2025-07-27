@@ -186,18 +186,27 @@ const Chat = () => {
       setMessages(prev => [...prev, newMessage]);
       setMessage('');
 
+      // Get sender's display name for notification
+      const { data: senderProfile } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('id', user.id)
+        .single();
+
+      const senderName = senderProfile?.display_name || 'Someone';
+
       // Create notification for the other user about new message
       try {
         await notificationService.createNotification({
           userId: otherUser.id,
           title: 'New Message',
-          message: `${user.email || 'Someone'}: ${message.trim().substring(0, 50)}${message.trim().length > 50 ? '...' : ''}`,
+          message: `${senderName}: ${message.trim().substring(0, 50)}${message.trim().length > 50 ? '...' : ''}`,
           isRead: false,
           type: 'new_message',
           actionUrl: `/chat/${chatId}`,
           metadata: { 
             senderId: user.id,
-            senderName: user.email || 'Someone',
+            senderName: senderName,
             chatId: chatId
           }
         });
@@ -244,18 +253,27 @@ const Chat = () => {
       setExchange(newExchange);
       setShowExchangeModal(false);
 
+      // Get initiator's display name for notification
+      const { data: initiatorProfile } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('id', user?.id)
+        .single();
+
+      const initiatorName = initiatorProfile?.display_name || 'Someone';
+
       // Create notification for the other user about exchange start
       try {
         await notificationService.createNotification({
           userId: otherUser.id,
           title: 'Exchange Started!',
-          message: `${user?.email || 'Someone'} started a skill exchange with you`,
+          message: `${initiatorName} started a skill exchange with you`,
           isRead: false,
           type: 'learning_match',
           actionUrl: `/chat/${chatId}`,
           metadata: { 
             initiatorId: user?.id,
-            initiatorName: user?.email || 'Someone',
+            initiatorName: initiatorName,
             skill: chatData.skill,
             recipientSkill: exchangeData.recipientSkill,
             isMentorship: exchangeData.isMentorship
@@ -269,7 +287,7 @@ const Chat = () => {
       const systemMessage: ChatMessage = {
         id: Date.now().toString(),
         senderId: 'system',
-        message: `Exchange started! ${user?.email} will teach ${chatData.skill}${exchangeData.isMentorship ? ' (Mentorship)' : ` in exchange for ${exchangeData.recipientSkill}`}`,
+        message: `Exchange started! ${initiatorName} will teach ${chatData.skill}${exchangeData.isMentorship ? ' (Mentorship)' : ` in exchange for ${exchangeData.recipientSkill}`}`,
         timestamp: new Date(),
         type: 'system'
       };
@@ -300,16 +318,25 @@ const Chat = () => {
     if (updatedExchange.status === 'completed') {
       (async () => {
         try {
+          // Get partner's display name for notification
+          const { data: partnerProfile } = await supabase
+            .from('profiles')
+            .select('display_name')
+            .eq('id', user?.id)
+            .single();
+
+          const partnerName = partnerProfile?.display_name || 'Someone';
+
           await notificationService.createNotification({
             userId: otherUser.id,
             title: 'Exchange Completed!',
-            message: `Your skill exchange with ${user?.email || 'Someone'} has been completed`,
+            message: `Your skill exchange with ${partnerName} has been completed`,
             isRead: false,
             type: 'exchange_completed',
             actionUrl: `/chat/${chatId}`,
             metadata: { 
               partnerId: user?.id,
-              partnerName: user?.email || 'Someone',
+              partnerName: partnerName,
               skill: exchange.initiatorSkill
             }
           });
@@ -325,7 +352,7 @@ const Chat = () => {
       senderId: 'system',
       message: updatedExchange.status === 'completed' 
         ? 'Exchange completed! Please leave a review for your learning partner.'
-        : `${user?.email} marked the exchange as finished.`,
+        : `Someone marked the exchange as finished.`,
       timestamp: new Date(),
       type: 'system'
     };

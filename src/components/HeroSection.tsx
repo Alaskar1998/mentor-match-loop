@@ -3,6 +3,8 @@ import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 import heroImage from "@/assets/hero-image.jpg";
 
 const popularSkills = [
@@ -31,8 +33,37 @@ const popularSkills = [
 export const HeroSection = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // Function to check if search should be disabled based on user name
+  const isSearchDisabled = () => {
+    if (!user?.name) return false;
+    
+    // List of usernames that should have search disabled
+    const disabledUsernames = [
+      'test',
+      'demo',
+      'admin',
+      'moderator',
+      'system',
+      'blocked',
+      'suspended',
+      'banned',
+      'restricted'
+    ];
+    
+    return disabledUsernames.some(disabledName => 
+      user.name.toLowerCase().includes(disabledName.toLowerCase())
+    );
+  };
 
   const handleSearch = (skill?: string) => {
+    // Prevent search if user is disabled
+    if (isSearchDisabled()) {
+      toast.error("Search is disabled for your account type");
+      return;
+    }
+    
     const query = skill || searchQuery;
     if (query) {
       navigate(`/search?q=${encodeURIComponent(query)}`);
@@ -67,25 +98,27 @@ export const HeroSection = () => {
 
           {/* Search Bar */}
           <div className="max-w-2xl mx-auto mb-8">
-            <div className="relative group">
+            <div className={`relative group ${isSearchDisabled() ? 'opacity-50' : ''}`}>
               <div className="absolute inset-0 bg-gradient-to-r from-accent to-warm rounded-full blur opacity-30 group-hover:opacity-50 transition-opacity duration-300" />
               <div className="relative flex items-center bg-white rounded-full p-2 shadow-elegant">
                 <Input
                   type="text"
-                  placeholder="What do you want to learn?"
+                  placeholder={isSearchDisabled() ? "Search disabled for your account" : "What skill do you want to learn?"}
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => !isSearchDisabled() && setSearchQuery(e.target.value)}
                   className="flex-1 border-0 focus-visible:ring-0 text-lg px-6 py-4 bg-transparent"
-                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                  onKeyDown={(e) => !isSearchDisabled() && e.key === "Enter" && handleSearch()}
+                  disabled={isSearchDisabled()}
                 />
                 <Button 
                   variant="hero" 
                   size="lg"
                   onClick={() => handleSearch()}
                   className="rounded-full px-8"
+                  disabled={isSearchDisabled()}
                 >
                   <Search className="w-5 h-5 mr-2" />
-                  Search
+                  {isSearchDisabled() ? 'Disabled' : 'Search'}
                 </Button>
               </div>
             </div>
@@ -98,8 +131,13 @@ export const HeroSection = () => {
               {popularSkills.map((skill) => (
                 <button
                   key={skill.name}
-                  onClick={() => handleSearch(skill.name)}
-                  className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white px-4 py-2 rounded-full transition-all duration-300 hover:scale-105 border border-white/20"
+                  onClick={() => !isSearchDisabled() && handleSearch(skill.name)}
+                  disabled={isSearchDisabled()}
+                  className={`bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full transition-all duration-300 border border-white/20 ${
+                    isSearchDisabled() 
+                      ? 'opacity-50 cursor-not-allowed' 
+                      : 'hover:bg-white/30 hover:scale-105'
+                  }`}
                 >
                   <span className="mr-2">{skill.emoji}</span>
                   {skill.name}

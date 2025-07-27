@@ -1,12 +1,8 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useAuth } from '@/hooks/useAuth';
-import { ExchangeReviewModal } from '@/components/review/ExchangeReviewModal';
-import { dummyLearningResponses } from '@/data/dummyLearningResponses';
-import { supabase } from '@/integrations/supabase/client';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
+import { supabase } from '../integrations/supabase/client';
+import { notificationService } from '../services/notificationService';
 import { toast } from 'sonner';
 import { 
   Clock, 
@@ -21,17 +17,23 @@ import {
   Check,
   X
 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { Badge } from '../components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
+import { ExchangeReviewModal } from '../components/review/ExchangeReviewModal';
 
-// Tab configuration for the horizontal navigation
+
+// Tab configuration
 const tabs = [
   { id: 'active', label: 'Active', icon: Clock },
   { id: 'responses', label: 'Responses', icon: MessageCircle },
-  { id: 'request', label: 'Request', icon: User },
-  { id: 'sent', label: 'Sent', icon: MessageSquare },
-  { id: 'completed', label: 'Completed', icon: CheckCircle },
+  { id: 'request', label: 'Request', icon: MessageSquare },
+  { id: 'sent', label: 'Sent', icon: XCircle },
+  { id: 'completed', label: 'Completed', icon: CheckCircle }
 ];
 
-// Type definition for exchange objects
+// Interface for exchange data
 interface Exchange {
   id: string;
   type: string;
@@ -44,7 +46,7 @@ interface Exchange {
   rating?: number;
 }
 
-// Type definition for learning response objects
+// Interface for learning response data
 interface LearningResponse {
   id: string;
   learning_request_id: string;
@@ -61,91 +63,214 @@ interface LearningResponse {
   skill: string;
 }
 
-// Mock data for exchanges - replace with real data from your backend
+// Real data will be fetched from database
 const mockExchanges: Record<string, Exchange[]> = {
-  active: [
-    {
-      id: '1',
-      type: 'exchange',
-      status: 'active',
-      otherUser: { name: 'Sarah Johnson', avatar: null },
-      skill: 'JavaScript',
-      date: '2024-01-15',
-      location: 'Online',
-      description: 'Learning advanced React patterns and state management'
-    },
-    {
-      id: '2',
-      type: 'mentorship',
-      status: 'active',
-      otherUser: { name: 'Mike Chen', avatar: null },
-      skill: 'Python',
-      date: '2024-01-10',
-      location: 'New York',
-      description: 'Data science mentorship session'
-    }
-  ],
-  request: [
-    {
-      id: '3',
-      type: 'exchange',
-      status: 'pending',
-      otherUser: { name: 'Emma Davis', avatar: null },
-      skill: 'Spanish',
-      date: '2024-01-20',
-      location: 'Online',
-      description: 'Conversational Spanish practice'
-    }
-  ],
-  sent: [
-    {
-      id: '4',
-      type: 'exchange',
-      status: 'pending',
-      otherUser: { name: 'Alex Thompson', avatar: null },
-      skill: 'Guitar',
-      date: '2024-01-18',
-      location: 'Los Angeles',
-      description: 'Acoustic guitar lessons'
-    }
-  ],
-  completed: [
-    {
-      id: '5',
-      type: 'exchange',
-      status: 'completed',
-      otherUser: { name: 'Lisa Wang', avatar: null },
-      skill: 'Cooking',
-      date: '2024-01-05',
-      location: 'San Francisco',
-      description: 'Italian cuisine cooking class',
-      rating: 5
-    },
-    {
-      id: '6',
-      type: 'mentorship',
-      status: 'completed',
-      otherUser: { name: 'David Kim', avatar: null },
-      skill: 'UI/UX Design',
-      date: '2024-01-01',
-      location: 'Online',
-      description: 'Design portfolio review',
-      rating: 4
-    }
-  ]
+  active: [],
+  request: [],
+  sent: [],
+  completed: []
 };
-
-// Mock data for learning responses - replace with real data from your backend
-const mockResponses: LearningResponse[] = dummyLearningResponses;
 
 export default function MyExchanges() {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState('active');
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [selectedExchange, setSelectedExchange] = useState<Exchange | null>(null);
+  const [responses, setResponses] = useState<LearningResponse[]>([]);
+
+  // Fetch user's learning responses from database
+  const fetchUserResponses = async () => {
+    if (!user?.id) return;
+
+    try {
+      console.log('Fetching user responses for user:', user.id);
+      
+      // First, get the user's learning requests
+      const { data: userRequests, error: requestsError } = await supabase
+        .from('learning_requests')
+        .select('id, skill, description')
+        .eq('user_id', user.id);
+
+      if (requestsError) {
+        console.error('Error fetching user requests:', requestsError);
+        toast.error("Failed to load requests");
+        return;
+      }
+
+      console.log('Found user requests:', userRequests);
+
+      if (!userRequests || userRequests.length === 0) {
+        console.log('No learning requests found for user');
+        setResponses([]);
+        return;
+      }
+
+      // Get the request IDs
+      const requestIds = userRequests.map(req => req.id);
+      console.log('Request IDs to check for responses:', requestIds);
+
+      // Now try to fetch responses to these requests using type assertion
+      console.log('Attempting to fetch responses for requests:', requestIds);
+      
+      try {
+        // Use type assertion to bypass TypeScript restrictions
+        // Only fetch pending responses (not declined or accepted)
+        const { data: responses, error: responsesError } = await (supabase as any)
+          .from('learning_responses')
+          .select('*')
+          .in('learning_request_id', requestIds)
+          .eq('status', 'pending');
+
+        if (responsesError) {
+          console.error('Error fetching responses:', responsesError);
+          toast.error("Failed to load responses");
+          setResponses([]);
+          return;
+        }
+
+        console.log('Raw responses from database:', responses);
+
+        if (!responses || responses.length === 0) {
+          console.log('No responses found in database');
+          setResponses([]);
+          return;
+        }
+
+        // Transform database data to LearningResponse format
+        const transformedResponses: LearningResponse[] = await Promise.all(
+          responses.map(async (response: any) => {
+            try {
+              // Fetch responder profile details
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('display_name, avatar_url')
+                .eq('id', response.responder_id)
+                .single();
+
+              // Fetch request details to get the skill
+              const { data: request } = await supabase
+                .from('learning_requests')
+                .select('skill')
+                .eq('id', response.learning_request_id)
+                .single();
+
+              return {
+                id: response.id,
+                learning_request_id: response.learning_request_id,
+                responder: {
+                  id: response.responder_id,
+                  name: profile?.display_name || 'Anonymous User',
+                  avatar: profile?.avatar_url || '👤',
+                  rating: 0, // Default rating since it's not in profiles table
+                  isVerified: false, // Default verification status
+                },
+                message: response.message,
+                status: response.status as "pending" | "accepted" | "declined",
+                created_at: response.created_at,
+                skill: request?.skill || 'Unknown Skill',
+              };
+            } catch (error) {
+              console.error('Error fetching details for response:', response.id, error);
+              // Return a basic response if details can't be fetched
+              return {
+                id: response.id,
+                learning_request_id: response.learning_request_id,
+                responder: {
+                  id: response.responder_id,
+                  name: 'Anonymous User',
+                  avatar: '👤',
+                  rating: 0,
+                  isVerified: false,
+                },
+                message: response.message,
+                status: response.status as "pending" | "accepted" | "declined",
+                created_at: response.created_at,
+                skill: 'Unknown Skill',
+              };
+            }
+          })
+                 );
+        
+        setResponses(transformedResponses);
+        console.log('Transformed and set responses:', transformedResponses.length);
+        
+      } catch (error) {
+        console.error('Error fetching responses:', error);
+        toast.error("Failed to load responses");
+        setResponses([]);
+      }
+      
+    } catch (error) {
+      console.error('Error fetching user responses:', error);
+      toast.error("Failed to load responses");
+    }
+  };
+
+  // Read tab parameter from URL on component mount
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && tabs.some(tab => tab.id === tabParam)) {
+      setActiveTab(tabParam);
+    } else if (!tabParam) {
+      // If no tab parameter is provided, set default to 'active' and update URL
+      setSearchParams({ tab: 'active' });
+    }
+  }, [searchParams, setSearchParams]);
+
+  // Update URL when tab changes
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    setSearchParams({ tab: tabId });
+  };
+
+  // Fetch user's learning responses when user changes or when Responses tab is opened
+  useEffect(() => {
+    if (user?.id) {
+      fetchUserResponses();
+    }
+  }, [user?.id]);
+
+  // Auto-update responses every 10 seconds (same as notifications)
+  useEffect(() => {
+    if (!user?.id || activeTab !== 'responses') return;
+
+    const pollInterval = setInterval(() => {
+      fetchUserResponses();
+    }, 10000); // 10 seconds
+
+    return () => clearInterval(pollInterval);
+  }, [user?.id, activeTab]);
+
+  // Refresh responses when Responses tab is opened
+  useEffect(() => {
+    if (user?.id && activeTab === 'responses') {
+      console.log('Responses tab opened, refreshing responses...');
+      fetchUserResponses();
+    }
+  }, [user?.id, activeTab]);
 
   // Get current tab's exchanges
   const currentExchanges = mockExchanges[activeTab as keyof typeof mockExchanges] || [];
+
+  // Get count for each tab
+  const getTabCount = (tabId: string) => {
+    switch (tabId) {
+      case 'active':
+        return mockExchanges.active?.length || 0;
+      case 'responses':
+        return responses.length;
+      case 'request':
+        return mockExchanges.request?.length || 0;
+      case 'sent':
+        return mockExchanges.sent?.length || 0;
+      case 'completed':
+        return mockExchanges.completed?.length || 0;
+      default:
+        return 0;
+    }
+  };
 
   // Get status badge variant and icon
   const getStatusConfig = (status: string, type: string) => {
@@ -210,11 +335,58 @@ export default function MyExchanges() {
       }
 
       console.log('Chat created successfully:', chatData);
-      toast.success("✅ Response accepted — chat opened!");
       
-      // TODO: Update response status to 'accepted' in database
+      // Get request creator's display name for notification
+      const { data: creatorProfile } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('id', user.id)
+        .single();
+
+      const creatorName = creatorProfile?.display_name || user.email || 'Someone';
+
+      // Create notification for the responder about acceptance
+      try {
+        await notificationService.createNotification({
+          userId: response.responder.id,
+          title: '✅ Response Accepted!',
+          message: `${creatorName} accepted your response to their ${response.skill} learning request`,
+          isRead: false,
+          type: 'invitation_accepted',
+          actionUrl: `/chat/${chatData.id}`,
+          metadata: { 
+            creatorId: user.id,
+            creatorName: creatorName,
+            skill: response.skill,
+            chatId: chatData.id
+          }
+        });
+      } catch (notificationError) {
+        console.error('Failed to create acceptance notification:', notificationError);
+      }
+
+      // Update response status to 'accepted' in database
+      const { error: updateError } = await (supabase as any)
+        .from('learning_responses')
+        .update({ status: 'accepted' })
+        .eq('id', response.id);
+
+      if (updateError) {
+        console.error('Error updating response status:', updateError);
+        toast.error("Failed to accept response");
+        return;
+      }
+
+      console.log('Response accepted successfully in database');
+      toast.success("✅ Response accepted — chat opened!");
+      // Remove from local state immediately
+      setResponses(prev => prev.filter(r => r.id !== response.id));
       // TODO: Move exchange to Active tab
       
+      // Redirect to messages page after a short delay to show the success message
+      setTimeout(() => {
+        navigate('/messages');
+      }, 1500);
     } catch (error) {
       console.error('Error accepting response:', error);
       toast.error("Failed to accept response");
@@ -223,16 +395,33 @@ export default function MyExchanges() {
 
   // Handle declining a learning response
   const handleDeclineResponse = async (response: LearningResponse) => {
+    if (!user?.id) {
+      toast.error("You must be logged in to decline responses");
+      return;
+    }
+
     try {
-      // TODO: Update response status in database
       console.log('Declining response:', response.id);
       
-      // Remove from responses list (in real app, this would update the database)
-      toast.success("Response declined");
-      
+      // Update response status to 'declined' in database
+      const { error: updateError } = await (supabase as any)
+        .from('learning_responses')
+        .update({ status: 'declined' })
+        .eq('id', response.id);
+
+      if (updateError) {
+        console.error('Error updating response status:', updateError);
+        toast.error("Failed to decline response");
+        return;
+      }
+
+      console.log('Response declined successfully in database');
+      // Remove from local state immediately
+      setResponses(prev => prev.filter(r => r.id !== response.id));
+      toast.success("✅ Response declined successfully");
     } catch (error) {
       console.error('Error declining response:', error);
-      toast.error("Failed to decline response");
+      toast.error("Failed to decline response. Please try again.");
     }
   };
 
@@ -256,7 +445,7 @@ export default function MyExchanges() {
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabChange(tab.id)}
                 className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                   isActive
                     ? 'border-primary text-primary'
@@ -266,7 +455,7 @@ export default function MyExchanges() {
                 <Icon className="w-4 h-4" />
                 {tab.label}
                 <Badge variant="secondary" className="ml-1 text-xs">
-                  {activeTab === 'responses' ? mockResponses.length : currentExchanges.length}
+                  {getTabCount(tab.id)}
                 </Badge>
               </button>
             );
@@ -278,85 +467,92 @@ export default function MyExchanges() {
       <div className="space-y-4">
         {activeTab === 'responses' ? (
           // Responses Tab Content
-          mockResponses.length === 0 ? (
-            <Card>
-              <CardContent className="p-8 text-center">
-                <div className="text-muted-foreground">
-                  <MessageCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <h3 className="text-lg font-medium mb-2">No responses yet</h3>
-                  <p className="text-sm">
-                    You haven't received any responses to your learning requests yet.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            mockResponses.map((response) => (
-              <Card key={response.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    {/* Response Info */}
-                    <div className="flex items-start gap-4 flex-1">
-                      <Avatar className="w-12 h-12">
-                        <AvatarFallback>
-                          {response.responder.avatar}
-                        </AvatarFallback>
-                      </Avatar>
-                      
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="font-semibold text-lg">{response.responder.name}</h3>
-                          {response.responder.isVerified && (
-                            <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
-                              Verified
-                            </Badge>
-                          )}
-                          <div className="flex items-center gap-1">
-                            <Star className="w-3 h-3 fill-current text-yellow-400" />
-                            <span className="text-sm">{response.responder.rating}</span>
-                          </div>
-                        </div>
-                        
-                        <Badge variant="secondary" className="text-xs mb-2">
-                          {response.skill}
-                        </Badge>
-                        
-                        <p className="text-muted-foreground mb-3">{response.message}</p>
-                        
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4" />
-                            {new Date(response.created_at).toLocaleDateString()}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex items-center gap-2 ml-4">
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => handleDeclineResponse(response)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <X className="w-4 h-4 mr-1" />
-                        Decline
-                      </Button>
-                      <Button 
-                        size="sm"
-                        onClick={() => handleAcceptResponse(response)}
-                        className="bg-green-600 hover:bg-green-700"
-                      >
-                        <Check className="w-4 h-4 mr-1" />
-                        Accept
-                      </Button>
-                    </div>
+          <div>
+            {/* Responses Header */}
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Responses to Your Requests</h3>
+            </div>
+            
+            {responses.length === 0 ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <div className="text-muted-foreground">
+                    <MessageCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <h3 className="text-lg font-medium mb-2">No responses yet</h3>
+                    <p className="text-sm">
+                      You haven't received any responses to your learning requests yet.
+                    </p>
                   </div>
                 </CardContent>
               </Card>
-            ))
-          )
+            ) : (
+              responses.map((response) => (
+                <Card key={response.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between">
+                      {/* Response Info */}
+                      <div className="flex items-start gap-4 flex-1">
+                        <Avatar className="w-12 h-12">
+                          <AvatarFallback>
+                            {response.responder.avatar}
+                          </AvatarFallback>
+                        </Avatar>
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="font-semibold text-lg">{response.responder.name}</h3>
+                            {response.responder.isVerified && (
+                              <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                                Verified
+                              </Badge>
+                            )}
+                            <div className="flex items-center gap-1">
+                              <Star className="w-3 h-3 fill-current text-yellow-400" />
+                              <span className="text-sm">{response.responder.rating}</span>
+                            </div>
+                          </div>
+                          
+                          <Badge variant="secondary" className="text-xs mb-2">
+                            {response.skill}
+                          </Badge>
+                          
+                          <p className="text-muted-foreground mb-3">{response.message}</p>
+                          
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="w-4 h-4" />
+                              {new Date(response.created_at).toLocaleDateString()}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-2 ml-4">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleDeclineResponse(response)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <X className="w-4 h-4 mr-1" />
+                          Decline
+                        </Button>
+                        <Button 
+                          size="sm"
+                          onClick={() => handleAcceptResponse(response)}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          <Check className="w-4 h-4 mr-1" />
+                          Accept
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
         ) : currentExchanges.length === 0 ? (
           <Card>
             <CardContent className="p-8 text-center">
@@ -453,14 +649,16 @@ export default function MyExchanges() {
                       )}
                       
                       {exchange.status === 'completed' && (
-                        <div className="flex items-center gap-2">
+                        <>
                           {exchange.rating && (
                             <div className="flex items-center gap-1">
                               {[...Array(5)].map((_, i) => (
                                 <Star
                                   key={i}
                                   className={`w-4 h-4 ${
-                                    i < exchange.rating! ? 'text-yellow-500 fill-current' : 'text-muted-foreground'
+                                    i < exchange.rating!
+                                      ? 'fill-current text-yellow-400'
+                                      : 'text-gray-300'
                                   }`}
                                 />
                               ))}
@@ -473,7 +671,7 @@ export default function MyExchanges() {
                           >
                             Review
                           </Button>
-                        </div>
+                        </>
                       )}
                     </div>
                   </div>
@@ -488,10 +686,7 @@ export default function MyExchanges() {
       {selectedExchange && (
         <ExchangeReviewModal
           isOpen={reviewModalOpen}
-          onClose={() => {
-            setReviewModalOpen(false);
-            setSelectedExchange(null);
-          }}
+          onClose={() => setReviewModalOpen(false)}
           exchange={selectedExchange}
           onReviewSubmitted={handleReviewSubmitted}
         />

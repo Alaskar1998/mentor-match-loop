@@ -5,10 +5,11 @@ import { FilterSidebar } from "@/components/search/FilterSidebar";
 import { FilterButton } from "@/components/search/FilterButton";
 import { SearchHeader } from "@/components/search/SearchHeader";
 import { AdBanner } from "@/components/ads/AdBanner";
-import { DummyAdCard } from "@/components/ads/DummyAdCard";
-import { dummyProfiles, getRandomAds } from "@/data/dummyData";
 import { supabase } from "@/integrations/supabase/client";
 import { useMonetization } from "@/hooks/useMonetization";
+import { useAuth } from "@/hooks/useAuth";
+import { searchService, SearchResponse } from "@/services/searchService";
+import { SearchSuggestionCard, NoResultsMessage } from "@/components/search/SearchSuggestion";
 
 export interface UserProfile {
   id: string;
@@ -33,98 +34,11 @@ export interface SearchFilters {
   mentorOnly: boolean;
 }
 
-// Mock data for demonstration
-const mockUsers: UserProfile[] = [
-  {
-    id: "1",
-    name: "Sarah Chen",
-    profilePicture: "👩‍🎨",
-    isMentor: true,
-    rating: 4.9,
-    successfulExchanges: 127,
-    skillLevel: "Expert",
-    bio: "UI/UX Designer with 8 years of experience. Love teaching design principles and Figma workflows.",
-    skills: ["UI/UX Design", "Figma", "Illustration", "Prototyping"],
-    country: "Singapore",
-    gender: "Female",
-    willingToTeachWithoutReturn: true
-  },
-  {
-    id: "2",
-    name: "Marcus Johnson",
-    profilePicture: "👨‍💻",
-    isMentor: true,
-    rating: 5.0,
-    successfulExchanges: 203,
-    skillLevel: "Expert",
-    bio: "Full-stack developer passionate about React and Node.js. Teaching coding since 2019.",
-    skills: ["React", "Node.js", "Python", "TypeScript"],
-    country: "United States",
-    gender: "Male",
-    willingToTeachWithoutReturn: true
-  },
-  {
-    id: "3",
-    name: "Elena Rodriguez",
-    profilePicture: "👩‍🍳",
-    isMentor: true,
-    rating: 4.8,
-    successfulExchanges: 89,
-    skillLevel: "Intermediate",
-    bio: "Professional chef specializing in plant-based cuisine. Love sharing healthy cooking techniques!",
-    skills: ["Vegan Cooking", "Baking", "Meal Prep", "Nutrition"],
-    country: "Spain",
-    gender: "Female",
-    willingToTeachWithoutReturn: true
-  },
-  {
-    id: "4",
-    name: "David Kim",
-    profilePicture: "🎸",
-    isMentor: false,
-    rating: 4.6,
-    successfulExchanges: 45,
-    skillLevel: "Intermediate",
-    bio: "Guitar enthusiast and music teacher. Also learning piano and would love to exchange knowledge!",
-    skills: ["Guitar", "Music Theory", "Songwriting"],
-    country: "South Korea",
-    gender: "Male",
-    willingToTeachWithoutReturn: false
-  },
-  {
-    id: "5",
-    name: "Amanda Silva",
-    profilePicture: "📷",
-    isMentor: true,
-    rating: 4.7,
-    successfulExchanges: 112,
-    skillLevel: "Expert",
-    bio: "Professional photographer and Adobe expert. Teaching photo editing and camera techniques.",
-    skills: ["Photography", "Lightroom", "Photoshop", "Portrait Photography"],
-    country: "Brazil",
-    gender: "Female",
-    willingToTeachWithoutReturn: true
-  },
-  {
-    id: "6",
-    name: "Alex Thompson",
-    profilePicture: "🏃‍♂️",
-    isMentor: false,
-    rating: 4.3,
-    successfulExchanges: 28,
-    skillLevel: "Beginner",
-    bio: "Fitness enthusiast learning about nutrition and workout planning. Happy to teach basic running techniques!",
-    skills: ["Running", "Basic Fitness", "Motivation"],
-    country: "Canada",
-    gender: "Male",
-    willingToTeachWithoutReturn: false
-  }
-];
-
 const SearchResultsPage = () => {
   const [searchParams] = useSearchParams();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<UserProfile[]>([]);
+  const [searchResponse, setSearchResponse] = useState<SearchResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<SearchFilters>({
     country: "",
@@ -137,145 +51,272 @@ const SearchResultsPage = () => {
   const isPremium = userTier === 'premium';
   const [showAd, setShowAd] = useState(true);
   const [isFilterSidebarOpen, setIsFilterSidebarOpen] = useState(false);
+  const { user } = useAuth();
 
   const searchQuery = searchParams.get("q") || "";
 
-  // Use dummy profiles for testing
+  // Handle search suggestions
+  const handleSuggestionClick = (suggestedTerm: string) => {
+    const newUrl = `/search?q=${encodeURIComponent(suggestedTerm)}`;
+    window.history.pushState({}, '', newUrl);
+    window.location.reload(); // Simple way to trigger search with new term
+  };
+
+  // Function to check if search should be disabled based on user name
+  const isSearchDisabled = () => {
+    if (!user?.name) return false;
+    
+    // List of usernames that should have search disabled
+    const disabledUsernames = [
+      'test',
+      'demo',
+      'admin',
+      'moderator',
+      'system',
+      'blocked',
+      'suspended',
+      'banned',
+      'restricted'
+    ];
+    
+    return disabledUsernames.some(disabledName => 
+      user.name.toLowerCase().includes(disabledName.toLowerCase())
+    );
+  };
+
+  // Fetch real user data from Supabase
   useEffect(() => {
-    // Simulate loading delay
-    const timer = setTimeout(() => {
-      // Convert dummy profiles to UserProfile format
-      const transformedUsers: UserProfile[] = dummyProfiles.map(profile => ({
-        id: profile.id,
-        name: profile.name,
-        profilePicture: profile.profilePicture,
-        isMentor: profile.isMentor,
-        rating: profile.rating,
-        successfulExchanges: profile.successfulExchanges,
-        skillLevel: profile.skillLevel,
-        bio: profile.bio,
-        skills: profile.skills,
-        country: profile.country,
-        gender: profile.gender,
-        willingToTeachWithoutReturn: profile.willingToTeachWithoutReturn
-      }));
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch profiles from Supabase
+        const { data: profiles, error } = await supabase
+          .from('profiles')
+          .select(`
+            id,
+            display_name,
+            avatar_url,
+            bio,
+            country,
+            gender,
+            skills_to_teach,
+            willing_to_teach_without_return
+          `)
+          .not('id', 'is', null);
 
-      setUsers(transformedUsers);
-      setLoading(false);
-    }, 1000); // 1 second loading delay for realistic feel
+        if (error) {
+          console.error('Error fetching profiles:', error);
+          setUsers([]);
+          return;
+        }
 
-    return () => clearTimeout(timer);
+        // Transform Supabase data to UserProfile format and filter out current user
+        const transformedUsers: UserProfile[] = profiles
+          ?.filter(profile => profile.id !== user?.id) // Filter out current user's profile
+          .map(profile => ({
+            id: profile.id,
+            name: profile.display_name || 'Anonymous User',
+            profilePicture: profile.avatar_url && profile.avatar_url.startsWith('http') ? profile.avatar_url : '👤',
+            isMentor: profile.willing_to_teach_without_return || false, // Use this as mentor indicator
+            rating: 4.5, // Default rating since it's not in the schema
+            successfulExchanges: 0, // Default since it's not in the schema
+            skillLevel: 'Intermediate' as const, // Default since it's not in the schema
+            bio: profile.bio || '',
+            skills: Array.isArray(profile.skills_to_teach) 
+              ? profile.skills_to_teach.map((skill: any) => {
+                  // Handle different skill formats
+                  if (typeof skill === 'string') return skill;
+                  if (skill && typeof skill === 'object') {
+                    return skill.name || skill.skill || skill.title || JSON.stringify(skill);
+                  }
+                  return String(skill);
+                })
+              : [],
+            country: profile.country || 'Unknown',
+            gender: (profile.gender === 'Female' ? 'Female' : 'Male') as 'Male' | 'Female',
+            willingToTeachWithoutReturn: profile.willing_to_teach_without_return || false
+          })) || [];
+
+        console.log('Loaded users with skills and avatars:', transformedUsers.map(user => ({
+          name: user.name,
+          skills: user.skills,
+          bio: user.bio,
+          avatar: user.profilePicture
+        })));
+        setUsers(transformedUsers);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        setUsers([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
   }, []);
 
   useEffect(() => {
-    // Filter users based on search query and filters
-    let filtered = users;
+    // Use the new fuzzy search service
+    if (searchQuery && users.length > 0) {
+      console.log('Searching for:', searchQuery);
+      console.log('Available users:', users.length);
+      console.log('Sample user skills:', users.slice(0, 3).map(u => ({ name: u.name, skills: u.skills })));
+      
+      const response = searchService.search(users, searchQuery);
+      console.log('Search response:', response);
+      setSearchResponse(response);
+      
+      // Apply additional filters to the search results
+      let filtered = response.results.map(result => result.user);
 
-    // Text search
-    if (searchQuery) {
-      filtered = filtered.filter(user => 
-        user.skills.some(skill => 
-          skill.toLowerCase().includes(searchQuery.toLowerCase())
-        ) ||
-        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.bio.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+      // Apply filters - Country filter only for premium users
+      if (filters.country && canUseFeature('country_filter')) {
+        filtered = filtered.filter(user => user.country === filters.country);
+      }
+
+      if (filters.skillLevel) {
+        filtered = filtered.filter(user => user.skillLevel === filters.skillLevel);
+      }
+
+      if (filters.rating) {
+        const ratingThreshold = parseFloat(filters.rating);
+        filtered = filtered.filter(user => user.rating >= ratingThreshold);
+      }
+
+      if (filters.gender.length > 0) {
+        filtered = filtered.filter(user => filters.gender.includes(user.gender));
+      }
+
+      // Apply mentor filter only for premium users
+      if (filters.mentorOnly && canUseFeature('mentor_filter')) {
+        filtered = filtered.filter(user => user.willingToTeachWithoutReturn);
+      }
+
+      setFilteredUsers(filtered);
+    } else {
+      // No search query - show all users with filters
+      let filtered = users;
+
+      // Apply filters
+      if (filters.country && canUseFeature('country_filter')) {
+        filtered = filtered.filter(user => user.country === filters.country);
+      }
+
+      if (filters.skillLevel) {
+        filtered = filtered.filter(user => user.skillLevel === filters.skillLevel);
+      }
+
+      if (filters.rating) {
+        const ratingThreshold = parseFloat(filters.rating);
+        filtered = filtered.filter(user => user.rating >= ratingThreshold);
+      }
+
+      if (filters.gender.length > 0) {
+        filtered = filtered.filter(user => filters.gender.includes(user.gender));
+      }
+
+      if (filters.mentorOnly && canUseFeature('mentor_filter')) {
+        filtered = filtered.filter(user => user.willingToTeachWithoutReturn);
+      }
+
+      setFilteredUsers(filtered);
+      setSearchResponse(null);
     }
-
-    // Apply filters - Country filter only for premium users
-    if (filters.country && canUseFeature('country_filter')) {
-      filtered = filtered.filter(user => user.country === filters.country);
-    }
-
-    if (filters.skillLevel) {
-      filtered = filtered.filter(user => user.skillLevel === filters.skillLevel);
-    }
-
-    if (filters.rating) {
-      const ratingThreshold = parseFloat(filters.rating);
-      filtered = filtered.filter(user => user.rating >= ratingThreshold);
-    }
-
-    if (filters.gender.length > 0) {
-      filtered = filtered.filter(user => filters.gender.includes(user.gender));
-    }
-
-    // Apply mentor filter only for premium users
-    if (filters.mentorOnly && canUseFeature('mentor_filter')) {
-      filtered = filtered.filter(user => user.willingToTeachWithoutReturn);
-    }
-
-    setFilteredUsers(filtered);
-  }, [searchQuery, filters, users]);
+  }, [searchQuery, filters, users, canUseFeature]);
 
   return (
     <div className="min-h-screen bg-background">
-      <SearchHeader searchQuery={searchQuery} />
+      <SearchHeader searchQuery={searchQuery} disabled={isSearchDisabled()} />
       
       <div className="container mx-auto px-6 py-8">
-        {/* Ad Banner for Free Users */}
-        {!isPremium && showAd && (
-          <div className="mb-6">
-            <AdBanner 
-              onClose={() => setShowAd(false)}
-              onUpgrade={() => {
-                // TODO: Open premium upgrade modal
-                console.log('Open premium upgrade');
-              }}
-            />
+        {/* Check if search is disabled */}
+        {isSearchDisabled() ? (
+          <div className="text-center py-12">
+            <div className="max-w-md mx-auto">
+              <div className="text-6xl mb-4">🔒</div>
+              <h2 className="text-2xl font-bold mb-2">Search Disabled</h2>
+              <p className="text-muted-foreground mb-4">
+                Search functionality is not available for your account type.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Contact support if you believe this is an error.
+              </p>
+            </div>
           </div>
-        )}
+        ) : (
+          <>
+            {/* Search Suggestion */}
+            {searchResponse?.suggestion && (
+              <div className="mb-6">
+                <SearchSuggestionCard
+                  suggestion={searchResponse.suggestion}
+                  onSuggestionClick={handleSuggestionClick}
+                />
+              </div>
+            )}
 
-        {/* Dummy Ad for Testing */}
-        <div className="mb-6">
-          <DummyAdCard 
-            ad={getRandomAds(1)[0]} 
-            className="mx-auto max-w-lg"
-          />
-        </div>
-        
-        {/* Filter Button and Sidebar */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <FilterButton
-              onClick={() => setIsFilterSidebarOpen(!isFilterSidebarOpen)}
-              isOpen={isFilterSidebarOpen}
-              activeFiltersCount={
-                (filters.country ? 1 : 0) +
-                (filters.skillLevel ? 1 : 0) +
-                (filters.rating ? 1 : 0) +
-                filters.gender.length +
-                (filters.mentorOnly ? 1 : 0)
-              }
-            />
-            <span className="text-sm text-muted-foreground">
+            {/* Ad Banner for Free Users */}
+            {!isPremium && showAd && (
+              <div className="mb-6">
+                <AdBanner 
+                  onClose={() => setShowAd(false)}
+                  onUpgrade={() => {
+                    // TODO: Open premium upgrade modal
+                    console.log('Open premium upgrade');
+                  }}
+                />
+              </div>
+            )}
+            
+            {/* Filter Button and Sidebar */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-4">
+                <FilterButton
+                  onClick={() => setIsFilterSidebarOpen(!isFilterSidebarOpen)}
+                  isOpen={isFilterSidebarOpen}
+                  activeFiltersCount={
+                    (filters.country ? 1 : 0) +
+                    (filters.skillLevel ? 1 : 0) +
+                    (filters.rating ? 1 : 0) +
+                    filters.gender.length +
+                    (filters.mentorOnly ? 1 : 0)
+                  }
+                />
+                            <span className="text-sm text-muted-foreground">
               {filteredUsers.length} results found
             </span>
-          </div>
-        </div>
+              </div>
+            </div>
 
-        {/* Search Results */}
-        <div className="flex-1">
-          {loading ? (
-            <div className="text-center py-8">Loading...</div>
-          ) : (
-            <SearchResults 
+            {/* Search Results */}
+            <div className="flex-1">
+              {loading ? (
+                <div className="text-center py-8">Loading...</div>
+              ) : (
+                            <SearchResults 
               users={filteredUsers} 
               searchQuery={searchQuery} 
               isPremium={isPremium}
+              searchResponse={searchResponse}
+              onSuggestionClick={handleSuggestionClick}
             />
-          )}
-        </div>
+              )}
+            </div>
+          </>
+        )}
       </div>
 
       {/* Filter Sidebar - Rendered outside main content flow */}
-      <FilterSidebar
-        filters={filters}
-        onFiltersChange={setFilters}
-        isPremium={isPremium}
-        isOpen={isFilterSidebarOpen}
-        onClose={() => setIsFilterSidebarOpen(false)}
-      />
+      {!isSearchDisabled() && (
+        <FilterSidebar
+          filters={filters}
+          onFiltersChange={setFilters}
+          isPremium={isPremium}
+          isOpen={isFilterSidebarOpen}
+          onClose={() => setIsFilterSidebarOpen(false)}
+        />
+      )}
     </div>
   );
 };
