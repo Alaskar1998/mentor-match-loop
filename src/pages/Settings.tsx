@@ -5,19 +5,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+
 import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
 import { Badge } from "@/components/ui/badge";
 import { 
-  User, 
   Bell, 
   Shield, 
   CreditCard, 
   Palette, 
   Globe, 
   Trash2, 
-  Upload,
   Mail,
   Lock,
   Eye,
@@ -29,15 +27,9 @@ import { toast } from "sonner";
 
 const Settings = () => {
   const { user, updateUser } = useAuth();
-  const [activeTab, setActiveTab] = useState("profile");
+  const [activeTab, setActiveTab] = useState("notifications");
   const [showPassword, setShowPassword] = useState(false);
   const [settings, setSettings] = useState({
-    // Profile settings
-    displayName: user?.name || "",
-    email: user?.email || "",
-    bio: user?.bio || "",
-    country: user?.country || "",
-    
     // Notification settings
     emailNotifications: true,
     pushNotifications: true,
@@ -61,7 +53,6 @@ const Settings = () => {
   });
 
   const tabs = [
-    { id: "profile", label: "Profile", icon: User },
     { id: "notifications", label: "Notifications", icon: Bell },
     { id: "privacy", label: "Privacy & Security", icon: Shield },
     { id: "billing", label: "Billing", icon: CreditCard },
@@ -70,14 +61,7 @@ const Settings = () => {
   ];
 
   const handleSave = () => {
-    // Update user profile
-    if (activeTab === "profile") {
-      updateUser({
-        name: settings.displayName,
-        bio: settings.bio,
-        country: settings.country
-      });
-    }
+    // Save settings based on active tab
     toast.success("Settings saved successfully!");
   };
 
@@ -90,77 +74,6 @@ const Settings = () => {
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case "profile":
-        return (
-          <div className="space-y-6">
-            <div className="flex items-center gap-6">
-              <Avatar className="w-24 h-24">
-                <AvatarImage src={user?.profilePicture} />
-                <AvatarFallback className="text-2xl">{user?.name?.charAt(0)}</AvatarFallback>
-              </Avatar>
-              <div>
-                <Button variant="outline" className="gap-2">
-                  <Upload className="w-4 h-4" />
-                  Change Photo
-                </Button>
-                <p className="text-sm text-muted-foreground mt-2">
-                  JPG, GIF or PNG. 1MB max.
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="displayName">Display Name</Label>
-                <Input
-                  id="displayName"
-                  value={settings.displayName}
-                  onChange={(e) => setSettings(prev => ({ ...prev, displayName: e.target.value }))}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  value={settings.email}
-                  onChange={(e) => setSettings(prev => ({ ...prev, email: e.target.value }))}
-                  type="email"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="bio">Bio</Label>
-              <Textarea
-                id="bio"
-                value={settings.bio}
-                onChange={(e) => setSettings(prev => ({ ...prev, bio: e.target.value }))}
-                placeholder="Tell others about yourself..."
-                rows={4}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="country">Country</Label>
-              <Select value={settings.country} onValueChange={(value) => setSettings(prev => ({ ...prev, country: value }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select your country" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="us">United States</SelectItem>
-                  <SelectItem value="uk">United Kingdom</SelectItem>
-                  <SelectItem value="ca">Canada</SelectItem>
-                  <SelectItem value="au">Australia</SelectItem>
-                  <SelectItem value="de">Germany</SelectItem>
-                  <SelectItem value="fr">France</SelectItem>
-                  <SelectItem value="jp">Japan</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        );
-
       case "notifications":
         return (
           <div className="space-y-6">
@@ -488,7 +401,7 @@ const Settings = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-3">
                   {(() => {
-                    const ActiveIcon = tabs.find(tab => tab.id === activeTab)?.icon || User;
+                    const ActiveIcon = tabs.find(tab => tab.id === activeTab)?.icon || Bell;
                     return <ActiveIcon className="w-5 h-5" />;
                   })()}
                   {tabs.find(tab => tab.id === activeTab)?.label}

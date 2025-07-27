@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Coins, Crown, Info } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const SKILL_LEVELS = ["Beginner", "Intermediate", "Expert"];
 const COUNTRIES = [
@@ -86,10 +87,44 @@ export const CreateRequest = () => {
   };
 
   const submitRequest = async () => {
-    // TODO: Submit to backend/database
-    console.log("Submitting request:", request);
-    toast.success("Learning request created successfully!");
-    navigate("/requests-feed");
+    if (!user?.id) {
+      toast.error("User not authenticated");
+      return;
+    }
+
+    try {
+      // Submit to Supabase database
+      const { data, error } = await supabase
+        .from('learning_requests')
+        .insert({
+          user_id: user.id,
+          skill: request.skill,
+          level: request.level,
+          description: request.description,
+          country: request.country || 'Unknown',
+          urgency: request.urgency as 'urgent' | 'soon' | 'flexible',
+          responses_count: 0
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating learning request:', error);
+        toast.error("Failed to create learning request. Please try again.");
+        return;
+      }
+
+      console.log("Learning request created successfully:", data);
+      toast.success("✅ Learning request created successfully! Redirecting to requests feed...");
+      
+      // Add a small delay to show the success message before navigating
+      setTimeout(() => {
+        navigate("/requests-feed");
+      }, 1500);
+    } catch (error) {
+      console.error('Error creating learning request:', error);
+      toast.error("Failed to create learning request. Please try again.");
+    }
   };
 
   const isPaymentRequired = userTier === "free" || (userTier === "premium" && remainingPosts === 0);

@@ -6,9 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Clock, MapPin, Plus, Search, Star, MessageCircle } from "lucide-react";
+import { Clock, MapPin, Plus, Search, Star, MessageCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { ResponseModal } from "@/components/requests/ResponseModal";
 
 interface LearningRequest {
   id: string;
@@ -57,14 +58,28 @@ export const RequestsFeed = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCountry, setFilterCountry] = useState("all");
   const [filterUrgency, setFilterUrgency] = useState("all");
+  const [responseModalOpen, setResponseModalOpen] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<LearningRequest | null>(null);
 
   useEffect(() => {
     fetchRequests();
   }, []);
 
+  // Refresh requests when component comes into focus (e.g., after creating a new request)
+  useEffect(() => {
+    const handleFocus = () => {
+      fetchRequests();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
+
   const fetchRequests = async () => {
     try {
       setLoading(true);
+      console.log('Fetching learning requests...');
+      
       const { data: requestsData, error } = await supabase
         .from('learning_requests')
         .select(`
@@ -86,9 +101,11 @@ export const RequestsFeed = () => {
 
       if (error) {
         console.error('Error fetching requests:', error);
-        toast.error("Failed to load learning requests");
+        toast.error(`Failed to load learning requests: ${error.message}`);
         return;
       }
+
+      console.log('Raw requests data:', requestsData);
 
       const formattedRequests: LearningRequest[] = requestsData?.map(req => ({
         id: req.id,
@@ -107,18 +124,24 @@ export const RequestsFeed = () => {
         responses: req.responses_count
       })) || [];
 
+      console.log('Formatted requests:', formattedRequests);
       setRequests(formattedRequests);
     } catch (error) {
-      console.error('Error:', error);
-      toast.error("Something went wrong");
+      console.error('Error fetching requests:', error);
+      toast.error("Something went wrong while loading requests");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleRespond = (requestId: string) => {
-    // TODO: Implement response functionality
-    toast.info("Response functionality coming soon!");
+  const handleRespond = (request: LearningRequest) => {
+    setSelectedRequest(request);
+    setResponseModalOpen(true);
+  };
+
+  const handleResponseSubmitted = () => {
+    // Refresh the requests data
+    fetchRequests();
   };
 
   const filteredRequests = requests.filter(request => {
@@ -143,10 +166,21 @@ export const RequestsFeed = () => {
               Help learners by responding to their skill requests
             </p>
           </div>
-          <Button onClick={() => navigate("/create-request")} className="gap-2">
-            <Plus className="w-4 h-4" />
-            Create Request
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={fetchRequests} 
+              variant="outline" 
+              disabled={loading}
+              className="gap-2"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+            <Button onClick={() => navigate("/create-request")} className="gap-2">
+              <Plus className="w-4 h-4" />
+              Create Request
+            </Button>
+          </div>
         </div>
 
         {/* Filters */}
@@ -257,7 +291,7 @@ export const RequestsFeed = () => {
                       <MessageCircle className="w-4 h-4" />
                       {request.responses} response{request.responses !== 1 ? 's' : ''}
                     </div>
-                    <Button onClick={() => handleRespond(request.id)} size="sm">
+                    <Button onClick={() => handleRespond(request)} size="sm">
                       Respond to Request
                     </Button>
                   </div>
@@ -280,6 +314,19 @@ export const RequestsFeed = () => {
           </Card>
         )}
       </div>
+
+      {/* Response Modal */}
+      {selectedRequest && (
+        <ResponseModal
+          isOpen={responseModalOpen}
+          onClose={() => {
+            setResponseModalOpen(false);
+            setSelectedRequest(null);
+          }}
+          request={selectedRequest}
+          onResponseSubmitted={handleResponseSubmitted}
+        />
+      )}
     </div>
   );
 };

@@ -53,29 +53,29 @@ export const PremiumUpgradeModal = ({ isOpen, onClose }: PremiumUpgradeModalProp
       icon: <MessageSquare className="w-5 h-5" />,
       title: "Unlimited Invites",
       description: "Send as many learning invitations as you want",
-      free: "3 per month",
+      free: "Limited invites",
       premium: "Unlimited"
     },
     {
       icon: <Search className="w-5 h-5" />,
-      title: "Worldwide Search",
-      description: "Find teachers and learners globally",
-      free: "Country only",
-      premium: "Worldwide"
+      title: "Search Visibility",
+      description: "See all search results clearly",
+      free: "First 3 visible, rest blurred",
+      premium: "All results visible"
     },
     {
       icon: <MapPin className="w-5 h-5" />,
-      title: "Map Search",
-      description: "Discover teachers nearby with interactive map",
-      free: false,
-      premium: true
+      title: "Worldwide + Map Search",
+      description: "Find teachers globally with interactive map",
+      free: "Country only, no map",
+      premium: "Worldwide + map search"
     },
     {
       icon: <Filter className="w-5 h-5" />,
-      title: "Advanced Filters",
-      description: "Filter by mentor status, skill level, and more",
-      free: "Basic filters",
-      premium: "All filters"
+      title: "Full Filters",
+      description: "Access all filters including Mentor filter",
+      free: "Basic filters only",
+      premium: "Full filters (including Mentor)"
     },
     {
       icon: <X className="w-5 h-5" />,
@@ -92,18 +92,11 @@ export const PremiumUpgradeModal = ({ isOpen, onClose }: PremiumUpgradeModalProp
       premium: true
     },
     {
-      icon: <Coins className="w-5 h-5" />,
-      title: "Monthly Coin Stipend",
-      description: "Receive coins every month automatically",
-      free: "0 coins",
-      premium: "300 coins/month"
-    },
-    {
-      icon: <Gift className="w-5 h-5" />,
-      title: "Discounted Purchases",
-      description: "Save on profile boosts and premium features",
-      free: "Full price",
-      premium: "Up to 35% off"
+      icon: <MessageSquare className="w-5 h-5" />,
+      title: "Invite Messages",
+      description: "Send personalized messages with invites",
+      free: "No messages",
+      premium: "Up to 3 invite messages"
     }
   ];
 
@@ -189,7 +182,7 @@ export const PremiumUpgradeModal = ({ isOpen, onClose }: PremiumUpgradeModalProp
               <Crown className="w-8 h-8 text-yellow-500" />
               <CardTitle className="text-2xl">Premium Plan</CardTitle>
             </div>
-            <div className="text-4xl font-bold">$9.99<span className="text-lg text-muted-foreground">/month</span></div>
+            <div className="text-4xl font-bold">$4.99<span className="text-lg text-muted-foreground">/month</span></div>
             <p className="text-muted-foreground">Unlock unlimited learning potential</p>
           </CardHeader>
         </Card>

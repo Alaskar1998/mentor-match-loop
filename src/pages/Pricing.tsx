@@ -12,52 +12,40 @@ const PricingPage = () => {
 
   const plans = [
     {
-      name: "Basic",
+      name: "Free",
       description: "Perfect for getting started with skill exchange",
-      monthlyPrice: 9,
-      yearlyPrice: 90,
+      monthlyPrice: 0,
+      yearlyPrice: 0,
       icon: <Star className="w-6 h-6" />,
       popular: false,
       features: [
-        "Up to 5 skill exchanges per month",
-        "Basic profile customization",
-        "Community access",
-        "Mobile app access",
-        "Email support"
+        "Limited invites",
+        "First 3 search results visible",
+        "Basic filters only",
+        "Country-only search",
+        "Ads visible"
+      ],
+      limitations: [
+        "Profiles beyond 3rd result are blurred",
+        "No map search",
+        "No mentor filter",
+        "No early event access"
       ]
     },
     {
       name: "Premium",
-      description: "For active learners who want more opportunities",
-      monthlyPrice: 19,
-      yearlyPrice: 190,
-      icon: <Zap className="w-6 h-6" />,
+      description: "Unlock unlimited learning opportunities",
+      monthlyPrice: 4.99,
+      yearlyPrice: 49.99,
+      icon: <Crown className="w-6 h-6" />,
       popular: true,
       features: [
-        "Unlimited skill exchanges",
-        "Advanced profile features",
-        "Priority matching",
-        "Video call scheduling",
-        "Progress tracking",
-        "Priority support",
-        "Advanced analytics"
-      ]
-    },
-    {
-      name: "Enterprise",
-      description: "For organizations and teams",
-      monthlyPrice: 49,
-      yearlyPrice: 490,
-      icon: <Crown className="w-6 h-6" />,
-      popular: false,
-      features: [
-        "Everything in Premium",
-        "Team management",
-        "Custom integrations",
-        "Advanced reporting",
-        "Dedicated account manager",
-        "Custom onboarding",
-        "24/7 phone support"
+        "Unlimited invites",
+        "Worldwide search + map search",
+        "Full filters (including Mentor filter)",
+        "Up to 3 invite messages",
+        "No ads",
+        "Early event access"
       ]
     }
   ];
@@ -118,7 +106,7 @@ const PricingPage = () => {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {plans.map((plan, index) => (
             <Card 
               key={plan.name} 
@@ -147,31 +135,54 @@ const PricingPage = () => {
               <CardContent className="pt-0">
                 <div className="text-center mb-6">
                   <div className="flex items-baseline justify-center gap-1">
-                    <span className="text-4xl font-bold">${getPrice(plan)}</span>
-                    <span className="text-muted-foreground">/{billingCycle === "monthly" ? "mo" : "yr"}</span>
+                    <span className="text-4xl font-bold">
+                      {plan.monthlyPrice === 0 ? "Free" : `$${getPrice(plan)}`}
+                    </span>
+                    {plan.monthlyPrice > 0 && (
+                      <span className="text-muted-foreground">/{billingCycle === "monthly" ? "mo" : "yr"}</span>
+                    )}
                   </div>
-                  {billingCycle === "yearly" && (
+                  {billingCycle === "yearly" && plan.monthlyPrice > 0 && (
                     <p className="text-sm text-green-600 mt-1">
                       Save {getSavings(plan)}% annually
                     </p>
                   )}
                 </div>
                 
-                <ul className="space-y-3 mb-6">
-                  {plan.features.map((feature, featureIndex) => (
-                    <li key={featureIndex} className="flex items-start gap-3">
-                      <Check className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                      <span className="text-sm">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
+                {/* Features */}
+                <div className="mb-6">
+                  <h4 className="font-semibold text-sm mb-3 text-green-600">✅ What's Included:</h4>
+                  <ul className="space-y-3 mb-4">
+                    {plan.features.map((feature, featureIndex) => (
+                      <li key={featureIndex} className="flex items-start gap-3">
+                        <Check className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                        <span className="text-sm">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  
+                  {/* Limitations for Free tier */}
+                  {plan.limitations && (
+                    <>
+                      <h4 className="font-semibold text-sm mb-3 text-orange-600">⚠️ Limitations:</h4>
+                      <ul className="space-y-3 mb-4">
+                        {plan.limitations.map((limitation, limitationIndex) => (
+                          <li key={limitationIndex} className="flex items-start gap-3">
+                            <span className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0 text-center">•</span>
+                            <span className="text-sm text-muted-foreground">{limitation}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
+                </div>
                 
                 <Button 
                   className="w-full"
                   variant={plan.popular ? "default" : "outline"}
                   onClick={() => handleUpgrade(plan.name, getPrice(plan))}
                 >
-                  {user ? "Upgrade Now" : "Sign Up to Continue"}
+                  {plan.monthlyPrice === 0 ? "Get Started Free" : (user ? "Upgrade Now" : "Sign Up to Continue")}
                 </Button>
               </CardContent>
             </Card>

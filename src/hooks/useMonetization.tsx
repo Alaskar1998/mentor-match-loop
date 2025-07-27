@@ -56,7 +56,7 @@ export const MonetizationProvider = ({ children }: { children: ReactNode }) => {
     noAds: userTier === 'premium',
     earlyEventAccess: userTier === 'premium',
     freeRequestPosts: userTier === 'premium' ? 3 : 0,
-    monthlyCoinStipend: userTier === 'premium' ? 300 : 0,
+    monthlyCoinStipend: userTier === 'premium' ? 0 : 0, // Removed coin stipend
     discountedCoinCosts: userTier === 'premium'
   };
 
@@ -80,6 +80,8 @@ export const MonetizationProvider = ({ children }: { children: ReactNode }) => {
         return features.mapSearch;
       case 'full_filters':
         return features.fullFilters;
+      case 'country_filter':
+        return userTier === 'premium';
       case 'mentor_filter':
         return limitations.mentorFilterEnabled;
       case 'no_ads':

@@ -97,7 +97,7 @@ export const ReviewModal = ({
           message: `${user.email || 'Someone'} left you a ${averageRating.toFixed(1)}-star review`,
           isRead: false,
           type: 'exchange_completed',
-          actionUrl: '/dashboard/reviews',
+          actionUrl: '/dashboard',
           metadata: { 
             reviewerId: user.id,
             reviewerName: user.email || 'Someone',

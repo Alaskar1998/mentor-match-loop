@@ -47,7 +47,7 @@ class MockNotificationService implements NotificationService {
         message: 'Complete your profile to start connecting with other learners',
         isRead: false,
         type: 'system_announcement',
-        actionUrl: '/dashboard/profile',
+        actionUrl: '/profile',
         metadata: { type: 'welcome' }
       },
       {
@@ -82,7 +82,7 @@ class MockNotificationService implements NotificationService {
         message: 'Someone viewed your profile today',
         isRead: true,
         type: 'profile_viewed',
-        actionUrl: '/dashboard/profile',
+        actionUrl: '/profile',
         metadata: { viewCount: 5 }
       }
     ];

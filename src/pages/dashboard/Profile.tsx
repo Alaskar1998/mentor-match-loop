@@ -84,6 +84,10 @@ const SKILL_CATEGORIES = [
     category: "Travel & Culture",
     skills: ["Travel Planning", "Cultural Awareness", "History", "Geography", "World Cuisine"]
   },
+  {
+    category: "Other",
+    skills: []
+  },
 ];
 
 export default function Profile() {
@@ -96,6 +100,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [skillOpen, setSkillOpen] = useState(false);
+  const [customSkillMode, setCustomSkillMode] = useState(false);
   
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -106,6 +111,33 @@ export default function Profile() {
     phone: (user as any)?.phone || '',
     profilePicture: user?.profilePicture || '',
   });
+
+  // Function to find category for a given skill name
+  const findCategoryForSkill = (skillName: string): string => {
+    const normalizedSkillName = skillName.toLowerCase().trim();
+    for (const category of SKILL_CATEGORIES) {
+      const foundSkill = category.skills.find(skill => 
+        skill.toLowerCase() === normalizedSkillName
+      );
+      if (foundSkill) {
+        return category.category;
+      }
+    }
+    return '';
+  };
+
+  // Function to handle custom skill input
+  const handleCustomSkillInput = (skillName: string) => {
+    // If a category is already selected, keep that category for the custom skill
+    // This ensures custom skills stay within the user's chosen category
+    const category = newSkill.category || findCategoryForSkill(skillName) || 'Other';
+    
+    setNewSkill({ 
+      ...newSkill, 
+      name: skillName,
+      category: category
+    });
+  };
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -168,10 +200,11 @@ export default function Profile() {
         const newSkillObj = {
           name: newSkill.name,
           level: newSkill.level,
-          description: newSkill.description
+          description: newSkill.description,
+          category: newSkill.category || 'Other'
         };
 
-        const updatedSkills = [...currentSkills, newSkillObj];
+        const updatedSkills = [...currentSkills, newSkillObj] as Array<{name: string; level: string; description: string; category?: string}>;
 
         const { error } = await supabase
           .from('profiles')
@@ -186,11 +219,17 @@ export default function Profile() {
             variant: "destructive"
           });
         } else {
+          // Update local user state to reflect the new skill
+          updateUser({
+            skillsToTeach: updatedSkills
+          });
+          
           toast({
             title: "Success",
             description: "Skill added successfully!"
           });
           setNewSkill({ category: '', name: '', level: '', description: '' });
+          setCustomSkillMode(false);
         }
       } catch (error) {
         console.error('Error:', error);
@@ -222,7 +261,7 @@ export default function Profile() {
       }
 
       const currentSkills = Array.isArray(profile?.skills_to_teach) ? profile.skills_to_teach : [];
-      const updatedSkills = currentSkills.filter((_, i) => i !== index);
+      const updatedSkills = currentSkills.filter((_, i) => i !== index) as Array<{name: string; level: string; description: string; category?: string}>;
 
       const { error } = await supabase
         .from('profiles')
@@ -237,6 +276,11 @@ export default function Profile() {
           variant: "destructive"
         });
       } else {
+        // Update local user state to reflect the removed skill
+        updateUser({
+          skillsToTeach: updatedSkills
+        });
+        
         toast({
           title: "Success",
           description: "Skill removed successfully!"
@@ -502,7 +546,12 @@ export default function Profile() {
               <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                 <div>
                   <h3 className="font-medium">{skill.name}</h3>
-                  <p className="text-sm text-muted-foreground">Level: {skill.level}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge variant="secondary" className="text-xs">
+                      {skill.category || 'Other'}
+                    </Badge>
+                    <span className="text-sm text-muted-foreground">Level: {skill.level}</span>
+                  </div>
                   {skill.description && (
                     <p className="text-sm text-muted-foreground mt-1">{skill.description}</p>
                   )}
@@ -545,8 +594,23 @@ export default function Profile() {
                           key={cat.category}
                           value={cat.category}
                           onSelect={() => {
-                            setNewSkill({ ...newSkill, category: cat.category, name: '' });
+                            // If user already has a skill selected, check if it belongs to the new category
+                            if (newSkill.name) {
+                              const skillExistsInCategory = cat.skills.some(skill => 
+                                skill.toLowerCase() === newSkill.name.toLowerCase()
+                              );
+                              if (!skillExistsInCategory) {
+                                // Clear the skill if it doesn't belong to the new category
+                                setNewSkill({ ...newSkill, category: cat.category, name: '' });
+                              } else {
+                                // Keep the skill if it belongs to the new category
+                                setNewSkill({ ...newSkill, category: cat.category });
+                              }
+                            } else {
+                              setNewSkill({ ...newSkill, category: cat.category, name: '' });
+                            }
                             setCategoryOpen(false);
+                            setCustomSkillMode(false);
                           }}
                         >
                           {cat.category}
@@ -557,40 +621,97 @@ export default function Profile() {
                 </PopoverContent>
               </Popover>
 
-              {/* Skill Dropdown (filtered by category) */}
-              <Popover open={skillOpen} onOpenChange={setSkillOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={skillOpen}
-                    className="w-full justify-between"
-                    disabled={!newSkill.category}
-                  >
-                    {newSkill.name ? newSkill.name : newSkill.category ? "Select skill" : "Select category first"}
-                    <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-64 p-0">
-                  <Command>
-                    <CommandInput placeholder="Search skill..." />
-                    <CommandList>
-                      {(SKILL_CATEGORIES.find(cat => cat.category === newSkill.category)?.skills || []).map(skill => (
+              {/* Skill Selection - Dropdown or Text Input */}
+              {!customSkillMode ? (
+                <Popover open={skillOpen} onOpenChange={setSkillOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={skillOpen}
+                      className="w-full justify-between"
+                    >
+                      {newSkill.name ? newSkill.name : "Select skill"}
+                      <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-64 p-0">
+                    <Command>
+                      <CommandInput placeholder="Search skill..." />
+                      <CommandList>
+                        {newSkill.category ? (
+                          // Show skills from selected category
+                          (SKILL_CATEGORIES.find(cat => cat.category === newSkill.category)?.skills || []).map(skill => (
+                            <CommandItem
+                              key={skill}
+                              value={skill}
+                              onSelect={() => {
+                                setNewSkill({ ...newSkill, name: skill });
+                                setSkillOpen(false);
+                              }}
+                            >
+                              {skill}
+                            </CommandItem>
+                          ))
+                        ) : (
+                          // Show all skills from all categories
+                          SKILL_CATEGORIES.flatMap(cat => 
+                            cat.skills.map(skill => (
+                              <CommandItem
+                                key={`${cat.category}-${skill}`}
+                                value={skill}
+                                onSelect={() => {
+                                  setNewSkill({ 
+                                    ...newSkill, 
+                                    name: skill,
+                                    category: cat.category 
+                                  });
+                                  setSkillOpen(false);
+                                }}
+                              >
+                                <div className="flex items-center justify-between w-full">
+                                  <span>{skill}</span>
+                                  <Badge variant="secondary" className="text-xs ml-2">
+                                    {cat.category}
+                                  </Badge>
+                                </div>
+                              </CommandItem>
+                            ))
+                          )
+                        )}
                         <CommandItem
-                          key={skill}
-                          value={skill}
+                          value="custom"
                           onSelect={() => {
-                            setNewSkill({ ...newSkill, name: skill });
+                            setCustomSkillMode(true);
                             setSkillOpen(false);
                           }}
                         >
-                          {skill}
+                          + Type custom skill name
                         </CommandItem>
-                      ))}
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              ) : (
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Type skill name..."
+                    value={newSkill.name}
+                    onChange={(e) => handleCustomSkillInput(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setCustomSkillMode(false);
+                      setNewSkill({ ...newSkill, name: '' });
+                    }}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
 
               {/* Level Dropdown */}
               <Select 
@@ -606,13 +727,16 @@ export default function Profile() {
                   ))}
                 </SelectContent>
               </Select>
-              <Button onClick={addSkillToTeach} disabled={loading || !newSkill.category || !newSkill.name || !newSkill.level}>
+              <Button 
+                onClick={addSkillToTeach} 
+                disabled={loading || !newSkill.name || !newSkill.level}
+              >
                 <Plus className="w-4 h-4 mr-2" />
                 {loading ? 'Adding...' : 'Add'}
               </Button>
             </div>
             <Input
-              placeholder="Description (optional)"
+              placeholder="✨ Write a short summary of your experience with this skill (e.g., years of practice, projects, achievements)"
               value={newSkill.description}
               onChange={(e) => setNewSkill({ ...newSkill, description: e.target.value })}
             />

@@ -6,10 +6,9 @@ import { useNavigate } from "react-router-dom";
 
 interface SearchHeaderProps {
   searchQuery: string;
-  resultCount: number;
 }
 
-export const SearchHeader = ({ searchQuery, resultCount }: SearchHeaderProps) => {
+export const SearchHeader = ({ searchQuery }: SearchHeaderProps) => {
   const [query, setQuery] = useState(searchQuery);
   const navigate = useNavigate();
 
@@ -51,9 +50,6 @@ export const SearchHeader = ({ searchQuery, resultCount }: SearchHeaderProps) =>
               <h1 className="text-2xl font-bold text-foreground mb-2">
                 {searchQuery ? `Results for "${searchQuery}"` : "All Skills"}
               </h1>
-              <p className="text-muted-foreground">
-                Found {resultCount} {resultCount === 1 ? 'teacher' : 'teachers'} available
-              </p>
             </div>
             
             {/* Breadcrumb */}

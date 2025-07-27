@@ -11,9 +11,10 @@ import { InvitationFlow } from "@/components/auth/InvitationFlow";
 
 interface ProfileCardProps {
   user: UserProfile;
+  isBlurred?: boolean;
 }
 
-export const ProfileCard = ({ user }: ProfileCardProps) => {
+export const ProfileCard = ({ user, isBlurred = false }: ProfileCardProps) => {
   const navigate = useNavigate();
   const { isAuthenticated, user: currentUser, signup } = useAuth();
   const [showSignupModal, setShowSignupModal] = useState(false);
@@ -64,7 +65,9 @@ export const ProfileCard = ({ user }: ProfileCardProps) => {
   };
 
   return (
-    <Card className="group shadow-card hover:shadow-elegant transition-all duration-300 hover:scale-[1.02] border-0 bg-gradient-to-br from-card to-muted overflow-hidden">
+    <Card className={`group shadow-card hover:shadow-elegant transition-all duration-300 hover:scale-[1.02] border-0 bg-gradient-to-br from-card to-muted overflow-hidden relative ${
+      isBlurred ? 'blur-sm pointer-events-none' : ''
+    }`}>
       <CardContent className="p-6">
         {/* Header */}
         <div className="flex items-start gap-4 mb-4">
@@ -160,6 +163,7 @@ export const ProfileCard = ({ user }: ProfileCardProps) => {
             size="sm" 
             onClick={handleViewProfile}
             className="flex-1 hover:bg-muted"
+            disabled={isBlurred}
           >
             <Eye className="w-4 h-4 mr-2" />
             View Profile
@@ -169,11 +173,22 @@ export const ProfileCard = ({ user }: ProfileCardProps) => {
             size="sm" 
             onClick={handleSendInvitation}
             className="flex-1"
+            disabled={isBlurred}
           >
             <MessageCircle className="w-4 h-4 mr-2" />
             Send Invitation
           </Button>
         </div>
+        
+        {/* Blur Overlay */}
+        {isBlurred && (
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background/80 flex items-end justify-center pb-4">
+            <div className="text-center">
+              <div className="text-2xl mb-2">🔒</div>
+              <p className="text-sm font-medium">Premium Required</p>
+            </div>
+          </div>
+        )}
       </CardContent>
 
       {/* Modals */}

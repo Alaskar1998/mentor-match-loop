@@ -26,6 +26,7 @@ interface Skill {
   name: string;
   level: string;
   description: string;
+  category?: string;
 }
 
 interface SignupData {
@@ -73,7 +74,7 @@ export const SignupModal = ({ isOpen, onClose, onSignupComplete }: SignupModalPr
   const [countryOpen, setCountryOpen] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
-  const [newSkill, setNewSkill] = useState({ name: "", level: "", description: "" });
+  const [newSkill, setNewSkill] = useState({ name: "", level: "", description: "", category: "" });
   const [newLearnSkill, setNewLearnSkill] = useState("");
   
   const { signup, signInWithGoogle, signInWithFacebook, signInWithApple } = useAuth();
@@ -183,7 +184,7 @@ export const SignupModal = ({ isOpen, onClose, onSignupComplete }: SignupModalPr
         ...prev,
         skillsToTeach: [...(prev.skillsToTeach || []), newSkill]
       }));
-      setNewSkill({ name: "", level: "", description: "" });
+      setNewSkill({ name: "", level: "", description: "", category: "" });
     }
   };
 

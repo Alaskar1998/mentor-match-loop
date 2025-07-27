@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Settings, Mail } from "lucide-react";
+import { Search, Settings, Mail, Coins } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { SignupModal } from "@/components/auth/SignupModal";
 import { SignInModal } from "@/components/auth/SignInModal";
@@ -73,6 +73,14 @@ export const Header = () => {
             <div className="flex items-center gap-2 md:gap-4">
               {isAuthenticated ? (
                 <div className="flex items-center gap-2">
+                  <Link to="/my-exchanges">
+                    <Button variant="ghost" size="sm">My Exchanges</Button>
+                  </Link>
+                  <Link to="/dashboard/gamification">
+                    <Button variant="ghost" size="sm" className="p-2">
+                      <Coins className="w-5 h-5" />
+                    </Button>
+                  </Link>
                   <NotificationDropdown type="general" />
                   <Link to="/messages">
                     <Button variant="ghost" size="sm" className="p-2">

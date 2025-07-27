@@ -16,6 +16,7 @@ interface User {
     name: string;
     level: string;
     description: string;
+    category?: string;
   }>;
   skillsToLearn: string[];
   willingToTeachWithoutReturn: boolean;
@@ -86,7 +87,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                     age: profile.age,
                     gender: profile.gender,
                     phone: profile.phone,
-                    skillsToTeach: Array.isArray(profile.skills_to_teach) ? profile.skills_to_teach as Array<{name: string; level: string; description: string}> : [],
+                    skillsToTeach: Array.isArray(profile.skills_to_teach) ? profile.skills_to_teach as Array<{name: string; level: string; description: string; category?: string}> : [],
                     skillsToLearn: profile.skills_to_learn || [],
                     willingToTeachWithoutReturn: profile.willing_to_teach_without_return || false,
                     userType: "free", // TODO: Check subscription status from database

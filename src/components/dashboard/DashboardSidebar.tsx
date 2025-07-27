@@ -1,28 +1,17 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { 
   Users, 
-  MessageSquare, 
   Mail, 
-  Star, 
   Settings, 
-  Coins,
-  Trophy,
-  MapPin,
-  Calendar,
-  Zap,
-  Crown
+  Coins
 } from 'lucide-react';
 import { NavLink, useLocation, Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 
 const dashboardItems = [
-  { title: "Overview", url: "/dashboard", icon: Users },
-  { title: "Profile", url: "/dashboard/profile", icon: Settings },
-  { title: "Chats", url: "/messages", icon: MessageSquare },
+  { title: "Profile", url: "/profile", icon: Settings },
   { title: "Invites", url: "/dashboard/invites", icon: Mail },
-  { title: "Reviews", url: "/dashboard/reviews", icon: Star },
   { title: "Coins & Badges", url: "/dashboard/gamification", icon: Coins },
-  { title: "Events", url: "/dashboard/events", icon: Calendar, premiumOnly: true },
 ];
 
 export function DashboardSidebar() {
@@ -48,9 +37,6 @@ export function DashboardSidebar() {
                 <item.icon className="h-4 w-4" />
                 <span className="flex items-center gap-1">
                   {item.title}
-                  {item.premiumOnly && (
-                    <Trophy className="w-3 h-3 text-yellow-500" />
-                  )}
                 </span>
               </Button>
             </NavLink>

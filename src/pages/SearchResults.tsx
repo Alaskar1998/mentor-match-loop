@@ -1,9 +1,14 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { SearchResults } from "@/components/search/SearchResults";
-import { FilterBar } from "@/components/search/FilterBar";
+import { FilterSidebar } from "@/components/search/FilterSidebar";
+import { FilterButton } from "@/components/search/FilterButton";
 import { SearchHeader } from "@/components/search/SearchHeader";
+import { AdBanner } from "@/components/ads/AdBanner";
+import { DummyAdCard } from "@/components/ads/DummyAdCard";
+import { dummyProfiles, getRandomAds } from "@/data/dummyData";
 import { supabase } from "@/integrations/supabase/client";
+import { useMonetization } from "@/hooks/useMonetization";
 
 export interface UserProfile {
   id: string;
@@ -16,7 +21,7 @@ export interface UserProfile {
   bio: string;
   skills: string[];
   country: string;
-  gender: "Male" | "Female" | "Other";
+  gender: "Male" | "Female";
   willingToTeachWithoutReturn: boolean;
 }
 
@@ -111,7 +116,7 @@ const mockUsers: UserProfile[] = [
     bio: "Fitness enthusiast learning about nutrition and workout planning. Happy to teach basic running techniques!",
     skills: ["Running", "Basic Fitness", "Motivation"],
     country: "Canada",
-    gender: "Other",
+    gender: "Male",
     willingToTeachWithoutReturn: false
   }
 ];
@@ -128,57 +133,38 @@ const SearchResultsPage = () => {
     gender: [],
     mentorOnly: false
   });
-  const [isPremium] = useState(false); // Mock user subscription status
+  const { userTier, canUseFeature } = useMonetization();
+  const isPremium = userTier === 'premium';
+  const [showAd, setShowAd] = useState(true);
+  const [isFilterSidebarOpen, setIsFilterSidebarOpen] = useState(false);
 
   const searchQuery = searchParams.get("q") || "";
 
-  // Fetch users from Supabase
+  // Use dummy profiles for testing
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const { data: profiles, error } = await supabase
-          .from('profiles')
-          .select('*');
+    // Simulate loading delay
+    const timer = setTimeout(() => {
+      // Convert dummy profiles to UserProfile format
+      const transformedUsers: UserProfile[] = dummyProfiles.map(profile => ({
+        id: profile.id,
+        name: profile.name,
+        profilePicture: profile.profilePicture,
+        isMentor: profile.isMentor,
+        rating: profile.rating,
+        successfulExchanges: profile.successfulExchanges,
+        skillLevel: profile.skillLevel,
+        bio: profile.bio,
+        skills: profile.skills,
+        country: profile.country,
+        gender: profile.gender,
+        willingToTeachWithoutReturn: profile.willingToTeachWithoutReturn
+      }));
 
-        if (error) {
-          console.error('Error fetching profiles:', error);
-          return;
-        }
+      setUsers(transformedUsers);
+      setLoading(false);
+    }, 1000); // 1 second loading delay for realistic feel
 
-        // Transform Supabase data to UserProfile format
-        const transformedUsers: UserProfile[] = (profiles || []).map(profile => {
-          // Extract skills from skills_to_teach array
-          const skills = Array.isArray(profile.skills_to_teach) 
-            ? profile.skills_to_teach.map((skill: any) => 
-                typeof skill === 'object' ? skill.name : skill
-              ).filter(Boolean)
-            : [];
-
-          return {
-            id: profile.id,
-            name: profile.display_name || 'Anonymous User',
-            profilePicture: profile.avatar_url || '👤',
-            isMentor: profile.willing_to_teach_without_return || false,
-            rating: 4.5, // Default rating - you could calculate this from reviews
-            successfulExchanges: 0, // Default - you could track this
-            skillLevel: "Intermediate" as const, // Default - you could derive this from experience
-            bio: profile.bio || '',
-            skills: skills,
-            country: profile.country || '',
-            gender: (profile.gender || 'Other') as "Male" | "Female" | "Other",
-            willingToTeachWithoutReturn: profile.willing_to_teach_without_return || false
-          };
-        });
-
-        setUsers(transformedUsers);
-      } catch (error) {
-        console.error('Error fetching users:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUsers();
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -196,8 +182,8 @@ const SearchResultsPage = () => {
       );
     }
 
-    // Apply filters
-    if (filters.country) {
+    // Apply filters - Country filter only for premium users
+    if (filters.country && canUseFeature('country_filter')) {
       filtered = filtered.filter(user => user.country === filters.country);
     }
 
@@ -214,7 +200,8 @@ const SearchResultsPage = () => {
       filtered = filtered.filter(user => filters.gender.includes(user.gender));
     }
 
-    if (filters.mentorOnly) {
+    // Apply mentor filter only for premium users
+    if (filters.mentorOnly && canUseFeature('mentor_filter')) {
       filtered = filtered.filter(user => user.willingToTeachWithoutReturn);
     }
 
@@ -223,29 +210,72 @@ const SearchResultsPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <SearchHeader searchQuery={searchQuery} resultCount={filteredUsers.length} />
+      <SearchHeader searchQuery={searchQuery} />
       
       <div className="container mx-auto px-6 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Filter Sidebar */}
-          <div className="lg:w-80 flex-shrink-0">
-            <FilterBar 
-              filters={filters}
-              onFiltersChange={setFilters}
-              isPremium={isPremium}
+        {/* Ad Banner for Free Users */}
+        {!isPremium && showAd && (
+          <div className="mb-6">
+            <AdBanner 
+              onClose={() => setShowAd(false)}
+              onUpgrade={() => {
+                // TODO: Open premium upgrade modal
+                console.log('Open premium upgrade');
+              }}
             />
           </div>
+        )}
 
-          {/* Search Results */}
-          <div className="flex-1">
-            {loading ? (
-              <div className="text-center py-8">Loading...</div>
-            ) : (
-              <SearchResults users={filteredUsers} searchQuery={searchQuery} />
-            )}
+        {/* Dummy Ad for Testing */}
+        <div className="mb-6">
+          <DummyAdCard 
+            ad={getRandomAds(1)[0]} 
+            className="mx-auto max-w-lg"
+          />
+        </div>
+        
+        {/* Filter Button and Sidebar */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <FilterButton
+              onClick={() => setIsFilterSidebarOpen(!isFilterSidebarOpen)}
+              isOpen={isFilterSidebarOpen}
+              activeFiltersCount={
+                (filters.country ? 1 : 0) +
+                (filters.skillLevel ? 1 : 0) +
+                (filters.rating ? 1 : 0) +
+                filters.gender.length +
+                (filters.mentorOnly ? 1 : 0)
+              }
+            />
+            <span className="text-sm text-muted-foreground">
+              {filteredUsers.length} results found
+            </span>
           </div>
         </div>
+
+        {/* Search Results */}
+        <div className="flex-1">
+          {loading ? (
+            <div className="text-center py-8">Loading...</div>
+          ) : (
+            <SearchResults 
+              users={filteredUsers} 
+              searchQuery={searchQuery} 
+              isPremium={isPremium}
+            />
+          )}
+        </div>
       </div>
+
+      {/* Filter Sidebar - Rendered outside main content flow */}
+      <FilterSidebar
+        filters={filters}
+        onFiltersChange={setFilters}
+        isPremium={isPremium}
+        isOpen={isFilterSidebarOpen}
+        onClose={() => setIsFilterSidebarOpen(false)}
+      />
     </div>
   );
 };

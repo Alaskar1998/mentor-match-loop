@@ -19,15 +19,12 @@ import SearchResults from "./pages/SearchResults";
 import { CreateRequest } from "./pages/CreateRequest";
 import { RequestsFeed } from "./pages/RequestsFeed";
 import Chat from "./pages/Chat";
-import Dashboard from "./pages/Dashboard";
-import Profile from "./pages/dashboard/Profile";
+import Profile from "./pages/Profile";
 import Messages from "./pages/Messages";
-import Chats from "./pages/dashboard/Chats";
 import Invites from "./pages/dashboard/Invites";
-import Reviews from "./pages/dashboard/Reviews";
 import Gamification from "./pages/dashboard/Gamification";
-import Events from "./pages/dashboard/Events";
 import ProfileView from "./pages/ProfileView";
+import MyExchanges from "./pages/MyExchanges";
 import { DashboardLayout } from "./components/dashboard/DashboardLayout";
 import NotFound from "./pages/NotFound";
 
@@ -58,46 +55,19 @@ const App = () => (
                 <Route path="/requests-feed" element={<RequestsFeed />} />
                 <Route path="/chat/:chatId" element={<Chat />} />
                 <Route path="/messages" element={<Messages />} />
-                <Route path="/dashboard" element={
-                  <DashboardLayout>
-                    <Dashboard />
-                  </DashboardLayout>
-                } />
+                <Route path="/my-exchanges" element={<MyExchanges />} />
                 <Route path="/dashboard/messages" element={
                   <DashboardLayout>
                     <Messages />
                   </DashboardLayout>
                 } />
-                <Route path="/dashboard/profile" element={
-                  <DashboardLayout>
-                    <Profile />
-                  </DashboardLayout>
-                } />
-                <Route path="/dashboard/chats" element={
-                  <DashboardLayout>
-                    <Chats />
-                  </DashboardLayout>
-                } />
+                <Route path="/profile" element={<Profile />} />
                 <Route path="/dashboard/invites" element={
                   <DashboardLayout>
                     <Invites />
                   </DashboardLayout>
                 } />
-                <Route path="/dashboard/reviews" element={
-                  <DashboardLayout>
-                    <Reviews />
-                  </DashboardLayout>
-                } />
-                <Route path="/dashboard/gamification" element={
-                  <DashboardLayout>
-                    <Gamification />
-                  </DashboardLayout>
-                } />
-                <Route path="/dashboard/events" element={
-                  <DashboardLayout>
-                    <Events />
-                  </DashboardLayout>
-                } />
+                <Route path="/dashboard/gamification" element={<Gamification />} />
                 <Route path="/profile/:id" element={<ProfileView />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />

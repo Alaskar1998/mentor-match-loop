@@ -117,7 +117,7 @@ export default function ProfileView() {
         message: `${viewerName} viewed your profile`,
         isRead: false,
         type: 'profile_viewed',
-        actionUrl: '/dashboard/profile',
+        actionUrl: '/profile',
         metadata: { 
           viewerId: currentUser.id,
           viewerName: viewerName
