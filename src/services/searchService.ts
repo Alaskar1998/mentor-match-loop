@@ -1,13 +1,12 @@
-// No imports needed - we're using simple string matching now
+import { getAllSkills } from "@/data/skills";
 
 export interface SearchResult {
   user: any;
-  matchedSkills: string[];
   matchType: 'exact' | 'prefix' | 'suffix' | 'partial';
+  matchedSkills: string[];
 }
 
 export interface SearchSuggestion {
-  originalTerm: string;
   suggestedTerm: string;
   confidence: number;
 }
@@ -38,6 +37,12 @@ class SearchService {
           }
         });
       }
+    });
+    
+    // Add centralized skills from our master data
+    const centralizedSkills = getAllSkills();
+    centralizedSkills.forEach(skill => {
+      this.allSkills.add(skill.toLowerCase());
     });
     
     // Add common skill variations and synonyms
@@ -76,6 +81,7 @@ class SearchService {
     if (!searchTerm.trim()) {
       return {
         results: [],
+        suggestion: undefined,
         totalFound: 0,
         searchTerm: searchTerm.trim(),
         hasExactMatches: false
@@ -195,7 +201,6 @@ class SearchService {
     if (bestConfidence > 0.5) {
       console.log('SearchService: Final suggestion:', bestSuggestion, 'with confidence:', bestConfidence);
       return {
-        originalTerm: searchTerm,
         suggestedTerm: bestSuggestion,
         confidence: bestConfidence
       };

@@ -16,19 +16,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { 
+  SKILL_CATEGORIES, 
+  SKILL_LEVELS, 
+  findCategoryForSkill, 
+  getCategoryEmoji,
+  type Skill 
+} from "@/data/skills";
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAuthComplete: (userData?: any) => void;
   defaultMode?: 'signup' | 'signin';
-}
-
-interface Skill {
-  name: string;
-  level: string;
-  description: string;
-  category?: string;
 }
 
 interface SignupData {
@@ -45,6 +45,43 @@ interface SignupData {
   phone?: string;
   profilePicture?: string;
 }
+
+interface ValidationErrors {
+  email?: string;
+  password?: string;
+  name?: string;
+  bio?: string;
+  gender?: string;
+  country?: string;
+  age?: string;
+}
+
+// Validation functions
+const validateEmail = (email: string): string | undefined => {
+  if (!email) return "Email is required";
+  if (!email.includes('@')) return "Email must contain @";
+  if (!email.includes('.') || email.split('@')[1]?.split('.')[0]?.length === 0) {
+    return "Please enter a valid email address";
+  }
+  return undefined;
+};
+
+const validatePassword = (password: string): string | undefined => {
+  if (!password) return "Password is required";
+  if (password.length < 6) return "Password must be at least 6 characters";
+  return undefined;
+};
+
+const validateRequired = (value: string, fieldName: string): string | undefined => {
+  if (!value || value.trim() === '') return `${fieldName} is required`;
+  return undefined;
+};
+
+const validateAge = (age: number): string | undefined => {
+  if (!age || age < 13) return "Age must be at least 13";
+  if (age > 120) return "Please enter a valid age";
+  return undefined;
+};
 
 const STEP_TITLES = [
   "Create Account",
@@ -63,7 +100,6 @@ const COUNTRIES = [
 ];
 
 const GENDERS = ["Male", "Female"];
-const SKILL_LEVELS = ["Beginner", "Intermediate", "Expert"];
 
 export const AuthModal = ({ isOpen, onClose, onAuthComplete, defaultMode = 'signup' }: AuthModalProps) => {
   const [mode, setMode] = useState<'signup' | 'signin'>(defaultMode);
@@ -78,6 +114,7 @@ export const AuthModal = ({ isOpen, onClose, onAuthComplete, defaultMode = 'sign
   const [countryOpen, setCountryOpen] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
 
   const [newSkill, setNewSkill] = useState({ name: "", level: "", description: "", category: "" });
   const [newLearnSkill, setNewLearnSkill] = useState("");
@@ -85,7 +122,85 @@ export const AuthModal = ({ isOpen, onClose, onAuthComplete, defaultMode = 'sign
   const { signup, login, signInWithGoogle, signInWithFacebook, signInWithApple } = useAuth();
   const { toast } = useToast();
 
+  // Real-time validation for sign-in
+  const validateSignIn = () => {
+    const errors: ValidationErrors = {};
+    
+    if (signinData.email) {
+      errors.email = validateEmail(signinData.email);
+    }
+    if (signinData.password) {
+      errors.password = validatePassword(signinData.password);
+    }
+    
+    setValidationErrors(errors);
+    return !errors.email && !errors.password;
+  };
+
+  // Real-time validation for sign-up
+  const validateSignUp = () => {
+    const errors: ValidationErrors = {};
+    
+    if (formData.email) {
+      errors.email = validateEmail(formData.email);
+    }
+    if (formData.password) {
+      errors.password = validatePassword(formData.password);
+    }
+    if (formData.name) {
+      errors.name = validateRequired(formData.name, 'Name');
+    }
+    if (formData.bio) {
+      errors.bio = validateRequired(formData.bio, 'Bio');
+    }
+    if (formData.gender) {
+      errors.gender = validateRequired(formData.gender, 'Gender');
+    }
+    if (formData.country) {
+      errors.country = validateRequired(formData.country, 'Country');
+    }
+    if (formData.age) {
+      errors.age = validateAge(formData.age);
+    }
+    
+    setValidationErrors(errors);
+    return !Object.values(errors).some(error => error);
+  };
+
+  // Check if sign-in form is valid
+  const isSignInValid = () => {
+    return signinData.email && signinData.password && !validationErrors.email && !validationErrors.password;
+  };
+
+  // Check if current sign-up step is valid
+  const isCurrentStepValid = () => {
+    switch (currentStep) {
+      case 1: // Email & Password
+        return formData.email && formData.password && !validationErrors.email && !validationErrors.password;
+      case 2: // Profile Info
+        return formData.name && formData.bio && formData.gender && formData.country && formData.age &&
+               !validationErrors.name && !validationErrors.bio && !validationErrors.gender && 
+               !validationErrors.country && !validationErrors.age;
+      case 3: // Skills
+        return true; // Skills are optional
+      case 4: // Mentorship
+        return true; // Mentorship settings are optional
+      default:
+        return false;
+    }
+  };
+
   const handleSignIn = async () => {
+    // Validate form
+    if (!validateSignIn()) {
+      toast({
+        title: "Validation Error",
+        description: "Please fix the errors in the form.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (!signinData.email || !signinData.password) {
       toast({
         title: "Missing information",
@@ -116,9 +231,29 @@ export const AuthModal = ({ isOpen, onClose, onAuthComplete, defaultMode = 'sign
   };
 
   const handleSignUp = async () => {
+    // Validate current step before proceeding
+    if (!isCurrentStepValid()) {
+      toast({
+        title: "Validation Error",
+        description: "Please complete all required fields correctly.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
     } else {
+      // Final validation before submission
+      if (!validateSignUp()) {
+        toast({
+          title: "Validation Error",
+          description: "Please fix all errors before submitting.",
+          variant: "destructive"
+        });
+        return;
+      }
+
       setIsLoading(true);
       const result = await signup(formData as SignupData);
       setIsLoading(false);
@@ -258,8 +393,21 @@ export const AuthModal = ({ isOpen, onClose, onAuthComplete, defaultMode = 'sign
           type="email"
           placeholder="Enter your email"
           value={signinData.email}
-          onChange={(e) => setSigninData(prev => ({ ...prev, email: e.target.value }))}
+          onChange={(e) => {
+            setSigninData(prev => ({ ...prev, email: e.target.value }));
+            // Real-time validation
+            if (e.target.value) {
+              const emailError = validateEmail(e.target.value);
+              setValidationErrors(prev => ({ ...prev, email: emailError }));
+            } else {
+              setValidationErrors(prev => ({ ...prev, email: undefined }));
+            }
+          }}
+          className={validationErrors.email ? "border-red-500" : ""}
         />
+        {validationErrors.email && (
+          <p className="text-sm text-red-500">{validationErrors.email}</p>
+        )}
       </div>
       
       <div className="space-y-2">
@@ -270,7 +418,17 @@ export const AuthModal = ({ isOpen, onClose, onAuthComplete, defaultMode = 'sign
             type={showPassword ? "text" : "password"}
             placeholder="Enter your password"
             value={signinData.password}
-            onChange={(e) => setSigninData(prev => ({ ...prev, password: e.target.value }))}
+            onChange={(e) => {
+              setSigninData(prev => ({ ...prev, password: e.target.value }));
+              // Real-time validation
+              if (e.target.value) {
+                const passwordError = validatePassword(e.target.value);
+                setValidationErrors(prev => ({ ...prev, password: passwordError }));
+              } else {
+                setValidationErrors(prev => ({ ...prev, password: undefined }));
+              }
+            }}
+            className={validationErrors.password ? "border-red-500" : ""}
           />
           <Button
             type="button"
@@ -282,11 +440,14 @@ export const AuthModal = ({ isOpen, onClose, onAuthComplete, defaultMode = 'sign
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </Button>
         </div>
+        {validationErrors.password && (
+          <p className="text-sm text-red-500">{validationErrors.password}</p>
+        )}
       </div>
 
       <Button 
         onClick={handleSignIn} 
-        disabled={isLoading}
+        disabled={isLoading || !isSignInValid()}
         className="w-full"
       >
         {isLoading ? "Signing in..." : "Sign In"}
@@ -329,8 +490,21 @@ export const AuthModal = ({ isOpen, onClose, onAuthComplete, defaultMode = 'sign
                 type="email"
                 placeholder="Enter your email"
                 value={formData.email || ""}
-                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                onChange={(e) => {
+                  setFormData(prev => ({ ...prev, email: e.target.value }));
+                  // Real-time validation
+                  if (e.target.value) {
+                    const emailError = validateEmail(e.target.value);
+                    setValidationErrors(prev => ({ ...prev, email: emailError }));
+                  } else {
+                    setValidationErrors(prev => ({ ...prev, email: undefined }));
+                  }
+                }}
+                className={validationErrors.email ? "border-red-500" : ""}
               />
+              {validationErrors.email && (
+                <p className="text-sm text-red-500">{validationErrors.email}</p>
+              )}
             </div>
             
             <div className="space-y-2">
@@ -339,9 +513,19 @@ export const AuthModal = ({ isOpen, onClose, onAuthComplete, defaultMode = 'sign
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Create a password"
+                  placeholder="Create a password (min. 6 characters)"
                   value={formData.password || ""}
-                  onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                  onChange={(e) => {
+                    setFormData(prev => ({ ...prev, password: e.target.value }));
+                    // Real-time validation
+                    if (e.target.value) {
+                      const passwordError = validatePassword(e.target.value);
+                      setValidationErrors(prev => ({ ...prev, password: passwordError }));
+                    } else {
+                      setValidationErrors(prev => ({ ...prev, password: undefined }));
+                    }
+                  }}
+                  className={validationErrors.password ? "border-red-500" : ""}
                 />
                 <Button
                   type="button"
@@ -353,9 +537,16 @@ export const AuthModal = ({ isOpen, onClose, onAuthComplete, defaultMode = 'sign
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
               </div>
+              {validationErrors.password && (
+                <p className="text-sm text-red-500">{validationErrors.password}</p>
+              )}
             </div>
 
-            <Button onClick={handleSignUp} disabled={isLoading} className="w-full">
+            <Button 
+              onClick={handleSignUp} 
+              disabled={isLoading || !isCurrentStepValid()} 
+              className="w-full"
+            >
               {isLoading ? "Creating account..." : "Continue"}
             </Button>
 

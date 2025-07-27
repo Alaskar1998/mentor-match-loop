@@ -12,8 +12,8 @@ import { Coins, Crown, Info } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { SKILL_LEVELS, getAllSkills } from "@/data/skills";
 
-const SKILL_LEVELS = ["Beginner", "Intermediate", "Expert"];
 const COUNTRIES = [
   "United States", "United Kingdom", "Canada", "Australia", "Germany", 
   "France", "Spain", "Italy", "Japan", "South Korea", "India", "Brazil",

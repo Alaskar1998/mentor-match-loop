@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Settings, Mail, Coins } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { SignupModal } from "@/components/auth/SignupModal";
-import { SignInModal } from "@/components/auth/SignInModal";
+import { AuthModal } from "@/components/auth/AuthModal";
 import { UserAvatar } from "@/components/auth/UserAvatar";
 import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
 import { toast } from "sonner";
@@ -13,8 +12,8 @@ import { toast } from "sonner";
 export const Header = () => {
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
-  const [showSignupModal, setShowSignupModal] = useState(false);
-  const [showSignInModal, setShowSignInModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState<'signup' | 'signin'>('signin');
   const [searchQuery, setSearchQuery] = useState("");
 
   // Function to check if search should be disabled based on user name
@@ -50,6 +49,16 @@ export const Header = () => {
       navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
       setSearchQuery("");
     }
+  };
+
+  const handleAuthClick = (mode: 'signup' | 'signin') => {
+    setAuthMode(mode);
+    setShowAuthModal(true);
+  };
+
+  const handleAuthComplete = (userData?: any) => {
+    console.log('Auth completed:', userData);
+    setShowAuthModal(false);
   };
 
   return (
@@ -124,8 +133,11 @@ export const Header = () => {
                   <Link to="/help">
                     <Button variant="ghost" size="sm">Help</Button>
                   </Link>
-                  <Button onClick={() => setShowSignInModal(true)} size="sm">
+                  <Button onClick={() => handleAuthClick('signin')} size="sm">
                     Sign In
+                  </Button>
+                  <Button onClick={() => handleAuthClick('signup')} size="sm">
+                    Sign Up
                   </Button>
                 </div>
               )}
@@ -151,22 +163,11 @@ export const Header = () => {
       </nav>
 
       {/* Modals */}
-      <SignInModal 
-        isOpen={showSignInModal} 
-        onClose={() => setShowSignInModal(false)}
-        onSwitchToSignup={() => {
-          setShowSignInModal(false);
-          setShowSignupModal(true);
-        }}
-      />
-      
-      <SignupModal 
-        isOpen={showSignupModal} 
-        onClose={() => setShowSignupModal(false)}
-        onSignupComplete={(userData) => {
-          console.log('Signup completed:', userData);
-          setShowSignupModal(false);
-        }}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        defaultMode={authMode}
+        onAuthComplete={handleAuthComplete}
       />
     </>
   );

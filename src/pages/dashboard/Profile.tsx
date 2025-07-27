@@ -1,19 +1,32 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
-import { useAuth } from '@/hooks/useAuth';
-import { Edit, Save, X, Upload, Plus, Trash2, Search } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Separator } from "@/components/ui/separator";
+import { Progress } from "@/components/ui/progress";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { 
+  User, Edit, Save, X, Plus, Upload, Search, 
+  Trophy, Users, Clock, Star, MessageSquare, Mail, Phone, MapPin, Calendar, Trash2
+} from "lucide-react";
+import { 
+  SKILL_CATEGORIES, 
+  SKILL_LEVELS, 
+  findCategoryForSkill, 
+  getCategoryEmoji,
+  type Skill 
+} from "@/data/skills";
 
+// Constants for form fields
 const COUNTRIES = [
   "United States", "United Kingdom", "Canada", "Australia", "Germany", 
   "France", "Spain", "Italy", "Japan", "South Korea", "India", "Brazil",
@@ -24,71 +37,6 @@ const COUNTRIES = [
 ];
 
 const GENDERS = ["Male", "Female"];
-const SKILL_LEVELS = ["Beginner", "Intermediate", "Expert"];
-
-// Example categories and skills
-const SKILL_CATEGORIES = [
-  {
-    category: "Programming",
-    skills: ["Python", "JavaScript", "Java", "C++", "Web Development", "Mobile Apps", "Go", "Rust", "PHP", "Ruby", "Swift", "Kotlin", "C#", "TypeScript", "SQL", "DevOps", "Machine Learning", "AI"]
-  },
-  {
-    category: "Languages",
-    skills: ["English", "Spanish", "French", "German", "Mandarin", "Arabic", "Russian", "Japanese", "Korean", "Italian", "Portuguese", "Hindi", "Turkish", "Dutch", "Swedish"]
-  },
-  {
-    category: "Music",
-    skills: ["Guitar", "Piano", "Singing", "Drums", "Violin", "Bass", "Saxophone", "Trumpet", "DJing", "Music Production"]
-  },
-  {
-    category: "Art & Design",
-    skills: ["Drawing", "Painting", "Graphic Design", "Photography", "Illustration", "Animation", "3D Modeling", "Fashion Design", "Interior Design"]
-  },
-  {
-    category: "Business",
-    skills: ["Marketing", "Public Speaking", "Entrepreneurship", "Finance", "Accounting", "Project Management", "Sales", "Negotiation", "Leadership"]
-  },
-  {
-    category: "Fitness & Wellness",
-    skills: ["Yoga", "Fitness", "Swimming", "Meditation", "Pilates", "Running", "Cycling", "Personal Training", "Nutrition"]
-  },
-  {
-    category: "Cooking",
-    skills: ["Baking", "Cooking", "Nutrition", "Vegan Cooking", "Grilling", "Pastry", "Meal Prep"]
-  },
-  {
-    category: "STEM",
-    skills: ["Mathematics", "Physics", "Chemistry", "Biology", "Statistics", "Data Science", "Robotics", "Astronomy"]
-  },
-  {
-    category: "Crafts & DIY",
-    skills: ["Knitting", "Sewing", "Woodworking", "Pottery", "Origami", "Jewelry Making", "Scrapbooking"]
-  },
-  {
-    category: "Sports",
-    skills: ["Soccer", "Basketball", "Tennis", "Martial Arts", "Golf", "Baseball", "Table Tennis", "Volleyball", "Chess"]
-  },
-  {
-    category: "Life Skills",
-    skills: ["Time Management", "Productivity", "Mindfulness", "Parenting", "First Aid", "Self Defense", "Financial Planning"]
-  },
-  {
-    category: "Technology",
-    skills: ["Cloud Computing", "Cybersecurity", "Blockchain", "UI/UX Design", "AR/VR", "Game Development", "IoT"]
-  },
-  {
-    category: "Writing & Communication",
-    skills: ["Creative Writing", "Copywriting", "Blogging", "Editing", "Storytelling", "Resume Writing", "Speech Writing"]
-  },
-  {
-    category: "Travel & Culture",
-    skills: ["Travel Planning", "Cultural Awareness", "History", "Geography", "World Cuisine"]
-  },
-  {
-    category: "Other",
-    skills: []
-  },
-];
 
 export default function Profile() {
   const { user, updateUser } = useAuth();

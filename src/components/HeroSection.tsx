@@ -6,29 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import heroImage from "@/assets/hero-image.jpg";
-
-const popularSkills = [
-  { emoji: "🎸", name: "Guitar" },
-  { emoji: "🍳", name: "Cooking" },
-  { emoji: "💻", name: "Coding" },
-  { emoji: "🎨", name: "Design" },
-  { emoji: "📷", name: "Photography" },
-  { emoji: "🎯", name: "Marketing" },
-  { emoji: "🧑‍🏫", name: "Public Speaking" },
-  { emoji: "📝", name: "Writing" },
-  { emoji: "🗣️", name: "Language Learning" },
-  { emoji: "🎹", name: "Piano" },
-  { emoji: "🏊", name: "Swimming" },
-  { emoji: "🏋️", name: "Fitness" },
-  { emoji: "🎭", name: "Acting" },
-  { emoji: "🎤", name: "Singing" },
-  { emoji: "🧘", name: "Yoga" },
-  { emoji: "📊", name: "Data Analysis" },
-  { emoji: "🧑‍💻", name: "Web Development" },
-  { emoji: "📚", name: "Tutoring" },
-  { emoji: "🧑‍🍳", name: "Baking" },
-  { emoji: "🎮", name: "Game Development" },
-];
+import { POPULAR_SKILLS } from "@/data/skills";
 
 export const HeroSection = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -128,7 +106,7 @@ export const HeroSection = () => {
           <div className="mb-12">
             <p className="text-white/80 mb-4 text-lg">Popular skills:</p>
             <div className="flex flex-wrap justify-center gap-3">
-              {popularSkills.map((skill) => (
+              {POPULAR_SKILLS.map((skill) => (
                 <button
                   key={skill.name}
                   onClick={() => !isSearchDisabled() && handleSearch(skill.name)}
