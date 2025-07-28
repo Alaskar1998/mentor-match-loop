@@ -233,7 +233,7 @@ export const ProfileCard = ({ user, isBlurred = false, searchResult }: ProfileCa
             <Eye className="w-4 h-4 mr-2" />
             View Profile
           </Button>
-          {!isAuthenticated && (
+          {((isAuthenticated && currentUser && user.id !== currentUser.id) || !isAuthenticated) && (
             <Button 
               variant="default" 
               size="sm" 
@@ -263,6 +263,7 @@ export const ProfileCard = ({ user, isBlurred = false, searchResult }: ProfileCa
           userType={currentUser.userType}
           remainingInvites={currentUser.remainingInvites}
           appCoins={currentUser.appCoins}
+          skillsToTeach={user.skills || []}
         />
       )}
     </Card>

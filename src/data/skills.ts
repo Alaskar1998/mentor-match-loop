@@ -29,42 +29,6 @@ export interface Skill {
 // Master skills and categories data
 export const SKILL_CATEGORIES: SkillCategory[] = [
   {
-    category: "Programming & Tech",
-    skills: [
-      "Python", "JavaScript", "Java", "C++", "C#", "TypeScript", "Go", "Rust", 
-      "PHP", "Ruby", "Swift", "Kotlin", "SQL", "HTML", "CSS", "React", "Vue.js", 
-      "Angular", "Node.js", "Django", "Flask", "Spring", "Laravel", "Express.js",
-      "Web Development", "Mobile Development", "DevOps", "Machine Learning", 
-      "Artificial Intelligence", "Data Science", "Cloud Computing", "Cybersecurity",
-      "Blockchain", "UI/UX Design", "Game Development", "IoT", "AR/VR"
-    ],
-    emoji: "💻",
-    description: "Programming languages, frameworks, and technology skills"
-  },
-  {
-    category: "Languages",
-    skills: [
-      "English", "Spanish", "French", "German", "Mandarin", "Arabic", "Russian", 
-      "Japanese", "Korean", "Italian", "Portuguese", "Hindi", "Turkish", "Dutch", 
-      "Swedish", "Norwegian", "Danish", "Finnish", "Polish", "Czech", "Hungarian",
-      "Greek", "Hebrew", "Thai", "Vietnamese", "Indonesian", "Malay", "Filipino"
-    ],
-    emoji: "🗣️",
-    description: "Spoken and written languages"
-  },
-  {
-    category: "Music & Arts",
-    skills: [
-      "Guitar", "Piano", "Singing", "Drums", "Violin", "Bass", "Saxophone", 
-      "Trumpet", "Flute", "Clarinet", "Cello", "Ukulele", "Harmonica", "DJing", 
-      "Music Production", "Composition", "Music Theory", "Drawing", "Painting", 
-      "Graphic Design", "Photography", "Illustration", "Animation", "3D Modeling", 
-      "Digital Art", "Sculpture", "Fashion Design", "Interior Design"
-    ],
-    emoji: "🎵",
-    description: "Musical instruments, performance, and visual arts"
-  },
-  {
     category: "Business & Professional",
     skills: [
       "Marketing", "Public Speaking", "Entrepreneurship", "Finance", "Accounting", 
@@ -75,39 +39,6 @@ export const SKILL_CATEGORIES: SkillCategory[] = [
     ],
     emoji: "💼",
     description: "Business, management, and professional development skills"
-  },
-  {
-    category: "Health & Wellness",
-    skills: [
-      "Yoga", "Fitness", "Swimming", "Meditation", "Pilates", "Running", "Cycling", 
-      "Personal Training", "Nutrition", "Weight Training", "Cardio", "Stretching",
-      "Mindfulness", "Stress Management", "Mental Health", "First Aid", "CPR",
-      "Physical Therapy", "Massage Therapy", "Acupuncture", "Herbal Medicine"
-    ],
-    emoji: "🧘",
-    description: "Physical fitness, mental health, and wellness practices"
-  },
-  {
-    category: "Culinary Arts",
-    skills: [
-      "Baking", "Cooking", "Nutrition", "Vegan Cooking", "Grilling", "Pastry", 
-      "Meal Prep", "Food Photography", "Wine Tasting", "Bartending", "Coffee Making",
-      "Sushi Making", "Bread Making", "Cake Decorating", "Chocolate Making",
-      "Fermentation", "Canning", "Food Safety", "Menu Planning", "Catering"
-    ],
-    emoji: "🍳",
-    description: "Cooking, baking, and food preparation skills"
-  },
-  {
-    category: "Science & Education",
-    skills: [
-      "Mathematics", "Physics", "Chemistry", "Biology", "Statistics", "Data Analysis",
-      "Robotics", "Astronomy", "Geology", "Psychology", "Sociology", "History",
-      "Geography", "Economics", "Philosophy", "Literature", "Linguistics",
-      "Computer Science", "Engineering", "Architecture", "Medicine", "Nursing"
-    ],
-    emoji: "🔬",
-    description: "Academic subjects and scientific disciplines"
   },
   {
     category: "Crafts & DIY",
@@ -121,15 +52,37 @@ export const SKILL_CATEGORIES: SkillCategory[] = [
     description: "Handcrafts, DIY projects, and creative hobbies"
   },
   {
-    category: "Sports & Recreation",
+    category: "Culinary Arts",
     skills: [
-      "Soccer", "Basketball", "Tennis", "Martial Arts", "Golf", "Baseball", 
-      "Table Tennis", "Volleyball", "Chess", "Swimming", "Rock Climbing", "Hiking",
-      "Skiing", "Snowboarding", "Surfing", "Skateboarding", "Dancing", "Gymnastics",
-      "Boxing", "Wrestling", "Archery", "Fishing", "Hunting", "Camping"
+      "Baking", "Cooking", "Nutrition", "Vegan Cooking", "Grilling", "Pastry", 
+      "Meal Prep", "Food Photography", "Wine Tasting", "Bartending", "Coffee Making",
+      "Sushi Making", "Bread Making", "Cake Decorating", "Chocolate Making",
+      "Fermentation", "Canning", "Food Safety", "Menu Planning", "Catering"
     ],
-    emoji: "⚽",
-    description: "Sports, outdoor activities, and recreational pursuits"
+    emoji: "🍳",
+    description: "Cooking, baking, and food preparation skills"
+  },
+  {
+    category: "Health & Wellness",
+    skills: [
+      "Yoga", "Fitness", "Swimming", "Meditation", "Pilates", "Running", "Cycling", 
+      "Personal Training", "Nutrition", "Weight Training", "Cardio", "Stretching",
+      "Mindfulness", "Stress Management", "Mental Health", "First Aid", "CPR",
+      "Physical Therapy", "Massage Therapy", "Acupuncture", "Herbal Medicine"
+    ],
+    emoji: "🧘",
+    description: "Physical fitness, mental health, and wellness practices"
+  },
+  {
+    category: "Languages",
+    skills: [
+      "English", "Spanish", "French", "German", "Mandarin", "Arabic", "Russian", 
+      "Japanese", "Korean", "Italian", "Portuguese", "Hindi", "Turkish", "Dutch", 
+      "Swedish", "Norwegian", "Danish", "Finnish", "Polish", "Czech", "Hungarian",
+      "Greek", "Hebrew", "Thai", "Vietnamese", "Indonesian", "Malay", "Filipino"
+    ],
+    emoji: "🗣️",
+    description: "Spoken and written languages"
   },
   {
     category: "Life Skills",
@@ -144,15 +97,57 @@ export const SKILL_CATEGORIES: SkillCategory[] = [
     description: "Essential life skills and personal development"
   },
   {
-    category: "Writing & Communication",
+    category: "Music & Arts",
     skills: [
-      "Creative Writing", "Copywriting", "Blogging", "Editing", "Storytelling", 
-      "Resume Writing", "Speech Writing", "Technical Writing", "Journalism",
-      "Content Creation", "Social Media", "Email Writing", "Grant Writing",
-      "Translation", "Interpretation", "Public Relations", "Advertising"
+      "Guitar", "Piano", "Singing", "Drums", "Violin", "Bass", "Saxophone", 
+      "Trumpet", "Flute", "Clarinet", "Cello", "Ukulele", "Harmonica", "DJing", 
+      "Music Production", "Composition", "Music Theory", "Drawing", "Painting", 
+      "Graphic Design", "Photography", "Illustration", "Animation", "3D Modeling", 
+      "Digital Art", "Sculpture", "Fashion Design", "Interior Design"
     ],
-    emoji: "✍️",
-    description: "Writing, communication, and content creation"
+    emoji: "🎵",
+    description: "Musical instruments, performance, and visual arts"
+  },
+  {
+    category: "Other",
+    skills: [],
+    emoji: "📝",
+    description: "Custom skills that don't fit other categories"
+  },
+  {
+    category: "Programming & Tech",
+    skills: [
+      "Python", "JavaScript", "Java", "C++", "C#", "TypeScript", "Go", "Rust", 
+      "PHP", "Ruby", "Swift", "Kotlin", "SQL", "HTML", "CSS", "React", "Vue.js", 
+      "Angular", "Node.js", "Django", "Flask", "Spring", "Laravel", "Express.js",
+      "Web Development", "Mobile Development", "DevOps", "Machine Learning", 
+      "Artificial Intelligence", "Data Science", "Cloud Computing", "Cybersecurity",
+      "Blockchain", "UI/UX Design", "Game Development", "IoT", "AR/VR"
+    ],
+    emoji: "💻",
+    description: "Programming languages, frameworks, and technology skills"
+  },
+  {
+    category: "Science & Education",
+    skills: [
+      "Mathematics", "Physics", "Chemistry", "Biology", "Statistics", "Data Analysis",
+      "Robotics", "Astronomy", "Geology", "Psychology", "Sociology", "History",
+      "Geography", "Economics", "Philosophy", "Literature", "Linguistics",
+      "Computer Science", "Engineering", "Architecture", "Medicine", "Nursing"
+    ],
+    emoji: "🔬",
+    description: "Academic subjects and scientific disciplines"
+  },
+  {
+    category: "Sports & Recreation",
+    skills: [
+      "Soccer", "Basketball", "Tennis", "Martial Arts", "Golf", "Baseball", 
+      "Table Tennis", "Volleyball", "Chess", "Swimming", "Rock Climbing", "Hiking",
+      "Skiing", "Snowboarding", "Surfing", "Skateboarding", "Dancing", "Gymnastics",
+      "Boxing", "Wrestling", "Archery", "Fishing", "Hunting", "Camping"
+    ],
+    emoji: "⚽",
+    description: "Sports, outdoor activities, and recreational pursuits"
   },
   {
     category: "Travel & Culture",
@@ -166,10 +161,15 @@ export const SKILL_CATEGORIES: SkillCategory[] = [
     description: "Travel, cultural understanding, and global perspectives"
   },
   {
-    category: "Other",
-    skills: [],
-    emoji: "📝",
-    description: "Custom skills that don't fit other categories"
+    category: "Writing & Communication",
+    skills: [
+      "Creative Writing", "Copywriting", "Blogging", "Editing", "Storytelling", 
+      "Resume Writing", "Speech Writing", "Technical Writing", "Journalism",
+      "Content Creation", "Social Media", "Email Writing", "Grant Writing",
+      "Translation", "Interpretation", "Public Relations", "Advertising"
+    ],
+    emoji: "✍️",
+    description: "Writing, communication, and content creation"
   }
 ];
 

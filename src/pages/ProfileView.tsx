@@ -290,7 +290,7 @@ export default function ProfileView() {
                 </Avatar>
                 
                 {/* Send Invitation Button - Centered under avatar */}
-                {!isAuthenticated && (
+                {((isAuthenticated && currentUser && user.id !== currentUser.id) || !isAuthenticated) && (
                   <Button 
                     onClick={handleSendInvitation} 
                     size="lg"
@@ -521,7 +521,7 @@ export default function ProfileView() {
         onAuthComplete={handleAuthComplete}
       />
 
-      {isAuthenticated && currentUser && (
+      {isAuthenticated && currentUser && user && (
         <InvitationFlow
           isOpen={showInvitationModal}
           onClose={() => setShowInvitationModal(false)}
@@ -530,6 +530,7 @@ export default function ProfileView() {
           userType={currentUser.userType}
           remainingInvites={currentUser.remainingInvites}
           appCoins={currentUser.appCoins}
+          skillsToTeach={Array.isArray(user.skills_to_teach) ? user.skills_to_teach.map((s: any) => typeof s === 'string' ? s : s.name || s.skill || s.title || JSON.stringify(s)) : []}
         />
       )}
     </div>

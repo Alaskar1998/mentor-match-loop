@@ -193,31 +193,34 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const checkDailyLogin = async () => {
-    if (!user) return;
+    // DISABLED: Coin notifications causing freezes
+    return;
     
-    try {
-      const transaction = await coinEconomyService.processDailyLoginBonus(user.id);
-      if (transaction) {
-        setState(prev => ({
-          ...prev,
-          appCoins: transaction.balanceAfter,
-          loginStreak: transaction.metadata?.streakDay || prev.loginStreak + 1,
-          lastLoginDate: new Date().toDateString()
-        }));
-        
-        toast({
-          title: `+${transaction.amount} coins earned!`,
-          description: `Day ${transaction.metadata?.streakDay} login bonus`,
-        });
+    // if (!user) return;
+    
+    // try {
+    //   const transaction = await coinEconomyService.processDailyLoginBonus(user.id);
+    //   if (transaction) {
+    //     setState(prev => ({
+    //       ...prev,
+    //       appCoins: transaction.balanceAfter,
+    //       loginStreak: transaction.metadata?.streakDay || prev.loginStreak + 1,
+    //       lastLoginDate: new Date().toDateString()
+    //     }));
+    //     
+    //     toast({
+    //       title: `+${transaction.amount} coins earned!`,
+    //       description: `Day ${transaction.metadata?.streakDay} login bonus`,
+    //     });
 
-        // Award streak badge at 7 days
-        if (transaction.metadata?.streakDay === 7) {
-          awardBadge('streak-warrior');
-        }
-      }
-    } catch (error) {
-      console.error('Daily login bonus error:', error);
-    }
+    //     // Award streak badge at 7 days
+    //     if (transaction.metadata?.streakDay === 7) {
+    //       awardBadge('streak-warrior');
+    //     }
+    //   }
+    // } catch (error) {
+    //   console.error('Daily login bonus error:', error);
+    // }
   };
 
   const awardBadge = (badgeId: string) => {
@@ -238,124 +241,103 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateProfileCompletion = async () => {
-    if (!user) return;
+    // DISABLED: Coin notifications causing freezes
+    return;
     
-    let completion = 0;
-    const fields = [
-      user.name,
-      user.email,
-      user.bio,
-      user.country,
-      user.skillsToTeach?.length > 0,
-      user.skillsToLearn?.length > 0,
-      user.profilePicture && user.profilePicture !== '👤'
-    ];
+    // if (!user) return;
     
-    completion = (fields.filter(Boolean).length / fields.length) * 100;
+    // let completion = 0;
+    // const fields = [
+    //   user.name,
+    //   user.email,
+    //   user.bio,
+    //   user.country,
+    //   user.skillsToTeach?.length > 0,
+    //   user.skillsToLearn?.length > 0,
+    //   user.profilePicture && user.profilePicture !== '👤'
+    // ];
     
-    setState(prev => ({
-      ...prev,
-      profileCompletion: completion
-    }));
+    // completion = (fields.filter(Boolean).length / fields.length) * 100;
     
-    try {
-      const transaction = await coinEconomyService.processProfileCompletion(user.id, completion);
-      if (transaction) {
-        setState(prev => ({
-          ...prev,
-          appCoins: transaction.balanceAfter
-        }));
-        
-        toast({
-          title: `+${transaction.amount} coins earned!`,
-          description: "Profile 100% complete!",
-        });
-        
-        awardBadge('profile-complete');
-      }
-    } catch (error) {
-      console.error('Profile completion error:', error);
-    }
+    // setState(prev => ({
+    //   ...prev,
+    //   profileCompletion: completion
+    // }));
+    
+    // try {
+    //   const transaction = await coinEconomyService.processProfileCompletion(user.id, completion);
+    //   if (transaction) {
+    //     setState(prev => ({
+    //       ...prev,
+    //       appCoins: transaction.balanceAfter
+    //     }));
+    //     
+    //     toast({
+    //       title: `+${transaction.amount} coins earned!`,
+    //       description: "Profile 100% complete!",
+    //     });
+    //     
+    //     awardBadge('profile-complete');
+    //   }
+    // } catch (error) {
+    //   console.error('Profile completion error:', error);
+    // }
   };
 
   const watchAd = async () => {
-    if (!user) return;
+    // DISABLED: Coin notifications causing freezes
+    return;
     
-    try {
-      const transaction = await coinEconomyService.processAdWatching(user.id, user.userType);
-      if (transaction) {
-        setState(prev => ({
-          ...prev,
-          appCoins: transaction.balanceAfter,
-          dailyAdsWatched: prev.dailyAdsWatched + 1
-        }));
-        
-        toast({
-          title: `+${transaction.amount} coins earned!`,
-          description: "Thanks for watching the ad!",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Ad watching failed",
-        description: error instanceof Error ? error.message : "Please try again later",
-        variant: "destructive"
-      });
-    }
+    // if (!user) return;
+    
+    // try {
+    //   const transaction = await coinEconomyService.processAdWatching(user.id, user.userType);
+    //   if (transaction) {
+    //     setState(prev => ({
+    //       ...prev,
+    //       appCoins: transaction.balanceAfter,
+    //       dailyAdsWatched: prev.dailyAdsWatched + 1
+    //     }));
+    //     
+    //     toast({
+    //       title: `+${transaction.amount} coins earned!`,
+    //       description: "Ad watched successfully",
+    //     });
+    //   }
+    // } catch (error) {
+    //   console.error('Ad watching error:', error);
+    // }
   };
 
   const completeExchange = async (isMentor: boolean, exchangeId: string = '', partnerId: string = '') => {
-    if (!user) return;
+    // DISABLED: Coin notifications causing freezes
+    return;
     
-    try {
-      const transactions = await coinEconomyService.processExchangeCompletion(
-        user.id, 
-        partnerId || 'partner-mock', 
-        exchangeId || `exchange-${Date.now()}`, 
-        isMentor
-      );
-      
-      const userTransactions = transactions.filter(tx => tx.userId === user.id);
-      const totalEarned = userTransactions.reduce((sum, tx) => sum + tx.amount, 0);
-      
-      if (userTransactions.length > 0) {
-        setState(prev => ({
-          ...prev,
-          appCoins: userTransactions[userTransactions.length - 1].balanceAfter,
-          totalExchanges: prev.totalExchanges + 1
-        }));
-        
-        const bonusText = isMentor ? ' (including mentor bonus)' : '';
-        toast({
-          title: `+${totalEarned} coins earned!`,
-          description: `Exchange completed${bonusText}`,
-        });
-      }
-      
-      // Update challenge progress
-      setState(prev => ({
-        ...prev,
-        challenges: prev.challenges.map(challenge => {
-          if (challenge.id === 'weekly-exchanges' && !challenge.isCompleted) {
-            const newProgress = challenge.progress + 1;
-            const isCompleted = newProgress >= challenge.target;
-            
-            if (isCompleted) {
-              earnCoins(challenge.reward, "Weekly challenge completed");
-            }
-            
-            return {
-              ...challenge,
-              progress: newProgress,
-              isCompleted
-            };
-          }
-          return challenge;
-        })
-      }));
-    } catch (error) {
-      console.error('Exchange completion error:', error);
-    }
+    // if (!user) return;
+    
+    // try {
+    //   const transaction = await coinEconomyService.processExchangeCompletion(
+    //     user.id, 
+    //     isMentor, 
+    //     exchangeId, 
+    //     partnerId
+    //   );
+    //   
+    //   if (transaction) {
+    //     setState(prev => ({
+    //       ...prev,
+    //       appCoins: transaction.balanceAfter,
+    //       totalExchanges: prev.totalExchanges + 1
+    //     }));
+    //     
+    //     toast({
+    //       title: `+${transaction.amount} coins earned!`,
+    //       description: `Exchange completed successfully`,
+    //     });
+    //   }
+    // } catch (error) {
+    //   console.error('Exchange completion error:', error);
+    // }
   };
 
   const purchaseItem = async (itemType: string): Promise<boolean> => {
@@ -420,29 +402,35 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
 
   // Check daily login on mount and monthly stipend
   useEffect(() => {
-    if (user) {
-      checkDailyLogin();
-      updateProfileCompletion();
-      
-      // Check monthly stipend for premium users
-      if (user.userType === 'premium') {
-        coinEconomyService.processMonthlyStipend(user.id, user.userType)
-          .then(transaction => {
-            if (transaction) {
-              setState(prev => ({
-                ...prev,
-                appCoins: transaction.balanceAfter
-              }));
-              
-              toast({
-                title: `+${transaction.amount} coins!`,
-                description: "Monthly premium stipend received",
-              });
-            }
-          })
-          .catch(console.error);
-      }
-    }
+    // DISABLED: Gamification features causing freezes
+    // if (user && user.name && user.email && user.bio && user.country) {
+    //   // Delay gamification checks to avoid conflicts during signup
+    //   const timer = setTimeout(() => {
+    //     checkDailyLogin();
+    //     updateProfileCompletion();
+    //     
+    //     // Check monthly stipend for premium users
+    //     if (user.userType === 'premium') {
+    //       coinEconomyService.processMonthlyStipend(user.id, user.userType)
+    //         .then(transaction => {
+    //           if (transaction) {
+    //             setState(prev => ({
+    //               ...prev,
+    //               appCoins: transaction.balanceAfter
+    //             }));
+    //             
+    //             toast({
+    //               title: `+${transaction.amount} coins!`,
+    //               description: "Monthly premium stipend received",
+    //             });
+    //           }
+    //         })
+    //         .catch(console.error);
+    //     }
+    //   }, 2000); // 2 second delay to ensure signup is complete
+    //   
+    //   return () => clearTimeout(timer);
+    // }
   }, [user]);
 
   return (

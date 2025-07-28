@@ -224,7 +224,7 @@ export const NotificationDropdown = ({ type }: NotificationDropdownProps) => {
                 size="sm" 
                 className="w-full"
                 onClick={() => {
-                  navigate(type === 'general' ? '/dashboard/notifications' : '/messages');
+                  navigate(type === 'general' ? '/my-exchanges' : '/messages');
                   setIsOpen(false);
                 }}
               >

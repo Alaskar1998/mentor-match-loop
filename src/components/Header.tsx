@@ -115,7 +115,7 @@ export const Header = () => {
                   <Link to="/my-exchanges">
                     <Button variant="ghost" size="sm">My Exchanges</Button>
                   </Link>
-                  <Link to="/dashboard/gamification">
+                  <Link to="/gamification">
                     <Button variant="ghost" size="sm" className="p-2">
                       <Coins className="w-5 h-5" />
                     </Button>

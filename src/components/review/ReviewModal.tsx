@@ -107,7 +107,7 @@ export const ReviewModal = ({
           message: `${reviewerName} left you a ${averageRating.toFixed(1)}-star review`,
           isRead: false,
           type: 'exchange_completed',
-          actionUrl: '/dashboard',
+          actionUrl: '/my-exchanges',
           metadata: { 
             reviewerId: user.id,
             reviewerName: reviewerName,

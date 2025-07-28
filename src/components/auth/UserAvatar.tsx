@@ -9,10 +9,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User, Settings, HelpCircle, Shield, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 export const UserAvatar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   if (!user) return null;
 
@@ -24,9 +26,21 @@ export const UserAvatar = () => {
     navigate("/settings");
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate("/");
+  const handleLogout = async () => {
+    if (isLoggingOut) return; // Prevent multiple clicks
+    
+    console.log('Logout button clicked');
+    setIsLoggingOut(true);
+    
+    try {
+      await logout();
+      console.log('Logout completed, navigating to home');
+      navigate("/");
+    } catch (error) {
+      console.error('Error during logout:', error);
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   return (
@@ -64,9 +78,13 @@ export const UserAvatar = () => {
           Privacy
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600">
+        <DropdownMenuItem 
+          onClick={handleLogout} 
+          className="cursor-pointer text-red-600"
+          disabled={isLoggingOut}
+        >
           <LogOut className="mr-2 h-4 w-4" />
-          Sign Out
+          {isLoggingOut ? "Signing out..." : "Sign Out"}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -33,60 +33,60 @@ export const LeaderboardModal = ({ isOpen, onClose }: LeaderboardModalProps) => 
   const { state } = useGamification();
 
   // Mock leaderboard data - in real app, this would come from API
-  const topRatedUsers: LeaderUser[] = [
-    {
-      id: '1',
-      name: 'Sarah Johnson',
-      profilePicture: '👩‍🏫',
-      rating: 4.9,
-      exchangeCount: 45,
-      mentorBadge: true,
-      totalCoins: 2500,
-      position: 1
-    },
-    {
-      id: '2',
-      name: 'Mike Chen',
-      profilePicture: '👨‍💻',
-      rating: 4.8,
-      exchangeCount: 38,
-      mentorBadge: false,
-      totalCoins: 1900,
-      position: 2
-    },
-    {
-      id: '3',
-      name: 'Emily Rodriguez',
-      profilePicture: '👩‍🎨',
-      rating: 4.7,
-      exchangeCount: 52,
-      mentorBadge: true,
-      totalCoins: 3200,
-      position: 3
-    },
-    {
-      id: '4',
-      name: 'David Kim',
-      profilePicture: '👨‍🔬',
-      rating: 4.6,
-      exchangeCount: 29,
-      mentorBadge: false,
-      totalCoins: 1500,
-      position: 4
-    },
-    {
-      id: '5',
-      name: 'Anna Smith',
-      profilePicture: '👩‍💼',
-      rating: 4.5,
-      exchangeCount: 41,
-      mentorBadge: true,
-      totalCoins: 2100,
-      position: 5
-    }
-  ];
+  // const topRatedUsers: LeaderUser[] = [
+  //   {
+  //     id: '1',
+  //     name: 'Sarah Johnson',
+  //     profilePicture: '👩‍🏫',
+  //     rating: 4.9,
+  //     exchangeCount: 45,
+  //     mentorBadge: true,
+  //     totalCoins: 2500,
+  //     position: 1
+  //   },
+  //   {
+  //     id: '2',
+  //     name: 'Mike Chen',
+  //     profilePicture: '👨‍💻',
+  //     rating: 4.8,
+  //     exchangeCount: 38,
+  //     mentorBadge: false,
+  //     totalCoins: 1900,
+  //     position: 2
+  //   },
+  //   {
+  //     id: '3',
+  //     name: 'Emily Rodriguez',
+  //     profilePicture: '👩‍🎨',
+  //     rating: 4.7,
+  //     exchangeCount: 52,
+  //     mentorBadge: true,
+  //     totalCoins: 3200,
+  //     position: 3
+  //   },
+  //   {
+  //     id: '4',
+  //     name: 'David Kim',
+  //     profilePicture: '👨‍🔬',
+  //     rating: 4.6,
+  //     exchangeCount: 29,
+  //     mentorBadge: false,
+  //     totalCoins: 1500,
+  //     position: 4
+  //   },
+  //   {
+  //     id: '5',
+  //     name: 'Anna Smith',
+  //     profilePicture: '👩‍��',
+  //     rating: 4.5,
+  //     exchangeCount: 41,
+  //     mentorBadge: true,
+  //     totalCoins: 2100,
+  //     position: 5
+  //   }
+  // ];
 
-  const mostActiveUsers = [...topRatedUsers].sort((a, b) => b.exchangeCount - a.exchangeCount);
+  // const mostActiveUsers = [...topRatedUsers].sort((a, b) => b.exchangeCount - a.exchangeCount);
 
   const getPositionIcon = (position: number) => {
     switch (position) {
@@ -188,7 +188,8 @@ export const LeaderboardModal = ({ isOpen, onClose }: LeaderboardModalProps) => 
               <div className="text-center text-sm text-muted-foreground mb-4">
                 🌟 Top-rated teachers and mentors in our community
               </div>
-              {topRatedUsers.map((user) => renderUserCard(user, 'rating'))}
+              {/* {topRatedUsers.map((user) => renderUserCard(user, 'rating'))} */}
+              <p className="text-center text-muted-foreground">No top rated users available.</p>
             </div>
           </TabsContent>
 
@@ -197,9 +198,10 @@ export const LeaderboardModal = ({ isOpen, onClose }: LeaderboardModalProps) => 
               <div className="text-center text-sm text-muted-foreground mb-4">
                 🔥 Most active learners and teachers this month
               </div>
-              {mostActiveUsers.map((user, index) => 
+              {/* {mostActiveUsers.map((user, index) => 
                 renderUserCard({...user, position: index + 1}, 'exchanges')
-              )}
+              )} */}
+              <p className="text-center text-muted-foreground">No most active users available.</p>
             </div>
           </TabsContent>
         </Tabs>

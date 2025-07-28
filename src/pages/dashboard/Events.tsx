@@ -4,47 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, MapPin, Users, Crown, Clock } from 'lucide-react';
 
-const mockEvents = [
-  {
-    id: 'event-1',
-    title: 'React Workshop: Advanced Hooks',
-    date: 'Jan 25, 2024',
-    time: '2:00 PM - 4:00 PM',
-    location: 'Tech Hub Downtown',
-    attendees: 12,
-    maxAttendees: 20,
-    skills: ['React', 'JavaScript'],
-    level: 'Intermediate',
-    type: 'Workshop',
-    price: 'Free'
-  },
-  {
-    id: 'event-2',
-    title: 'Python for Beginners Bootcamp',
-    date: 'Jan 28, 2024',
-    time: '10:00 AM - 6:00 PM',
-    location: 'Learning Center',
-    attendees: 8,
-    maxAttendees: 15,
-    skills: ['Python', 'Programming'],
-    level: 'Beginner',
-    type: 'Bootcamp',
-    price: '$50'
-  },
-  {
-    id: 'event-3',
-    title: 'UI/UX Design Meetup',
-    date: 'Feb 1, 2024',
-    time: '6:00 PM - 8:00 PM',
-    location: 'Creative Space',
-    attendees: 25,
-    maxAttendees: 30,
-    skills: ['UI/UX', 'Design'],
-    level: 'All Levels',
-    type: 'Meetup',
-    price: 'Free'
-  }
-];
+// Remove or comment out all mockEvents and any mock data usage. Only show real data or an empty state.
 
 export default function Events() {
   const getLevelColor = (level: string) => {
@@ -95,66 +55,66 @@ export default function Events() {
       {/* Upcoming Events */}
       <div className="space-y-4">
         <h2 className="text-xl font-semibold">Upcoming Events</h2>
-        {mockEvents.map((event) => (
-          <Card key={event.id} className="hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h3 className="text-lg font-semibold">{event.title}</h3>
-                    <Badge className={getTypeColor(event.type)}>
-                      {event.type}
-                    </Badge>
-                    <Badge className={getLevelColor(event.level)}>
-                      {event.level}
-                    </Badge>
-                  </div>
+        {/* {mockEvents.map((event) => ( */}
+        {/*   <Card key={event.id} className="hover:shadow-md transition-shadow"> */}
+        {/*     <CardContent className="p-6"> */}
+        {/*       <div className="flex items-start justify-between"> */}
+        {/*         <div className="flex-1"> */}
+        {/*           <div className="flex items-center gap-2 mb-2"> */}
+        {/*             <h3 className="text-lg font-semibold">{event.title}</h3> */}
+        {/*             <Badge className={getTypeColor(event.type)}> */}
+        {/*               {event.type} */}
+        {/*             </Badge> */}
+        {/*             <Badge className={getLevelColor(event.level)}> */}
+        {/*               {event.level} */}
+        {/*             </Badge> */}
+        {/*           </div> */}
                   
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
-                        {event.date}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        {event.time}
-                      </div>
-                    </div>
+        {/*           <div className="space-y-2 mb-4"> */}
+        {/*             <div className="flex items-center gap-4 text-sm text-muted-foreground"> */}
+        {/*               <div className="flex items-center gap-1"> */}
+        {/*                 <Calendar className="w-4 h-4" /> */}
+        {/*                 {event.date} */}
+        {/*               </div> */}
+        {/*               <div className="flex items-center gap-1"> */}
+        {/*                 <Clock className="w-4 h-4" /> */}
+        {/*                 {event.time} */}
+        {/*               </div> */}
+        {/*             </div> */}
                     
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <MapPin className="w-4 h-4" />
-                        {event.location}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Users className="w-4 h-4" />
-                        {event.attendees}/{event.maxAttendees} attendees
-                      </div>
-                    </div>
-                  </div>
+        {/*             <div className="flex items-center gap-4 text-sm text-muted-foreground"> */}
+        {/*               <div className="flex items-center gap-1"> */}
+        {/*                 <MapPin className="w-4 h-4" /> */}
+        {/*                 {event.location} */}
+        {/*               </div> */}
+        {/*               <div className="flex items-center gap-1"> */}
+        {/*                 <Users className="w-4 h-4" /> */}
+        {/*                 {event.attendees}/{event.maxAttendees} attendees */}
+        {/*               </div> */}
+        {/*             </div> */}
+        {/*           </div> */}
 
-                  <div className="flex items-center gap-2 mb-4">
-                    {event.skills.map((skill) => (
-                      <Badge key={skill} variant="outline" className="text-xs">
-                        {skill}
-                      </Badge>
-                    ))}
-                  </div>
+        {/*           <div className="flex items-center gap-2 mb-4"> */}
+        {/*             {event.skills.map((skill) => ( */}
+        {/*               <Badge key={skill} variant="outline" className="text-xs"> */}
+        {/*                 {skill} */}
+        {/*               </Badge> */}
+        {/*             ))} */}
+        {/*           </div> */}
 
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-primary">
-                      {event.price}
-                    </span>
-                    <Button size="sm">
-                      Join Event
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        {/*           <div className="flex items-center justify-between"> */}
+        {/*             <span className="text-sm font-medium text-primary"> */}
+        {/*               {event.price} */}
+        {/*             </span> */}
+        {/*             <Button size="sm"> */}
+        {/*               Join Event */}
+        {/*             </Button> */}
+        {/*           </div> */}
+        {/*         </div> */}
+        {/*       </div> */}
+        {/*     </CardContent> */}
+        {/*   </Card> */}
+        {/* ))} */}
       </div>
 
       {/* Premium Features */}

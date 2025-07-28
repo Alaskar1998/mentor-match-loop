@@ -155,6 +155,7 @@ export const WorkshopCard = ({ workshop, userTier }: WorkshopCardProps) => {
 
 // Workshop Management Dashboard (Future)
 export const WorkshopDashboard = () => {
+  // Remove or comment out all mockWorkshops and any mock data usage. Only show real data or an empty state.
   // Mock workshop data
   const mockWorkshops: Workshop[] = [
     {

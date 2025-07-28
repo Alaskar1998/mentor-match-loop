@@ -20,6 +20,7 @@ interface InvitationFlowProps {
   userType: "free" | "premium";
   remainingInvites?: number;
   appCoins?: number;
+  skillsToTeach: string[];
 }
 
 export const InvitationFlow = ({ 
@@ -29,17 +30,19 @@ export const InvitationFlow = ({
   recipientName, 
   userType,
   remainingInvites = 3,
-  appCoins = 50
+  appCoins = 50,
+  skillsToTeach = []
 }: InvitationFlowProps) => {
   const [message, setMessage] = useState("");
+  const [selectedSkill, setSelectedSkill] = useState<string>("");
   const [showPayment, setShowPayment] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
 
   const sendInvitation = async () => {
-    if (!user || !message.trim()) return;
-
+    if (!user || !message.trim() || !selectedSkill) return;
     setIsLoading(true);
     try {
       const { error } = await supabase
@@ -47,55 +50,42 @@ export const InvitationFlow = ({
         .insert({
           sender_id: user.id,
           recipient_id: recipientId,
-          skill: 'General', // You could make this dynamic based on the context
+          skill: selectedSkill,
           message: message.trim(),
           status: 'pending'
         });
-
       if (error) {
         toast.error("Failed to send invitation");
         console.error('Invitation error:', error);
         return;
       }
-
-      // Get sender's display name for better notification
       const { data: senderProfile } = await supabase
         .from('profiles')
         .select('display_name')
         .eq('id', user.id)
         .single();
-
       const senderName = senderProfile?.display_name || user.email || 'Someone';
-
-      // Create notification for the recipient
       try {
         await notificationService.createNotification({
           userId: recipientId,
           title: 'New Invitation Received',
-          message: `${senderName} wants to learn from you`,
+          message: `${senderName} wants to learn ${selectedSkill} from you`,
           isRead: false,
           type: 'invitation_received',
-          actionUrl: '/dashboard/invites',
+          actionUrl: '/my-exchanges?tab=request',
           metadata: { 
             senderId: user.id, 
             senderName: senderName,
-            skill: 'General'
+            skill: selectedSkill
           }
         });
       } catch (notificationError) {
         console.error('Failed to create notification:', notificationError);
-        // Don't fail the invitation if notification creation fails
       }
-
-      toast.success(`Invitation sent to ${recipientName}!`);
-      onClose();
+      setShowConfirmation(true);
       setMessage("");
+      setSelectedSkill("");
       setShowPayment(false);
-      
-      // Optionally navigate to invites page
-      setTimeout(() => {
-        navigate('/dashboard/invites');
-      }, 1000);
     } catch (error) {
       toast.error("Failed to send invitation");
       console.error('Invitation error:', error);
@@ -105,6 +95,10 @@ export const InvitationFlow = ({
   };
 
   const handleSendInvite = () => {
+    if (!selectedSkill) {
+      toast.error("Please select a skill");
+      return;
+    }
     if (!message.trim()) {
       toast.error("Please enter a message");
       return;
@@ -137,8 +131,14 @@ export const InvitationFlow = ({
             Connect with {recipientName} to start your skill exchange journey.
           </DialogDescription>
         </DialogHeader>
-
-        {!showPayment ? (
+        {showConfirmation ? (
+          <div className="space-y-6 text-center py-8">
+            <div className="text-3xl">✅</div>
+            <div className="font-semibold text-lg">Invitation sent successfully!</div>
+            <div className="text-muted-foreground text-sm mb-4">You can check your invites anytime from your dashboard.</div>
+            <Button onClick={onClose}>Close</Button>
+          </div>
+        ) : !showPayment ? (
           <div className="space-y-6">
             {/* User Status */}
             <Card className="border-0 bg-muted/30">
@@ -161,7 +161,6 @@ export const InvitationFlow = ({
                     {appCoins} coins
                   </div>
                 </div>
-
                 {userType === "free" && (
                   <div className="mt-3 text-sm">
                     <div className="flex justify-between">
@@ -172,7 +171,21 @@ export const InvitationFlow = ({
                 )}
               </CardContent>
             </Card>
-
+            {/* Skill Selection */}
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Select a skill to learn</label>
+              <select
+                className="w-full border rounded px-3 py-2 focus:outline-none focus:ring"
+                value={selectedSkill}
+                onChange={e => setSelectedSkill(e.target.value)}
+              >
+                <option value="">-- Select a skill --</option>
+                {skillsToTeach.map(skill => (
+                  <option key={skill} value={skill}>{skill}</option>
+                ))}
+              </select>
+              <div className="text-xs text-muted-foreground mt-1">Select the skill you’d like to learn from this user.</div>
+            </div>
             {/* Message Compose */}
             <div className="space-y-3">
               <label className="text-sm font-medium">Your message to {recipientName}</label>
@@ -184,9 +197,6 @@ export const InvitationFlow = ({
                 className="resize-none"
               />
             </div>
-
-
-
             {/* Action Buttons */}
             <div className="flex gap-3">
               <Button variant="outline" onClick={onClose} className="flex-1">
@@ -194,7 +204,7 @@ export const InvitationFlow = ({
               </Button>
               <Button 
                 onClick={handleSendInvite} 
-                disabled={!message.trim() || isLoading}
+                disabled={!selectedSkill || !message.trim() || isLoading}
                 className="flex-1"
               >
                 {isLoading ? "Sending..." : "Send Invitation"}

@@ -27,8 +27,8 @@ export const Footer = () => {
               <Link to="/pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Pricing
               </Link>
-              <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Dashboard
+              <Link to="/my-exchanges" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                My Exchanges
               </Link>
             </nav>
           </div>

@@ -123,14 +123,10 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
     if (user) {
       loadNotifications();
       
-      // Set up real-time updates simulation
-      const cleanup = notificationService.simulateRealTimeUpdates(user.id);
-      
       // Poll for updates every 10 seconds for more responsive notifications
       const pollInterval = setInterval(loadNotifications, 10000);
       
       return () => {
-        cleanup();
         clearInterval(pollInterval);
       };
     } else {

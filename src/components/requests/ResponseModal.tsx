@@ -127,7 +127,7 @@ export const ResponseModal = ({ isOpen, onClose, request, onResponseSubmitted }:
           title: '📩 New Response to Your Request',
           message: `${responderName} responded to your "${request.skill}" request: "${requestSnippet}"`,
           isRead: false,
-          type: 'invitation_received', // Using existing type for now
+          type: 'invitation_received', // Use allowed type
           actionUrl: '/my-exchanges?tab=responses',
           metadata: { 
             responderId: user.id,

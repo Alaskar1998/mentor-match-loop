@@ -1,207 +1,214 @@
-import { Notification, NotificationCounts, NotificationService } from "@/types/notifications";
+import { Notification, NotificationCounts, NotificationService, ChatNotification } from "@/types/notifications";
+import { supabase } from "@/integrations/supabase/client";
 
-// Mock storage - in production this would be replaced with actual API calls
-class MockNotificationService implements NotificationService {
-  private notifications: Notification[] = [];
-  private storageKey = 'skillexchange_notifications';
-
-  constructor() {
-    this.loadFromStorage();
-    this.generateMockNotifications();
-  }
-
-  private loadFromStorage() {
-    const stored = localStorage.getItem(this.storageKey);
-    if (stored) {
-      this.notifications = JSON.parse(stored).map((n: any) => ({
-        ...n,
-        createdAt: new Date(n.createdAt)
-      }));
-    }
-  }
-
-  private saveToStorage() {
-    localStorage.setItem(this.storageKey, JSON.stringify(this.notifications));
-  }
-
-  private generateMockNotifications() {
-    // Only generate initial notifications if storage is empty
-    if (this.notifications.length === 0) {
-      // We'll generate notifications when a user first logs in
-      // This will be handled in the createDemoNotifications method
-    }
-  }
-
-  // Public method to create demo notifications for a specific user
-  createDemoNotifications(userId: string) {
-    // Check if user already has notifications
-    const existingUserNotifications = this.notifications.filter(n => n.userId === userId);
-    if (existingUserNotifications.length > 0) {
-      return; // User already has notifications
-    }
-
-    const mockNotifications: Omit<Notification, 'id' | 'createdAt'>[] = [
-      {
-        userId: userId,
-        title: 'Welcome to SkillExchange!',
-        message: 'Complete your profile to start connecting with other learners',
-        isRead: false,
-        type: 'system_announcement',
-        actionUrl: '/profile',
-        metadata: { type: 'welcome' }
-      },
-      {
-        userId: userId,
-        title: 'New Invitation Received',
-        message: 'Someone wants to learn JavaScript from you',
-        isRead: false,
-        type: 'invitation_received',
-        actionUrl: '/dashboard/invites',
-        metadata: { skill: 'JavaScript' }
-      },
-      {
-        userId: userId,
-        title: 'Learning Match Found',
-        message: 'Found 3 new users who can teach Spanish in your area',
-        isRead: false,
-        type: 'learning_match',
-        actionUrl: '/search?skill=Spanish',
-        metadata: { skill: 'Spanish', matches: 3 }
-      },
-      {
-        userId: userId,
-        title: 'New Message',
-        message: 'Hey! When can we start the JavaScript lessons?',
-        isRead: false,
-        type: 'new_message',
-        actionUrl: '/messages'
-      } as any,
-      {
-        userId: userId,
-        title: 'Profile Viewed',
-        message: 'Someone viewed your profile today',
-        isRead: true,
-        type: 'profile_viewed',
-        actionUrl: '/profile',
-        metadata: { viewCount: 5 }
-      }
-    ];
-
-    mockNotifications.forEach(notification => {
-      this.createNotification(notification);
-    });
-  }
-
+// Real notification service using Supabase
+class RealNotificationService implements NotificationService {
   async getNotifications(userId: string, type?: 'general' | 'chat'): Promise<Notification[]> {
-    // Create demo notifications for new users
-    this.createDemoNotifications(userId);
-    
-    let filtered = this.notifications.filter(n => n.userId === userId);
-    
-    if (type === 'general') {
-      filtered = filtered.filter(n => !['new_message', 'new_chat'].includes(n.type));
-    } else if (type === 'chat') {
-      filtered = filtered.filter(n => ['new_message', 'new_chat'].includes(n.type));
+    try {
+      let query = (supabase as any)
+        .from('notifications')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (type === 'general') {
+        query = query.not('type', 'in', '(new_message,new_chat)');
+      } else if (type === 'chat') {
+        query = query.in('type', ['new_message', 'new_chat']);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Error fetching notifications:', error);
+        // Return empty array instead of throwing
+        return [];
+      }
+
+      return data?.map((notification: any) => ({
+        id: notification.id,
+        userId: notification.user_id,
+        title: notification.title,
+        message: notification.message,
+        isRead: notification.is_read,
+        type: notification.type,
+        actionUrl: notification.action_url,
+        metadata: notification.metadata,
+        createdAt: new Date(notification.created_at),
+        chatId: notification.chat_id,
+        senderId: notification.sender_id,
+        senderName: notification.sender_name
+      })) || [];
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      // Return empty array instead of throwing
+      return [];
     }
-    
-    return filtered.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
   async markAsRead(notificationId: string): Promise<void> {
-    const notification = this.notifications.find(n => n.id === notificationId);
-    if (notification) {
-      notification.isRead = true;
-      this.saveToStorage();
+    try {
+      const { error } = await (supabase as any)
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('id', notificationId);
+
+      if (error) {
+        console.error('Error marking notification as read:', error);
+      }
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
     }
   }
 
   async markAllAsRead(userId: string, type?: 'general' | 'chat'): Promise<void> {
-    this.notifications.forEach(notification => {
-      if (notification.userId === userId) {
-        if (!type || 
-            (type === 'general' && !['new_message', 'new_chat'].includes(notification.type)) ||
-            (type === 'chat' && ['new_message', 'new_chat'].includes(notification.type))) {
-          notification.isRead = true;
-        }
+    try {
+      let query = (supabase as any)
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('user_id', userId);
+
+      if (type === 'general') {
+        query = query.not('type', 'in', '(new_message,new_chat)');
+      } else if (type === 'chat') {
+        query = query.in('type', ['new_message', 'new_chat']);
       }
-    });
-    this.saveToStorage();
+
+      const { error } = await query;
+
+      if (error) {
+        console.error('Error marking all notifications as read:', error);
+      }
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+    }
   }
 
   async deleteNotification(notificationId: string): Promise<void> {
-    this.notifications = this.notifications.filter(n => n.id !== notificationId);
-    this.saveToStorage();
+    try {
+      const { error } = await (supabase as any)
+        .from('notifications')
+        .delete()
+        .eq('id', notificationId);
+
+      if (error) {
+        console.error('Error deleting notification:', error);
+      }
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+    }
   }
 
   async clearAll(userId: string, type?: 'general' | 'chat'): Promise<void> {
-    this.notifications = this.notifications.filter(notification => {
-      if (notification.userId !== userId) return true;
-      
-      if (!type) return false;
-      if (type === 'general' && ['new_message', 'new_chat'].includes(notification.type)) return true;
-      if (type === 'chat' && !['new_message', 'new_chat'].includes(notification.type)) return true;
-      
-      return false;
-    });
-    this.saveToStorage();
+    try {
+      let query = (supabase as any)
+        .from('notifications')
+        .delete()
+        .eq('user_id', userId);
+
+      if (type === 'general') {
+        query = query.not('type', 'in', '(new_message,new_chat)');
+      } else if (type === 'chat') {
+        query = query.in('type', ['new_message', 'new_chat']);
+      }
+
+      const { error } = await query;
+
+      if (error) {
+        console.error('Error clearing notifications:', error);
+      }
+    } catch (error) {
+      console.error('Error clearing notifications:', error);
+    }
   }
 
   async getUnreadCount(userId: string): Promise<NotificationCounts> {
-    const userNotifications = this.notifications.filter(n => n.userId === userId && !n.isRead);
-    
-    const general = userNotifications.filter(n => !['new_message', 'new_chat'].includes(n.type)).length;
-    const chat = userNotifications.filter(n => ['new_message', 'new_chat'].includes(n.type)).length;
-    
-    return {
-      general,
-      chat,
-      total: general + chat
-    };
+    try {
+      const { data: generalData, error: generalError } = await (supabase as any)
+        .from('notifications')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('is_read', false)
+        .not('type', 'in', '(new_message,new_chat)');
+
+      const { data: chatData, error: chatError } = await (supabase as any)
+        .from('notifications')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('is_read', false)
+        .in('type', ['new_message', 'new_chat']);
+
+      if (generalError || chatError) {
+        console.error('Error fetching unread counts:', { generalError, chatError });
+        // Return zero counts instead of throwing
+        return { general: 0, chat: 0, total: 0 };
+      }
+
+      const general = generalData?.length || 0;
+      const chat = chatData?.length || 0;
+
+      return {
+        general,
+        chat,
+        total: general + chat
+      };
+    } catch (error) {
+      console.error('Error fetching unread counts:', error);
+      // Return zero counts instead of throwing
+      return { general: 0, chat: 0, total: 0 };
+    }
   }
 
   async createNotification(notification: Omit<Notification, 'id' | 'createdAt'>): Promise<Notification> {
-    const newNotification: Notification = {
-      ...notification,
-      id: `notification-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      createdAt: new Date()
-    } as Notification;
-    
-    this.notifications.push(newNotification);
-    this.saveToStorage();
-    
-    return newNotification;
-  }
+    try {
+      const notificationData: any = {
+        user_id: notification.userId,
+        title: notification.title,
+        message: notification.message,
+        is_read: notification.isRead,
+        type: notification.type,
+        action_url: notification.actionUrl,
+        metadata: notification.metadata
+      };
 
-  // Simulate real-time updates by occasionally adding new notifications
-  simulateRealTimeUpdates(userId: string) {
-    const interval = setInterval(() => {
-      if (Math.random() < 0.1) { // 10% chance every 30 seconds
-        const mockMessages = [
-          'New learning match found!',
-          'Someone viewed your profile',
-          'You have a new message',
-          'Weekly challenge completed'
-        ];
-        
-        const randomMessage = mockMessages[Math.floor(Math.random() * mockMessages.length)];
-        
-        this.createNotification({
-          userId,
-          title: 'New Update',
-          message: randomMessage,
-          isRead: false,
-          type: Math.random() < 0.3 ? 'new_message' : 'system_announcement',
-          ...(Math.random() < 0.3 && {
-            chatId: 'chat-random',
-            senderId: 'user-random',
-            senderName: 'Random User'
-          })
-        } as any);
+      // Add chat-specific fields if this is a chat notification
+      if (notification.type === 'new_message' || notification.type === 'new_chat') {
+        const chatNotification = notification as ChatNotification;
+        notificationData.chat_id = chatNotification.chatId;
+        notificationData.sender_id = chatNotification.senderId;
+        notificationData.sender_name = chatNotification.senderName;
       }
-    }, 30000); // Every 30 seconds
 
-    return () => clearInterval(interval);
+      const { data, error } = await (supabase as any)
+        .from('notifications')
+        .insert(notificationData)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating notification:', error);
+        throw error;
+      }
+
+      return {
+        id: data.id,
+        userId: data.user_id,
+        title: data.title,
+        message: data.message,
+        isRead: data.is_read,
+        type: data.type,
+        actionUrl: data.action_url,
+        metadata: data.metadata,
+        createdAt: new Date(data.created_at),
+        chatId: data.chat_id,
+        senderId: data.sender_id,
+        senderName: data.sender_name
+      };
+    } catch (error) {
+      console.error('Error creating notification:', error);
+      throw error;
+    }
   }
 }
 
-export const notificationService = new MockNotificationService();
+export const notificationService = new RealNotificationService();

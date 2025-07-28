@@ -15,18 +15,13 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { SkillInputComponent } from "@/components/ui/SkillInputComponent";
+import { type Skill } from "@/data/skills";
 
 interface SignupModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSignupComplete: (userData: SignupData) => void;
-}
-
-interface Skill {
-  name: string;
-  level: string;
-  description: string;
-  category?: string;
 }
 
 interface SignupData {
@@ -192,6 +187,13 @@ export const SignupModal = ({ isOpen, onClose, onSignupComplete }: SignupModalPr
     setFormData(prev => ({
       ...prev,
       skillsToTeach: prev.skillsToTeach?.filter((_, i) => i !== index) || []
+    }));
+  };
+
+  const handleAddSkill = (skill: Skill) => {
+    setFormData(prev => ({
+      ...prev,
+      skillsToTeach: [...(prev.skillsToTeach || []), skill]
     }));
   };
 
@@ -437,51 +439,15 @@ export const SignupModal = ({ isOpen, onClose, onSignupComplete }: SignupModalPr
 
             <Card>
               <CardContent className="p-4 space-y-4">
-                <div>
-                  <Label htmlFor="skillName">Skill Name</Label>
-                  <Input
-                    id="skillName"
-                    placeholder="e.g., Guitar, Cooking, JavaScript"
-                    value={newSkill.name}
-                    onChange={(e) => setNewSkill(prev => ({ ...prev, name: e.target.value }))}
-                    className="mt-1"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="skillLevel">Your Level</Label>
-                  <Select onValueChange={(value) => setNewSkill(prev => ({ ...prev, level: value }))}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Select your skill level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {SKILL_LEVELS.map(level => (
-                        <SelectItem key={level} value={level}>{level}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="skillDescription">What can you teach?</Label>
-                  <Textarea
-                    id="skillDescription"
-                    placeholder="Describe what you can teach in this skill..."
-                    value={newSkill.description}
-                    onChange={(e) => setNewSkill(prev => ({ ...prev, description: e.target.value }))}
-                    className="mt-1"
-                    rows={2}
-                  />
-                </div>
-
-                <Button onClick={addSkillToTeach} className="w-full">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Skill
-                </Button>
+                <SkillInputComponent
+                  onAddSkill={handleAddSkill}
+                  title="Add Skill to Teach"
+                  compact={true}
+                />
               </CardContent>
             </Card>
 
-            {formData.skillsToTeach && formData.skillsToTeach.length > 0 && (
+            {formData.skillsToTeach && formData.skillsToTeach.length > 0 &&
               <div className="space-y-3">
                 <h4 className="font-medium">Your Skills</h4>
                 {formData.skillsToTeach.map((skill, index) => (
@@ -507,6 +473,38 @@ export const SignupModal = ({ isOpen, onClose, onSignupComplete }: SignupModalPr
                 ))}
               </div>
             )}
+
+            <div className="flex gap-4 mt-6">
+              <Button variant="outline" onClick={handleBack} className="flex-1">
+                Back
+              </Button>
+              <Button onClick={handleNext} disabled={isLoading} className="flex-1">
+                {isLoading ? "Creating account..." : "Continue"}
+              </Button>
+            </div>
+
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  OR CONTINUE WITH
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              <Button variant="outline" onClick={() => handleSocialAuth('google')} disabled={isLoading}>
+                Google
+              </Button>
+              <Button variant="outline" onClick={() => handleSocialAuth('facebook')} disabled={isLoading}>
+                Facebook
+              </Button>
+              <Button variant="outline" onClick={() => handleSocialAuth('apple')} disabled={isLoading}>
+                Apple
+              </Button>
+            </div>
           </div>
         );
 
