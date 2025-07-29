@@ -63,6 +63,27 @@ interface LearningResponse {
   skill: string;
 }
 
+// Interface for invitation data
+interface Invitation {
+  id: string;
+  sender_id: string;
+  recipient_id: string;
+  skill: string;
+  message: string;
+  status: "pending" | "accepted" | "declined";
+  created_at: string;
+  sender?: {
+    id: string;
+    name: string;
+    avatar: string;
+  };
+  recipient?: {
+    id: string;
+    name: string;
+    avatar: string;
+  };
+}
+
 // Real data will be fetched from database
 const mockExchanges: Record<string, Exchange[]> = {
   active: [],
@@ -79,6 +100,141 @@ export default function MyExchanges() {
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [selectedExchange, setSelectedExchange] = useState<Exchange | null>(null);
   const [responses, setResponses] = useState<LearningResponse[]>([]);
+  const [sentInvites, setSentInvites] = useState<Invitation[]>([]);
+  const [receivedInvites, setReceivedInvites] = useState<Invitation[]>([]);
+  const [activeExchanges, setActiveExchanges] = useState<any[]>([]);
+  const [completedExchanges, setCompletedExchanges] = useState<any[]>([]);
+
+  const fetchActiveExchanges = async () => {
+    if (!user) return;
+
+    try {
+      console.log('🔄 Fetching active exchanges...');
+      
+      // Fetch chats where user is participant and exchange_state is active_exchange
+      const { data: chats, error } = await supabase
+        .from('chats')
+        .select(`
+          *,
+          exchange_contracts (
+            *
+          ),
+          profiles!chats_user1_id_fkey (
+            id,
+            display_name,
+            avatar_url
+          ),
+          profiles_user2:profiles!chats_user2_id_fkey (
+            id,
+            display_name,
+            avatar_url
+          )
+        `)
+        .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
+        .eq('exchange_state', 'active_exchange');
+
+      if (error) {
+        console.error('Error fetching active exchanges:', error);
+        return;
+      }
+
+      // Transform the data
+      const exchanges = (chats || []).map(chat => {
+        const isUser1 = chat.user1_id === user.id;
+        const otherUser = isUser1 ? chat.profiles_user2 : chat.profiles;
+        const contract = chat.exchange_contracts?.[0];
+        
+        return {
+          id: chat.id,
+          skill: chat.skill,
+          otherUser: {
+            name: otherUser?.display_name || 'Unknown User',
+            avatar: otherUser?.avatar_url
+          },
+          userSkill: isUser1 ? contract?.user1_skill : contract?.user2_skill,
+          otherUserSkill: isUser1 ? contract?.user2_skill : contract?.user1_skill,
+          userIsMentorship: isUser1 ? contract?.user1_is_mentorship : contract?.user2_is_mentorship,
+          otherUserIsMentorship: isUser1 ? contract?.user2_is_mentorship : contract?.user1_is_mentorship,
+          startedAt: new Date(chat.updated_at),
+          canFinish: new Date().getTime() - new Date(chat.updated_at).getTime() > 30 * 60 * 1000 // 30 minutes
+        };
+      });
+
+      setActiveExchanges(exchanges);
+      console.log('✅ Active exchanges fetched:', exchanges);
+    } catch (error) {
+      console.error('Error fetching active exchanges:', error);
+    }
+  };
+
+  const fetchCompletedExchanges = async () => {
+    if (!user) return;
+
+    try {
+      console.log('🔄 Fetching completed exchanges...');
+      
+      // Fetch chats where user is participant and exchange_state is completed or both users have reviewed
+      const { data: chats, error } = await supabase
+        .from('chats')
+        .select(`
+          *,
+          exchange_contracts (
+            *
+          ),
+          profiles!chats_user1_id_fkey (
+            id,
+            display_name,
+            avatar_url
+          ),
+          profiles_user2:profiles!chats_user2_id_fkey (
+            id,
+            display_name,
+            avatar_url
+          ),
+          reviews (
+            *
+          )
+        `)
+        .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
+        .eq('exchange_state', 'completed');
+
+      if (error) {
+        console.error('Error fetching completed exchanges:', error);
+        return;
+      }
+
+      // Transform the data
+      const exchanges = (chats || []).map(chat => {
+        const isUser1 = chat.user1_id === user.id;
+        const otherUser = isUser1 ? chat.profiles_user2 : chat.profiles;
+        const contract = chat.exchange_contracts?.[0];
+        const userReview = chat.reviews?.find(r => r.reviewer_id === user.id);
+        const otherUserReview = chat.reviews?.find(r => r.reviewer_id !== user.id);
+        
+        return {
+          id: chat.id,
+          skill: chat.skill,
+          otherUser: {
+            name: otherUser?.display_name || 'Unknown User',
+            avatar: otherUser?.avatar_url
+          },
+          userSkill: isUser1 ? contract?.user1_skill : contract?.user2_skill,
+          otherUserSkill: isUser1 ? contract?.user2_skill : contract?.user1_skill,
+          userIsMentorship: isUser1 ? contract?.user1_is_mentorship : contract?.user2_is_mentorship,
+          completedAt: new Date(chat.updated_at),
+          userReview,
+          otherUserReview,
+          averageRating: otherUserReview ? 
+            Math.round((otherUserReview.skill_rating + otherUserReview.communication_rating) / 2) : null
+        };
+      });
+
+      setCompletedExchanges(exchanges);
+      console.log('✅ Completed exchanges fetched:', exchanges);
+    } catch (error) {
+      console.error('Error fetching completed exchanges:', error);
+    }
+  };
 
   // Fetch user's learning responses from database
   const fetchUserResponses = async () => {
@@ -208,6 +364,169 @@ export default function MyExchanges() {
     }
   };
 
+  // Fetch user's sent invites from database
+  const fetchSentInvites = async () => {
+    if (!user?.id) return;
+
+    try {
+      console.log('Fetching sent invites for user:', user.id);
+      
+      const { data: invites, error } = await supabase
+        .from('invitations')
+        .select('*')
+        .eq('sender_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching sent invites:', error);
+        toast.error("Failed to load sent invites");
+        return;
+      }
+
+      console.log('Raw sent invites from database:', invites);
+
+      if (!invites || invites.length === 0) {
+        console.log('No sent invites found');
+        setSentInvites([]);
+        return;
+      }
+
+      // Transform database data to Invitation format with recipient details
+      const transformedInvites: Invitation[] = await Promise.all(
+        invites.map(async (invite: any) => {
+          try {
+            // Fetch recipient profile details
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('display_name, avatar_url')
+              .eq('id', invite.recipient_id)
+              .single();
+
+            return {
+              id: invite.id,
+              sender_id: invite.sender_id,
+              recipient_id: invite.recipient_id,
+              skill: invite.skill,
+              message: invite.message,
+              status: invite.status as "pending" | "accepted" | "declined",
+              created_at: invite.created_at,
+              recipient: {
+                id: invite.recipient_id,
+                name: profile?.display_name || 'Anonymous User',
+                avatar: profile?.avatar_url || '👤',
+              }
+            };
+          } catch (error) {
+            console.error('Error fetching recipient details for invite:', invite.id, error);
+            return {
+              id: invite.id,
+              sender_id: invite.sender_id,
+              recipient_id: invite.recipient_id,
+              skill: invite.skill,
+              message: invite.message,
+              status: invite.status as "pending" | "accepted" | "declined",
+              created_at: invite.created_at,
+              recipient: {
+                id: invite.recipient_id,
+                name: 'Anonymous User',
+                avatar: '👤',
+              }
+            };
+          }
+        })
+      );
+      
+      setSentInvites(transformedInvites);
+      console.log('Transformed and set sent invites:', transformedInvites.length);
+      
+    } catch (error) {
+      console.error('Error fetching sent invites:', error);
+      toast.error("Failed to load sent invites");
+    }
+  };
+
+  // Fetch user's received invites from database
+  const fetchReceivedInvites = async () => {
+    if (!user?.id) return;
+
+    try {
+      console.log('Fetching received invites for user:', user.id);
+      
+      const { data: invites, error } = await supabase
+        .from('invitations')
+        .select('*')
+        .eq('recipient_id', user.id)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching received invites:', error);
+        toast.error("Failed to load received invites");
+        return;
+      }
+
+      console.log('Raw received invites from database:', invites);
+
+      if (!invites || invites.length === 0) {
+        console.log('No received invites found');
+        setReceivedInvites([]);
+        return;
+      }
+
+      // Transform database data to Invitation format with sender details
+      const transformedInvites: Invitation[] = await Promise.all(
+        invites.map(async (invite: any) => {
+          try {
+            // Fetch sender profile details
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('display_name, avatar_url')
+              .eq('id', invite.sender_id)
+              .single();
+
+            return {
+              id: invite.id,
+              sender_id: invite.sender_id,
+              recipient_id: invite.recipient_id,
+              skill: invite.skill,
+              message: invite.message,
+              status: invite.status as "pending" | "accepted" | "declined",
+              created_at: invite.created_at,
+              sender: {
+                id: invite.sender_id,
+                name: profile?.display_name || 'Anonymous User',
+                avatar: profile?.avatar_url || '👤',
+              }
+            };
+          } catch (error) {
+            console.error('Error fetching sender details for invite:', invite.id, error);
+            return {
+              id: invite.id,
+              sender_id: invite.sender_id,
+              recipient_id: invite.recipient_id,
+              skill: invite.skill,
+              message: invite.message,
+              status: invite.status as "pending" | "accepted" | "declined",
+              created_at: invite.created_at,
+              sender: {
+                id: invite.sender_id,
+                name: 'Anonymous User',
+                avatar: '👤',
+              }
+            };
+          }
+        })
+      );
+      
+      setReceivedInvites(transformedInvites);
+      console.log('Transformed and set received invites:', transformedInvites.length);
+      
+    } catch (error) {
+      console.error('Error fetching received invites:', error);
+      toast.error("Failed to load received invites");
+    }
+  };
+
   // Read tab parameter from URL on component mount
   useEffect(() => {
     const tabParam = searchParams.get('tab');
@@ -229,6 +548,10 @@ export default function MyExchanges() {
   useEffect(() => {
     if (user?.id) {
       fetchUserResponses();
+      fetchSentInvites();
+      fetchReceivedInvites();
+      fetchActiveExchanges(); // Fetch active exchanges when user changes
+      fetchCompletedExchanges(); // Fetch completed exchanges when user changes
     }
   }, [user?.id]);
 
@@ -243,6 +566,49 @@ export default function MyExchanges() {
     return () => clearInterval(pollInterval);
   }, [user?.id, activeTab]);
 
+  // Auto-update sent invites every 10 seconds
+  useEffect(() => {
+    if (!user?.id || activeTab !== 'sent') return;
+
+    const pollInterval = setInterval(() => {
+      fetchSentInvites();
+    }, 10000); // 10 seconds
+
+    return () => clearInterval(pollInterval);
+  }, [user?.id, activeTab]);
+
+  // Auto-update received invites every 10 seconds
+  useEffect(() => {
+    if (!user?.id || activeTab !== 'request') return;
+
+    const pollInterval = setInterval(() => {
+      fetchReceivedInvites();
+    }, 10000); // 10 seconds
+
+    return () => clearInterval(pollInterval);
+  }, [user?.id, activeTab]);
+
+  // Auto-refresh data every 10 seconds when on specific tabs
+  useEffect(() => {
+    if (!user) return;
+
+    let interval: NodeJS.Timeout;
+    
+    if (activeTab === 'sent') {
+      interval = setInterval(fetchSentInvites, 10000);
+    } else if (activeTab === 'request') {
+      interval = setInterval(fetchReceivedInvites, 10000);
+    } else if (activeTab === 'active') {
+      interval = setInterval(fetchActiveExchanges, 10000);
+    } else if (activeTab === 'completed') {
+      interval = setInterval(fetchCompletedExchanges, 10000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [activeTab, user?.id]);
+
   // Refresh responses when Responses tab is opened
   useEffect(() => {
     if (user?.id && activeTab === 'responses') {
@@ -251,24 +617,34 @@ export default function MyExchanges() {
     }
   }, [user?.id, activeTab]);
 
+  // Refresh sent invites when Sent tab is opened
+  useEffect(() => {
+    if (user?.id && activeTab === 'sent') {
+      console.log('Sent tab opened, refreshing sent invites...');
+      fetchSentInvites();
+    }
+  }, [user?.id, activeTab]);
+
+  // Refresh received invites when Request tab is opened
+  useEffect(() => {
+    if (user?.id && activeTab === 'request') {
+      console.log('Request tab opened, refreshing received invites...');
+      fetchReceivedInvites();
+    }
+  }, [user?.id, activeTab]);
+
   // Get current tab's exchanges
   const currentExchanges = mockExchanges[activeTab as keyof typeof mockExchanges] || [];
 
   // Get count for each tab
-  const getTabCount = (tabId: string) => {
-    switch (tabId) {
-      case 'active':
-        return mockExchanges.active?.length || 0;
-      case 'responses':
-        return responses.length;
-      case 'request':
-        return mockExchanges.request?.length || 0;
-      case 'sent':
-        return mockExchanges.sent?.length || 0;
-      case 'completed':
-        return mockExchanges.completed?.length || 0;
-      default:
-        return 0;
+  const getTabCount = (tab: string) => {
+    switch (tab) {
+      case 'responses': return responses.length;
+      case 'sent': return sentInvites.length;
+      case 'request': return receivedInvites.length;
+      case 'active': return activeExchanges.length;
+      case 'completed': return completedExchanges.length;
+      default: return 0;
     }
   };
 
@@ -425,6 +801,127 @@ export default function MyExchanges() {
     }
   };
 
+  // Handle accepting a received invitation
+  const handleAcceptInvitation = async (invite: Invitation) => {
+    if (!user?.id) {
+      toast.error("You must be logged in to accept invitations");
+      return;
+    }
+
+    try {
+      console.log('✅ Accepting invitation:', invite.id);
+      
+      // Update invitation status to 'accepted' in database
+      const { error: updateError } = await supabase
+        .from('invitations')
+        .update({ status: 'accepted' })
+        .eq('id', invite.id);
+
+      if (updateError) {
+        console.error('Error updating invitation status:', updateError);
+        toast.error("Failed to accept invitation");
+        return;
+      }
+
+      // Create a chat thread for the exchange
+      const { data: chatData, error: chatError } = await supabase
+        .from('chats')
+        .insert({
+          user1_id: invite.sender_id,
+          user2_id: user.id,
+          skill: invite.skill,
+          status: 'active'
+        })
+        .select()
+        .single();
+
+      if (chatError) {
+        console.error('Error creating chat:', chatError);
+        toast.error("Failed to create chat thread");
+        return;
+      }
+
+      console.log('Chat created successfully:', chatData);
+      
+      // Get current user's display name for notification
+      const { data: recipientProfile } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('id', user.id)
+        .single();
+
+      const recipientName = recipientProfile?.display_name || user.email || 'Someone';
+
+      // Create notification for the sender about acceptance
+      try {
+        await notificationService.createNotification({
+          userId: invite.sender_id,
+          title: '✅ Invitation Accepted!',
+          message: `${recipientName} accepted your invitation to learn ${invite.skill}`,
+          isRead: false,
+          type: 'invitation_accepted',
+          actionUrl: `/chat/${chatData.id}`,
+          metadata: { 
+            recipientId: user.id,
+            recipientName: recipientName,
+            skill: invite.skill,
+            chatId: chatData.id
+          }
+        });
+        console.log('✅ Acceptance notification sent to sender');
+      } catch (notificationError) {
+        console.error('Failed to create acceptance notification:', notificationError);
+      }
+
+      console.log('Invitation accepted successfully');
+      toast.success("✅ Invitation accepted — chat created!");
+      
+      // Remove from local state immediately
+      setReceivedInvites(prev => prev.filter(inv => inv.id !== invite.id));
+      
+      // Redirect to messages page after a short delay
+      setTimeout(() => {
+        navigate('/messages');
+      }, 1500);
+    } catch (error) {
+      console.error('Error accepting invitation:', error);
+      toast.error("Failed to accept invitation");
+    }
+  };
+
+  // Handle declining a received invitation
+  const handleDeclineInvitation = async (invite: Invitation) => {
+    if (!user?.id) {
+      toast.error("You must be logged in to decline invitations");
+      return;
+    }
+
+    try {
+      console.log('❌ Declining invitation:', invite.id);
+      
+      // Update invitation status to 'declined' in database
+      const { error: updateError } = await supabase
+        .from('invitations')
+        .update({ status: 'declined' })
+        .eq('id', invite.id);
+
+      if (updateError) {
+        console.error('Error updating invitation status:', updateError);
+        toast.error("Failed to decline invitation");
+        return;
+      }
+
+      console.log('Invitation declined successfully');
+      
+      // Remove from local state immediately
+      setReceivedInvites(prev => prev.filter(inv => inv.id !== invite.id));
+      toast.success("✅ Invitation declined");
+    } catch (error) {
+      console.error('Error declining invitation:', error);
+      toast.error("Failed to decline invitation");
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-6 max-w-6xl">
       {/* Page Header */}
@@ -553,6 +1050,330 @@ export default function MyExchanges() {
               ))
             )}
           </div>
+        ) : activeTab === 'sent' ? (
+          // Sent Invites Tab Content
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Sent Invitations</h3>
+            </div>
+            
+            {sentInvites.length === 0 ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <div className="text-muted-foreground">
+                    <XCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <h3 className="text-lg font-medium mb-2">No sent invitations</h3>
+                    <p className="text-sm">
+                      You haven't sent any invitations yet. Start by browsing users and sending invites!
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              sentInvites.map((invite) => (
+                <Card key={invite.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-4 flex-1">
+                        <Avatar className="w-12 h-12">
+                          <AvatarImage src={invite.recipient?.avatar} />
+                          <AvatarFallback>
+                            {invite.recipient?.avatar || '👤'}
+                          </AvatarFallback>
+                        </Avatar>
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="font-semibold text-lg">{invite.recipient?.name}</h3>
+                            <Badge variant={invite.status === 'pending' ? 'secondary' : invite.status === 'accepted' ? 'default' : 'destructive'} className="text-xs">
+                              {invite.status.charAt(0).toUpperCase() + invite.status.slice(1)}
+                            </Badge>
+                          </div>
+                          
+                          <Badge variant="secondary" className="text-xs mb-2">
+                            {invite.skill}
+                          </Badge>
+                          
+                          <p className="text-muted-foreground mb-3">{invite.message}</p>
+                          
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="w-4 h-4" />
+                              {new Date(invite.created_at).toLocaleDateString()}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        ) : activeTab === 'request' ? (
+          // Received Invites Tab Content
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Received Invitations</h3>
+            </div>
+            
+            {receivedInvites.length === 0 ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <div className="text-muted-foreground">
+                    <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <h3 className="text-lg font-medium mb-2">No pending invitations</h3>
+                    <p className="text-sm">
+                      You don't have any pending invitations from other users.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              receivedInvites.map((invite) => (
+                <Card key={invite.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-4 flex-1">
+                        <Avatar className="w-12 h-12">
+                          <AvatarImage src={invite.sender?.avatar} />
+                          <AvatarFallback>
+                            {invite.sender?.avatar || '👤'}
+                          </AvatarFallback>
+                        </Avatar>
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="font-semibold text-lg">{invite.sender?.name}</h3>
+                            <Badge variant="secondary" className="text-xs">
+                              Wants to learn
+                            </Badge>
+                          </div>
+                          
+                          <Badge variant="secondary" className="text-xs mb-2">
+                            {invite.skill}
+                          </Badge>
+                          
+                          <p className="text-muted-foreground mb-3">{invite.message}</p>
+                          
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="w-4 h-4" />
+                              {new Date(invite.created_at).toLocaleDateString()}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-2 ml-4">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleDeclineInvitation(invite)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <X className="w-4 h-4 mr-1" />
+                          Decline
+                        </Button>
+                        <Button 
+                          size="sm"
+                          onClick={() => handleAcceptInvitation(invite)}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          <Check className="w-4 h-4 mr-1" />
+                          Accept
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        ) : activeTab === 'active' ? (
+          // Active Exchanges Tab Content
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Active Exchanges</h3>
+            </div>
+            
+            {activeExchanges.length === 0 ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <div className="text-muted-foreground">
+                    <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <h3 className="text-lg font-medium mb-2">No active exchanges</h3>
+                    <p className="text-sm">
+                      You don't have any active exchanges at the moment.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              activeExchanges.map((exchange) => (
+                <Card key={exchange.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-4 flex-1">
+                        <Avatar className="w-12 h-12">
+                          <AvatarImage src={exchange.otherUser.avatar} />
+                          <AvatarFallback>
+                            {exchange.otherUser.name.split(' ').map(n => n[0]).join('')}
+                          </AvatarFallback>
+                        </Avatar>
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="font-semibold text-lg">{exchange.otherUser.name}</h3>
+                            <Badge variant="outline" className="text-xs">
+                              {exchange.userIsMentorship ? 'Mentorship' : 'Exchange'}
+                            </Badge>
+                            <Badge variant="default" className="text-xs">
+                              Active
+                            </Badge>
+                          </div>
+                          
+                          <p className="text-muted-foreground mb-2">
+                            {exchange.userIsMentorship ? 'You are mentoring' : 'You are learning'} {exchange.otherUserSkill}
+                          </p>
+                          
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="w-4 h-4" />
+                              {exchange.startedAt.toLocaleDateString()}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <MapPin className="w-4 h-4" />
+                              {/* Assuming a default location or that it's not always available */}
+                              {exchange.location || 'Location not specified'}
+                            </div>
+                            <Badge variant="secondary" className="text-xs">
+                              {exchange.skill}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-2 ml-4">
+                        <Button size="sm" variant="outline">
+                          <MessageSquare className="w-4 h-4 mr-1" />
+                          Chat
+                        </Button>
+                        {exchange.canFinish && (
+                          <Button size="sm" variant="outline" onClick={() => {
+                            // TODO: Implement chat completion logic
+                            toast.info("Chat completion not yet implemented.");
+                          }}>
+                            Finish
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        ) : activeTab === 'completed' ? (
+          // Completed Exchanges Tab Content
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Completed Exchanges</h3>
+            </div>
+            
+            {completedExchanges.length === 0 ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <div className="text-muted-foreground">
+                    <CheckCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <h3 className="text-lg font-medium mb-2">No completed exchanges</h3>
+                    <p className="text-sm">
+                      You haven't completed any exchanges yet.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              completedExchanges.map((exchange) => (
+                <Card key={exchange.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-4 flex-1">
+                        <Avatar className="w-12 h-12">
+                          <AvatarImage src={exchange.otherUser.avatar} />
+                          <AvatarFallback>
+                            {exchange.otherUser.name.split(' ').map(n => n[0]).join('')}
+                          </AvatarFallback>
+                        </Avatar>
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="font-semibold text-lg">{exchange.otherUser.name}</h3>
+                            <Badge variant="outline" className="text-xs">
+                              {exchange.userIsMentorship ? 'Mentorship' : 'Exchange'}
+                            </Badge>
+                            <Badge variant="default" className="text-xs">
+                              Completed
+                            </Badge>
+                          </div>
+                          
+                          <p className="text-muted-foreground mb-2">
+                            {exchange.userIsMentorship ? 'You were mentoring' : 'You were learning'} {exchange.otherUserSkill}
+                          </p>
+                          
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="w-4 h-4" />
+                              {exchange.completedAt.toLocaleDateString()}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <MapPin className="w-4 h-4" />
+                              {/* Assuming a default location or that it's not always available */}
+                              {exchange.location || 'Location not specified'}
+                            </div>
+                            <Badge variant="secondary" className="text-xs">
+                              {exchange.skill}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-2 ml-4">
+                        <Button size="sm" variant="outline">
+                          <MessageSquare className="w-4 h-4 mr-1" />
+                          Chat
+                        </Button>
+                        {exchange.averageRating && (
+                          <div className="flex items-center gap-1">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`w-4 h-4 ${
+                                  i < exchange.averageRating!
+                                    ? 'fill-current text-yellow-400'
+                                    : 'text-gray-300'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        )}
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleOpenReview(exchange)}
+                        >
+                          Review
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
         ) : currentExchanges.length === 0 ? (
           <Card>
             <CardContent className="p-8 text-center">
@@ -561,9 +1382,6 @@ export default function MyExchanges() {
                 <h3 className="text-lg font-medium mb-2">No {activeTab} exchanges</h3>
                 <p className="text-sm">
                   {activeTab === 'active' && "You don't have any active exchanges at the moment."}
-                  {activeTab === 'responses' && "You haven't received any responses to your learning requests yet."}
-                  {activeTab === 'request' && "No pending requests from other users."}
-                  {activeTab === 'sent' && "You haven't sent any exchange requests yet."}
                   {activeTab === 'completed' && "No completed exchanges yet."}
                 </p>
               </div>
@@ -629,23 +1447,6 @@ export default function MyExchanges() {
                             Complete
                           </Button>
                         </>
-                      )}
-                      
-                      {exchange.status === 'pending' && activeTab === 'request' && (
-                        <>
-                          <Button size="sm" variant="outline">
-                            Decline
-                          </Button>
-                          <Button size="sm">
-                            Accept
-                          </Button>
-                        </>
-                      )}
-                      
-                      {exchange.status === 'pending' && activeTab === 'sent' && (
-                        <Button size="sm" variant="outline">
-                          Cancel
-                        </Button>
                       )}
                       
                       {exchange.status === 'completed' && (

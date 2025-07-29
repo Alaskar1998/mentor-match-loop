@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 class RealNotificationService implements NotificationService {
   async getNotifications(userId: string, type?: 'general' | 'chat'): Promise<Notification[]> {
     try {
+      console.log('🔍 Fetching notifications for user:', userId, 'type:', type);
+      
       let query = (supabase as any)
         .from('notifications')
         .select('*')
@@ -19,13 +21,16 @@ class RealNotificationService implements NotificationService {
 
       const { data, error } = await query;
 
+      console.log('📧 Notifications query result:', { data, error, count: data?.length || 0 });
+
       if (error) {
-        console.error('Error fetching notifications:', error);
+        console.error('❌ Error fetching notifications:', error);
+        console.error('❌ Error details:', JSON.stringify(error, null, 2));
         // Return empty array instead of throwing
         return [];
       }
 
-      return data?.map((notification: any) => ({
+      const notifications = data?.map((notification: any) => ({
         id: notification.id,
         userId: notification.user_id,
         title: notification.title,
@@ -39,8 +44,12 @@ class RealNotificationService implements NotificationService {
         senderId: notification.sender_id,
         senderName: notification.sender_name
       })) || [];
+
+      console.log('✅ Processed notifications:', notifications.length, notifications);
+      return notifications;
     } catch (error) {
-      console.error('Error fetching notifications:', error);
+      console.error('❌ Error fetching notifications:', error);
+      console.error('❌ Catch block error details:', JSON.stringify(error, null, 2));
       // Return empty array instead of throwing
       return [];
     }
@@ -161,6 +170,8 @@ class RealNotificationService implements NotificationService {
 
   async createNotification(notification: Omit<Notification, 'id' | 'createdAt'>): Promise<Notification> {
     try {
+      console.log('📝 Creating notification:', notification);
+      
       const notificationData: any = {
         user_id: notification.userId,
         title: notification.title,
@@ -179,18 +190,23 @@ class RealNotificationService implements NotificationService {
         notificationData.sender_name = chatNotification.senderName;
       }
 
+      console.log('💾 Inserting notification data:', notificationData);
+
       const { data, error } = await (supabase as any)
         .from('notifications')
         .insert(notificationData)
         .select()
         .single();
 
+      console.log('📧 Notification creation result:', { data, error });
+
       if (error) {
-        console.error('Error creating notification:', error);
+        console.error('❌ Error creating notification:', error);
+        console.error('❌ Error details:', JSON.stringify(error, null, 2));
         throw error;
       }
 
-      return {
+      const createdNotification = {
         id: data.id,
         userId: data.user_id,
         title: data.title,
@@ -204,8 +220,12 @@ class RealNotificationService implements NotificationService {
         senderId: data.sender_id,
         senderName: data.sender_name
       };
+
+      console.log('✅ Notification created successfully:', createdNotification);
+      return createdNotification;
     } catch (error) {
-      console.error('Error creating notification:', error);
+      console.error('❌ Error creating notification:', error);
+      console.error('❌ Catch block error details:', JSON.stringify(error, null, 2));
       throw error;
     }
   }

@@ -1,164 +1,195 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-
-interface Skill {
-  name: string;
-  level: string;
-  description: string;
-}
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface ExchangeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAgree: (data: { recipientSkill?: string; isMentorship: boolean }) => void;
-  initiatorName: string;
-  recipientName: string;
-  initiatorSkill: string;
-  recipientSkills: Skill[];
-  initiatorId: string;
-  recipientId: string;
+  onAgree: (data: { userSkill: string; isMentorship: boolean }) => void;
+  chatId: string;
+  otherUserName: string;
+  currentUserSkills: Array<{name: string; level: string; description: string; category?: string}>;
+  exchangeState: string;
+  contractData?: {
+    currentUserSkill?: string;
+    otherUserSkill?: string;
+    currentUserIsMentorship?: boolean;
+    otherUserIsMentorship?: boolean;
+    currentUserAgreed?: boolean;
+    otherUserAgreed?: boolean;
+  };
 }
 
 export const ExchangeModal = ({
   isOpen,
   onClose,
   onAgree,
-  initiatorName,
-  recipientName,
-  initiatorSkill,
-  recipientSkills,
-  initiatorId,
-  recipientId
+  chatId,
+  otherUserName,
+  currentUserSkills,
+  exchangeState,
+  contractData
 }: ExchangeModalProps) => {
-  const navigate = useNavigate();
+  const { user } = useAuth();
   const [selectedSkill, setSelectedSkill] = useState<string>('');
   const [isMentorship, setIsMentorship] = useState(false);
 
+  // Reset form when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedSkill(contractData?.currentUserSkill || '');
+      setIsMentorship(contractData?.currentUserIsMentorship || false);
+    }
+  }, [isOpen, contractData]);
+
   const handleAgree = () => {
+    console.log('🎯 ExchangeModal handleAgree called with:', { selectedSkill, isMentorship });
+    
+    if (!isMentorship && !selectedSkill) {
+      toast.error("Please select a skill or choose mentorship session");
+      return;
+    }
+
+    console.log('🎯 Calling onAgree with data:', { userSkill: selectedSkill, isMentorship });
     onAgree({
-      recipientSkill: selectedSkill,
+      userSkill: selectedSkill,
       isMentorship
     });
     
-    // Reset form
-    setSelectedSkill('');
-    setIsMentorship(false);
+    console.log('🎯 onAgree called, about to close modal');
   };
 
   const canProceed = isMentorship || selectedSkill;
+
+  // Get modal content based on exchange state
+  const getModalContent = () => {
+    switch (exchangeState) {
+      case 'pending_start':
+        return {
+          title: "Start Your Skill Exchange",
+          description: `Choose what you'll teach ${otherUserName} in this exchange.`,
+          buttonText: "Start Exchange"
+        };
+      case 'draft_contract':
+        if (contractData?.currentUserSkill || contractData?.currentUserIsMentorship) {
+          return {
+            title: "Waiting for Response",
+            description: `You've selected your skill. Waiting for ${otherUserName} to choose theirs.`,
+            buttonText: "Update My Selection"
+          };
+        } else {
+          return {
+            title: "Complete the Exchange Setup",
+            description: `${otherUserName} wants to start an exchange. See what they'll teach and choose your skill.`,
+            buttonText: "Start Exchange"
+          };
+        }
+      case 'contract_proposed':
+        return {
+          title: "Review Exchange Agreement",
+          description: "Both skills have been selected. Review and confirm to start the exchange.",
+          buttonText: contractData?.currentUserAgreed ? "Already Agreed" : "Agree to Start Exchange"
+        };
+      default:
+        return {
+          title: "Exchange in Progress",
+          description: "This exchange is already active.",
+          buttonText: "Close"
+        };
+    }
+  };
+
+  const modalContent = getModalContent();
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold text-center">
-            What skills are you exchanging?
+            {modalContent.title}
           </DialogTitle>
           <DialogDescription className="text-center">
-            Select the skills you'll be teaching and learning in this exchange.
+            {modalContent.description}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
-          {/* Initiator's skill (pre-populated) */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">
-              <button 
-                onClick={() => navigate(`/profile/${initiatorId}`)}
-                className="text-primary hover:underline font-medium"
-              >
-                {initiatorName}
-              </button> will teach:
-            </label>
-            <div className="p-3 bg-muted rounded-lg">
-              <Badge variant="secondary" className="text-sm">
-                {initiatorSkill}
-              </Badge>
-            </div>
-          </div>
+        {/* Show contract summary if in later stages */}
+        {(exchangeState === 'draft_contract' || exchangeState === 'contract_proposed') && contractData && (
+          <Card className="bg-muted/30">
+            <CardContent className="p-4 space-y-3">
+              <h4 className="font-medium text-sm">Exchange Summary:</h4>
+              
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">You will teach:</span>
+                <Badge variant={contractData.currentUserIsMentorship ? "outline" : "secondary"}>
+                  {contractData.currentUserIsMentorship ? "Mentorship Session" : contractData.currentUserSkill || "Not selected"}
+                </Badge>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">{otherUserName} will teach:</span>
+                <Badge variant={contractData.otherUserIsMentorship ? "outline" : "secondary"}>
+                  {contractData.otherUserIsMentorship ? "Mentorship Session" : contractData.otherUserSkill || "Not selected yet"}
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-          {/* Recipient's skill selection */}
-          <div className="space-y-3">
-            <label className="text-sm font-medium">
-              <button 
-                onClick={() => navigate(`/profile/${recipientId}`)}
-                className="text-primary hover:underline font-medium"
-              >
-                {recipientName}
-              </button> will teach:
-            </label>
-            
-            {/* Skill selection dropdown */}
-            <Select 
-              value={selectedSkill} 
-              onValueChange={setSelectedSkill}
-              disabled={isMentorship}
-            >
-              <SelectTrigger className={isMentorship ? 'opacity-50' : ''}>
-                <SelectValue placeholder="Select a skill to teach" />
-              </SelectTrigger>
-              <SelectContent>
-                {recipientSkills.map((skill) => (
-                  <SelectItem key={skill.name} value={skill.name}>
-                    <div className="flex items-center gap-2">
-                      <span>{skill.name}</span>
-                      <Badge variant="outline" className="text-xs">
-                        {skill.level}
-                      </Badge>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {/* Mentorship option */}
+        {/* Skill selection (only show if user can still select) */}
+        {(exchangeState === 'pending_start' || 
+          (exchangeState === 'draft_contract' && (!contractData?.currentUserSkill && !contractData?.currentUserIsMentorship))) && (
+          <div className="space-y-4">
+            {/* Mentorship toggle */}
             <div className="flex items-center space-x-2 p-3 border rounded-lg">
-              <Checkbox
+              <Switch
                 id="mentorship"
                 checked={isMentorship}
-                onCheckedChange={(checked) => {
-                  setIsMentorship(checked as boolean);
-                  if (checked) {
-                    setSelectedSkill('');
-                  }
-                }}
+                onCheckedChange={setIsMentorship}
               />
-              <label
-                htmlFor="mentorship"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Nothing — this is a mentorship session.
-              </label>
+              <Label htmlFor="mentorship" className="text-sm">
+                Nothing — this is a mentorship session
+              </Label>
             </div>
 
-            {isMentorship && (
-              <p className="text-sm text-muted-foreground italic">
-                {recipientName} is offering to teach without expecting a skill in return.
-              </p>
+            {/* Skill selection */}
+            {!isMentorship && (
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">What skill will you teach?</Label>
+                <Select value={selectedSkill} onValueChange={setSelectedSkill}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a skill you'll teach..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {currentUserSkills.map((skill, index) => (
+                      <SelectItem key={index} value={skill.name}>
+                        {skill.name} ({skill.level})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Selected skill preview */}
+            {selectedSkill && !isMentorship && (
+              <div className="p-3 bg-muted rounded-lg">
+                <p className="text-sm text-muted-foreground mb-1">You will teach:</p>
+                <Badge variant="secondary">
+                  {selectedSkill}
+                </Badge>
+              </div>
             )}
           </div>
-
-          {/* Selected skill preview */}
-          {selectedSkill && !isMentorship && (
-            <div className="p-3 bg-muted rounded-lg">
-              <p className="text-sm text-muted-foreground mb-1">Selected skill:</p>
-              <Badge variant="secondary">
-                {selectedSkill}
-              </Badge>
-            </div>
-          )}
-        </div>
+        )}
 
         {/* Action buttons */}
         <div className="flex gap-3 pt-4">
@@ -167,21 +198,26 @@ export const ExchangeModal = ({
             onClick={onClose}
             className="flex-1"
           >
-            Cancel
+            {exchangeState === 'active_exchange' ? 'Close' : 'Cancel'}
           </Button>
-          <Button
-            onClick={handleAgree}
-            disabled={!canProceed}
-            className="flex-1"
-          >
-            Agree & Start Exchange
-          </Button>
+          
+          {exchangeState !== 'active_exchange' && (
+            <Button
+              onClick={handleAgree}
+              disabled={!canProceed || (exchangeState === 'contract_proposed' && contractData?.currentUserAgreed)}
+              className="flex-1"
+            >
+              {modalContent.buttonText}
+            </Button>
+          )}
         </div>
 
         {/* Agreement notice */}
-        <p className="text-xs text-muted-foreground text-center">
-          Both users must agree to these terms before the exchange officially starts.
-        </p>
+        {exchangeState !== 'active_exchange' && (
+          <p className="text-xs text-muted-foreground text-center">
+            Both users must agree to these terms before the exchange officially starts.
+          </p>
+        )}
       </DialogContent>
     </Dialog>
   );

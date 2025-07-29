@@ -17,10 +17,11 @@ interface InvitationFlowProps {
   onClose: () => void;
   recipientId: string;
   recipientName: string;
-  userType: "free" | "premium";
+  userType: 'mentor' | 'learner';
   remainingInvites?: number;
   appCoins?: number;
-  skillsToTeach: string[];
+  skillsToTeach?: Array<{name: string; level: string; description: string; category?: string}>;
+  onInviteSent?: () => void; // Callback to refresh invites after sending
 }
 
 export const InvitationFlow = ({ 
@@ -31,7 +32,8 @@ export const InvitationFlow = ({
   userType,
   remainingInvites = 3,
   appCoins = 50,
-  skillsToTeach = []
+  skillsToTeach = [],
+  onInviteSent
 }: InvitationFlowProps) => {
   const [message, setMessage] = useState("");
   const [selectedSkill, setSelectedSkill] = useState<string>("");
@@ -43,8 +45,17 @@ export const InvitationFlow = ({
 
   const sendInvitation = async () => {
     if (!user || !message.trim() || !selectedSkill) return;
+    
+    console.log('🚀 Starting invitation send process...', {
+      sender: user.id,
+      recipient: recipientId,
+      skill: selectedSkill,
+      message: message.trim()
+    });
+    
     setIsLoading(true);
     try {
+      console.log('💾 Inserting invitation into database...');
       const { error } = await supabase
         .from('invitations')
         .insert({
@@ -55,17 +66,32 @@ export const InvitationFlow = ({
           status: 'pending'
         });
       if (error) {
+        console.error('❌ Failed to insert invitation:', error);
         toast.error("Failed to send invitation");
         console.error('Invitation error:', error);
         return;
       }
+      
+      console.log('✅ Invitation inserted successfully');
+      
+      console.log('👤 Fetching sender profile...');
       const { data: senderProfile } = await supabase
         .from('profiles')
         .select('display_name')
         .eq('id', user.id)
         .single();
       const senderName = senderProfile?.display_name || user.email || 'Someone';
+      
+      console.log('📧 Sender profile fetched:', { senderName });
+      
       try {
+        console.log('🔍 Creating notification with data:', {
+          userId: recipientId,
+          senderId: user.id,
+          senderName: senderName,
+          skill: selectedSkill
+        });
+        
         await notificationService.createNotification({
           userId: recipientId,
           title: 'New Invitation Received',
@@ -79,14 +105,22 @@ export const InvitationFlow = ({
             skill: selectedSkill
           }
         });
+        console.log('✅ Notification created successfully for recipient:', recipientId);
       } catch (notificationError) {
-        console.error('Failed to create notification:', notificationError);
+        console.error('❌ Failed to create notification:', notificationError);
+        console.error('❌ Notification error details:', JSON.stringify(notificationError, null, 2));
+        // Don't fail the invitation if notification fails
       }
+      
+      console.log('🎉 Invitation process completed successfully');
       setShowConfirmation(true);
       setMessage("");
       setSelectedSkill("");
       setShowPayment(false);
+      onInviteSent?.(); // Call the callback after successful invitation
     } catch (error) {
+      console.error('❌ Overall invitation error:', error);
+      console.error('❌ Overall error details:', JSON.stringify(error, null, 2));
       toast.error("Failed to send invitation");
       console.error('Invitation error:', error);
     } finally {
@@ -135,7 +169,7 @@ export const InvitationFlow = ({
           <div className="space-y-6 text-center py-8">
             <div className="text-3xl">✅</div>
             <div className="font-semibold text-lg">Invitation sent successfully!</div>
-            <div className="text-muted-foreground text-sm mb-4">You can check your invites anytime from your dashboard.</div>
+            <div className="text-muted-foreground text-sm mb-4">You can check your invites anytime from the My Exchanges page.</div>
             <Button onClick={onClose}>Close</Button>
           </div>
         ) : !showPayment ? (
@@ -145,30 +179,19 @@ export const InvitationFlow = ({
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    {userType === "premium" ? (
-                      <>
-                        <Crown className="w-4 h-4 text-accent" />
-                        <Badge variant="default" className="bg-accent">Premium</Badge>
-                      </>
-                    ) : (
-                      <>
-                        <Badge variant="outline">Free User</Badge>
-                      </>
-                    )}
+                    <Badge variant="outline">User</Badge>
                   </div>
                   <div className="flex items-center gap-1 text-sm text-muted-foreground">
                     <Coins className="w-4 h-4" />
                     {appCoins} coins
                   </div>
                 </div>
-                {userType === "free" && (
-                  <div className="mt-3 text-sm">
-                    <div className="flex justify-between">
-                      <span>Invites remaining this month:</span>
-                      <span className="font-medium">{remainingInvites}/3</span>
-                    </div>
+                <div className="mt-3 text-sm">
+                  <div className="flex justify-between">
+                    <span>Invites remaining this month:</span>
+                    <span className="font-medium">{remainingInvites}/3</span>
                   </div>
-                )}
+                </div>
               </CardContent>
             </Card>
             {/* Skill Selection */}
@@ -180,8 +203,10 @@ export const InvitationFlow = ({
                 onChange={e => setSelectedSkill(e.target.value)}
               >
                 <option value="">-- Select a skill --</option>
-                {skillsToTeach.map(skill => (
-                  <option key={skill} value={skill}>{skill}</option>
+                {skillsToTeach.map((skill, index) => (
+                  <option key={index} value={typeof skill === 'string' ? skill : skill.name}>
+                    {typeof skill === 'string' ? skill : skill.name}
+                  </option>
                 ))}
               </select>
               <div className="text-xs text-muted-foreground mt-1">Select the skill you’d like to learn from this user.</div>

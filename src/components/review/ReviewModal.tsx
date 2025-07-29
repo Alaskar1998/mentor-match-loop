@@ -35,9 +35,11 @@ interface ReviewModalProps {
   exchange: Exchange | null;
   otherUser: {
     id: string;
-    name: string;
+    name?: string;
+    display_name?: string;
     profilePicture?: string;
-  };
+    avatar_url?: string;
+  } | null;
   onReviewSubmitted: () => void;
 }
 
@@ -48,16 +50,21 @@ export const ReviewModal = ({
   otherUser,
   onReviewSubmitted
 }: ReviewModalProps) => {
-  const { user, updateUser } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
-  const { completeExchange } = useGamification();
-  
+  const [rating, setRating] = useState(5);
   const [skillRating, setSkillRating] = useState(0);
   const [personalRating, setPersonalRating] = useState(0);
-  const [textReview, setTextReview] = useState('');
+  const [review, setReview] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { completeExchange } = useGamification();
 
-  if (!exchange || !user) return null;
+  // Safety check to prevent crashes
+  if (!isOpen || !otherUser || !exchange) {
+    return null;
+  }
+
+  console.log('🔍 ReviewModal render data:', { isOpen, otherUser, exchange });
 
   const handleSubmitReview = async () => {
     if (skillRating === 0 || personalRating === 0) {
@@ -72,70 +79,105 @@ export const ReviewModal = ({
     setIsSubmitting(true);
 
     try {
-      // Simulate API call to submit review
-      console.log('Submitting review:', {
+      console.log('📝 Submitting review:', {
         exchangeId: exchange.id,
         reviewedUserId: otherUser.id,
         skillRating,
         personalRating,
-        textReview,
+        textReview: review,
         reviewerUserId: user.id
       });
 
-      // Update current user's successful exchanges count and award coins
-      const isMentor = user.willingToTeachWithoutReturn || false;
-      completeExchange(isMentor);
-      
-      updateUser({
-        successfulExchanges: (user as any).successfulExchanges ? (user as any).successfulExchanges + 1 : 1
-      });
+      // Save review to database
+      const { error: reviewError } = await supabase
+        .from('reviews')
+        .insert({
+          chat_id: exchange.id,
+          reviewer_id: user.id,
+          reviewed_user_id: otherUser.id,
+          skill_rating: skillRating,
+          communication_rating: personalRating,
+          review_text: review,
+          created_at: new Date().toISOString()
+        });
 
-      // Get reviewer's display name for notification
-      const { data: reviewerProfile } = await supabase
-        .from('profiles')
-        .select('display_name')
-        .eq('id', user.id)
+      if (reviewError) {
+        console.error('Error saving review:', reviewError);
+        toast({
+          title: "Error",
+          description: "Failed to save review. Please try again.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Update exchange contract to mark this user as having reviewed
+      const { data: contract } = await supabase
+        .from('exchange_contracts')
+        .select('user1_id, user2_id')
+        .eq('chat_id', exchange.id)
         .single();
 
-      const reviewerName = reviewerProfile?.display_name || 'Someone';
+      if (contract) {
+        const isUser1 = contract.user1_id === user.id;
+        const updateField = isUser1 ? 'user1_reviewed' : 'user2_reviewed';
+        
+        const { error: contractError } = await supabase
+          .from('exchange_contracts')
+          .update({
+            [updateField]: true
+          })
+          .eq('chat_id', exchange.id);
 
-      // Create notification for the reviewed user
+        if (contractError) {
+          console.error('Error updating contract:', contractError);
+        }
+      }
+
+      // Send notification to the other user
       try {
+        const reviewerName = user?.name || user?.email || 'Someone';
         await notificationService.createNotification({
           userId: otherUser.id,
-          title: 'New Review Received',
-          message: `${reviewerName} left you a ${averageRating.toFixed(1)}-star review`,
+          title: 'Review Received',
+          message: `${reviewerName} has reviewed your exchange. You can now leave your review too.`,
           isRead: false,
-          type: 'exchange_completed',
-          actionUrl: '/my-exchanges',
-          metadata: { 
-            reviewerId: user.id,
-            reviewerName: reviewerName,
-            rating: averageRating,
-            skill: exchange.initiatorSkill
+          type: 'learning_match',
+          actionUrl: `/chat/${exchange.id}`,
+          metadata: {
+            senderId: user.id,
+            senderName: reviewerName,
+            exchangeId: exchange.id,
+            rating: Math.round((skillRating + personalRating) / 2)
           }
         });
       } catch (notificationError) {
         console.error('Failed to create review notification:', notificationError);
       }
 
-      // Show success message
+      // Complete gamification
+      const isMentor = exchange.isMentorship;
+      completeExchange(isMentor);
+
       toast({
         title: "Review submitted!",
-        description: "Thank you for your feedback. This helps improve our community.",
+        description: "Thank you for your feedback. The other person has been notified to leave their review.",
       });
 
       // Reset form
+      setRating(5);
       setSkillRating(0);
       setPersonalRating(0);
-      setTextReview('');
+      setReview('');
       
       onReviewSubmitted();
       onClose();
+
     } catch (error) {
+      console.error('Error submitting review:', error);
       toast({
         title: "Error",
-        description: "Failed to submit review. Please try again.",
+        description: "Something went wrong. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -153,7 +195,7 @@ export const ReviewModal = ({
             Leave a Review
           </DialogTitle>
           <DialogDescription className="text-center">
-            Rate your experience with {otherUser.name} to help improve our community.
+            Rate your experience with {otherUser?.name || otherUser?.display_name || 'this person'} to help improve our community.
           </DialogDescription>
         </DialogHeader>
 
@@ -161,11 +203,13 @@ export const ReviewModal = ({
           {/* User info */}
           <div className="flex items-center gap-4 p-3 bg-muted rounded-lg">
             <Avatar className="w-12 h-12">
-              <AvatarImage src={otherUser.profilePicture} />
-              <AvatarFallback>{otherUser.name[0]}</AvatarFallback>
+              <AvatarImage src={otherUser?.profilePicture || otherUser?.avatar_url} />
+              <AvatarFallback>
+                {(otherUser?.name || otherUser?.display_name || 'U').charAt(0).toUpperCase()}
+              </AvatarFallback>
             </Avatar>
             <div className="flex-1">
-              <h3 className="font-semibold">{otherUser.name}</h3>
+              <h3 className="font-semibold">{otherUser?.name || otherUser?.display_name || 'Unknown User'}</h3>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <span>Exchange:</span>
                 <Badge variant="secondary" className="text-xs">
@@ -256,21 +300,21 @@ export const ReviewModal = ({
               Additional feedback (optional)
             </label>
             <Textarea
-              value={textReview}
-              onChange={(e) => setTextReview(e.target.value)}
+              value={review}
+              onChange={(e) => setReview(e.target.value)}
               placeholder="Share your experience working with this person..."
               className="min-h-[80px]"
               maxLength={500}
             />
             <div className="text-xs text-muted-foreground text-right">
-              {textReview.length}/500 characters
+              {review.length}/500 characters
             </div>
           </div>
 
           {/* Impact note */}
           <div className="p-3 border border-blue-200 bg-blue-50 rounded-lg">
             <p className="text-sm text-blue-800">
-              💡 Your review helps build {otherUser.name}"s reputation and contributes to our community leaderboards.
+              💡 Your review helps build {otherUser?.name || otherUser?.display_name || 'this person'}"s reputation and contributes to our community leaderboards.
             </p>
           </div>
         </div>

@@ -44,8 +44,12 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
   const [isLoading, setIsLoading] = useState(false);
 
   const loadNotifications = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('🚫 No user found, skipping notification load');
+      return;
+    }
     
+    console.log('🔄 Loading notifications for user:', user.id);
     setIsLoading(true);
     try {
       const [general, chat, counts] = await Promise.all([
@@ -54,11 +58,17 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
         notificationService.getUnreadCount(user.id)
       ]);
       
+      console.log('📊 Notification results:', {
+        general: general.length,
+        chat: chat.length,
+        counts
+      });
+      
       setGeneralNotifications(general);
       setChatNotifications(chat);
       setUnreadCounts(counts);
     } catch (error) {
-      console.error('Failed to load notifications:', error);
+      console.error('❌ Failed to load notifications:', error);
     } finally {
       setIsLoading(false);
     }
