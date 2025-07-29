@@ -7,37 +7,19 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import heroImage from "@/assets/hero-image.jpg";
 import { POPULAR_SKILLS } from "@/data/skills";
+import { isSearchDisabled } from "@/utils/userValidation";
 
 export const HeroSection = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // Function to check if search should be disabled based on user name
-  const isSearchDisabled = () => {
-    if (!user?.name) return false;
-    
-    // List of usernames that should have search disabled
-    const disabledUsernames = [
-      'test',
-      'demo',
-      'admin',
-      'moderator',
-      'system',
-      'blocked',
-      'suspended',
-      'banned',
-      'restricted'
-    ];
-    
-    return disabledUsernames.some(disabledName => 
-      user.name.toLowerCase().includes(disabledName.toLowerCase())
-    );
-  };
+  // Use centralized validation
+  const searchDisabled = isSearchDisabled(user?.name);
 
   const handleSearch = (skill?: string) => {
     // Prevent search if user is disabled
-    if (isSearchDisabled()) {
+    if (searchDisabled) {
       toast.error("Search is disabled for your account type");
       return;
     }
@@ -76,27 +58,27 @@ export const HeroSection = () => {
 
           {/* Search Bar */}
           <div className="max-w-2xl mx-auto mb-8">
-            <div className={`relative group ${isSearchDisabled() ? 'opacity-50' : ''}`}>
+            <div className={`relative group ${searchDisabled ? 'opacity-50' : ''}`}>
               <div className="absolute inset-0 bg-gradient-to-r from-accent to-warm rounded-full blur opacity-30 group-hover:opacity-50 transition-opacity duration-300" />
               <div className="relative flex items-center bg-white rounded-full p-2 shadow-elegant">
                 <Input
                   type="text"
-                  placeholder={isSearchDisabled() ? "Search disabled for your account" : "What skill do you want to learn?"}
+                  placeholder={searchDisabled ? "Search disabled for your account" : "What skill do you want to learn?"}
                   value={searchQuery}
-                  onChange={(e) => !isSearchDisabled() && setSearchQuery(e.target.value)}
+                  onChange={(e) => !searchDisabled && setSearchQuery(e.target.value)}
                   className="flex-1 border-0 focus-visible:ring-0 text-lg px-6 py-4 bg-transparent"
-                  onKeyDown={(e) => !isSearchDisabled() && e.key === "Enter" && handleSearch()}
-                  disabled={isSearchDisabled()}
+                  onKeyDown={(e) => !searchDisabled && e.key === "Enter" && handleSearch()}
+                  disabled={searchDisabled}
                 />
                 <Button 
                   variant="hero" 
                   size="lg"
                   onClick={() => handleSearch()}
                   className="rounded-full px-8"
-                  disabled={isSearchDisabled()}
+                  disabled={searchDisabled}
                 >
                   <Search className="w-5 h-5 mr-2" />
-                  {isSearchDisabled() ? 'Disabled' : 'Search'}
+                  {searchDisabled ? 'Disabled' : 'Search'}
                 </Button>
               </div>
             </div>
@@ -109,10 +91,10 @@ export const HeroSection = () => {
               {POPULAR_SKILLS.map((skill) => (
                 <button
                   key={skill.name}
-                  onClick={() => !isSearchDisabled() && handleSearch(skill.name)}
-                  disabled={isSearchDisabled()}
+                  onClick={() => !searchDisabled && handleSearch(skill.name)}
+                  disabled={searchDisabled}
                   className={`bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full transition-all duration-300 border border-white/20 ${
-                    isSearchDisabled() 
+                    searchDisabled 
                       ? 'opacity-50 cursor-not-allowed' 
                       : 'hover:bg-white/30 hover:scale-105'
                   }`}

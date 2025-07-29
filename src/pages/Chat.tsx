@@ -14,6 +14,8 @@ import { useToast } from '@/hooks/use-toast';
 import { notificationService } from '@/services/notificationService';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useOptimizedPolling } from '@/hooks/useOptimizedPolling';
+import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
 
 interface ChatMessage {
   id: string;
@@ -53,6 +55,14 @@ interface ChatData {
 }
 
 const Chat = () => {
+  // Performance monitoring
+  usePerformanceMonitor('Chat', {
+    threshold: 16,
+    onSlowRender: (metrics) => {
+      console.warn('Slow render in Chat component:', metrics);
+    }
+  });
+
   const { chatId } = useParams<{ chatId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -62,6 +72,7 @@ const Chat = () => {
   const [showExchangeModal, setShowExchangeModal] = useState(false);
   const [showFinishModal, setShowFinishModal] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const [isUpdatingState, setIsUpdatingState] = useState(false); // Flag to prevent modal conflicts
   const [exchangeState, setExchangeState] = useState('pending_start');
   const [contractData, setContractData] = useState<any>(null);
   const [otherUser, setOtherUser] = useState<OtherUser | null>(null);
@@ -75,11 +86,11 @@ const Chat = () => {
     }
   }, [chatId, user]);
 
-  // Poll for new messages every 3 seconds
-  useEffect(() => {
-    if (!chatId || !user) return;
-
-    const pollMessages = async () => {
+  // Optimized polling for messages
+  const { isActive: isPollingMessages } = useOptimizedPolling(
+    async () => {
+      if (isUpdatingState) return; // Skip if we're updating state
+      
       try {
         const { data: messagesData, error: messagesError } = await supabase
           .from('chat_messages')
@@ -93,7 +104,7 @@ const Chat = () => {
             senderId: msg.sender_id,
             message: msg.message,
             timestamp: new Date(msg.created_at),
-            type: msg.sender_id === 'system' ? 'system' : 'text'
+            type: msg.message.startsWith('[SYSTEM]') ? 'system' : 'text'
           }));
 
           // Only update if messages have changed
@@ -105,18 +116,19 @@ const Chat = () => {
       } catch (error) {
         console.error('Error polling messages:', error);
       }
-    };
+    },
+    { 
+      interval: 5000, 
+      enabled: !!chatId && !!user,
+      maxRetries: 3
+    }
+  );
 
-    const interval = setInterval(pollMessages, 3000); // Poll every 3 seconds
-
-    return () => clearInterval(interval);
-  }, [chatId, user, messages]);
-
-  // Poll for exchange state changes every 5 seconds
-  useEffect(() => {
-    if (!chatId || !user) return;
-
-    const pollExchangeState = async () => {
+  // Optimized polling for exchange state
+  const { isActive: isPollingExchange } = useOptimizedPolling(
+    async () => {
+      if (isUpdatingState) return; // Skip if we're updating state
+      
       try {
         // Check for exchange state changes
         const { data: chat } = await supabase
@@ -157,12 +169,13 @@ const Chat = () => {
       } catch (error) {
         console.error('Error polling exchange state:', error);
       }
-    };
-
-    const interval = setInterval(pollExchangeState, 5000); // Poll every 5 seconds
-
-    return () => clearInterval(interval);
-  }, [chatId, user, exchangeState, contractData]);
+    },
+    { 
+      interval: 8000, 
+      enabled: !!chatId && !!user,
+      maxRetries: 3
+    }
+  );
 
   const fetchChatData = async () => {
     console.log('🔄 fetchChatData called with:', { chatId, userId: user?.id });
@@ -288,7 +301,7 @@ const Chat = () => {
         senderId: msg.sender_id,
         message: msg.message,
         timestamp: new Date(msg.created_at),
-        type: msg.sender_id === 'system' ? 'system' : 'text'
+        type: msg.message.startsWith('[SYSTEM]') ? 'system' : 'text'
       }));
 
       setMessages(formattedMessages);
@@ -384,6 +397,8 @@ const Chat = () => {
   };
 
   const handleStartExchange = () => {
+    if (isUpdatingState) return; // Prevent opening if we're updating state
+    console.log('🚀 Opening exchange modal');
     setShowExchangeModal(true);
   };
 
@@ -396,6 +411,7 @@ const Chat = () => {
 
     try {
       console.log('🤝 Processing exchange agreement:', data);
+      setIsUpdatingState(true); // Prevent polling interference
 
       // Determine user positions in the contract
       const isUser1 = chatData.user1_id === user.id;
@@ -474,8 +490,8 @@ const Chat = () => {
           // Add system message to chat
           const systemMessage = {
             id: Date.now().toString(),
-            sender_id: 'system',
-            message: `${senderName} wants to start an exchange and will teach: ${data.isMentorship ? 'Mentorship Session' : data.userSkill}. Click "Start Exchange" to choose what you'll teach.`,
+            sender_id: user?.id || '', // Use current user's ID
+            message: `[SYSTEM] ${senderName} wants to start an exchange and will teach: ${data.isMentorship ? 'Mentorship Session' : data.userSkill}. Click "Start Exchange" to choose what you'll teach.`,
             created_at: new Date().toISOString(),
             chat_id: chatId
           };
@@ -488,7 +504,7 @@ const Chat = () => {
           // Add to local messages
           setMessages(prev => [...prev, {
             id: systemMessage.id,
-            senderId: 'system',
+            senderId: user?.id || '', // Use current user's ID
             message: systemMessage.message,
             timestamp: new Date(),
             type: 'system'
@@ -550,76 +566,126 @@ const Chat = () => {
         }
       }
 
-      // Handle contract_proposed state - when user agrees to final contract
-      if (exchangeState === 'contract_proposed' && contractData && !contractData.currentUserAgreed) {
-        // Mark current user as agreed
-        const isUser1 = chatData.user1_id === user.id;
-        const agreeData = isUser1 ? { user1_agreed: true } : { user2_agreed: true };
+      // Close the modal
+      setShowExchangeModal(false);
 
-        const { error: agreeError } = await supabase
-          .from('exchange_contracts')
-          .update(agreeData)
-          .eq('chat_id', chatId);
+      // Add a small delay to ensure state updates are processed
+      setTimeout(() => {
+        console.log('✅ Modal closed and state updated');
+      }, 100);
 
-        if (agreeError) {
-          console.error('Error updating agreement:', agreeError);
-          toast.error("Failed to agree to contract");
-          return;
+    } catch (error) {
+      console.error('Error in handleExchangeAgreed:', error);
+      toast.error("Failed to process exchange agreement");
+    } finally {
+      setIsUpdatingState(false); // Re-enable polling
+    }
+  };
+
+  const handleAgreeToContract = async () => {
+    if (!user || !chatData || !otherUser || !contractData) return;
+
+    try {
+      console.log('🤝 Agreeing to final contract');
+      setIsUpdatingState(true); // Prevent polling interference
+      
+      // Mark current user as agreed
+      const isUser1 = chatData.user1_id === user.id;
+      const agreeData = isUser1 ? { user1_agreed: true } : { user2_agreed: true };
+
+      const { error: agreeError } = await supabase
+        .from('exchange_contracts')
+        .update(agreeData)
+        .eq('chat_id', chatId);
+
+      if (agreeError) {
+        console.error('Error updating agreement:', agreeError);
+        toast.error("Failed to agree to contract");
+        return;
+      }
+
+      // Update local state
+      const updatedContractData = { ...contractData, currentUserAgreed: true };
+      setContractData(updatedContractData);
+
+      // Check if both users have agreed
+      const bothAgreed = isUser1 
+        ? (true && contractData.otherUserAgreed)
+        : (contractData.otherUserAgreed && true);
+
+      if (bothAgreed) {
+        // Move to active_exchange state
+        await supabase
+          .from('chats')
+          .update({ 
+            exchange_state: 'active_exchange',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', chatId);
+
+        setExchangeState('active_exchange');
+        
+        // Add system message to chat
+        const systemMessage = {
+          id: Date.now().toString(),
+          sender_id: user?.id || '', // Use current user's ID
+          message: `[SYSTEM] Exchange is now active! Both users have agreed to the contract.`,
+          created_at: new Date().toISOString(),
+          chat_id: chatId
+        };
+
+        // Save system message to database
+        await supabase
+          .from('chat_messages')
+          .insert(systemMessage);
+
+        // Add to local messages
+        setMessages(prev => [...prev, {
+          id: systemMessage.id,
+          senderId: user?.id || '', // Use current user's ID
+          message: systemMessage.message,
+          timestamp: new Date(),
+          type: 'system'
+        }]);
+        
+        // Send notification to other user
+        try {
+          const senderName = user.name || user.email || 'Someone';
+          await notificationService.createNotification({
+            userId: otherUser.id,
+            title: 'Exchange Active!',
+            message: `Your exchange with ${senderName} is now active. Start learning!`,
+            isRead: false,
+            type: 'learning_match',
+            actionUrl: `/chat/${chatId}`,
+            metadata: { 
+              senderId: user.id,
+              senderName: senderName,
+              chatId: chatId
+            }
+          });
+        } catch (notificationError) {
+          console.error('Failed to create activation notification:', notificationError);
         }
 
-        // Update local state
-        const updatedContractData = { ...contractData, currentUserAgreed: true };
-        setContractData(updatedContractData);
-
-        // Check if both users have agreed
-        const bothAgreed = isUser1 
-          ? (true && contractData.otherUserAgreed)
-          : (contractData.otherUserAgreed && true);
-
-        if (bothAgreed) {
-          // Move to active_exchange state
-          await supabase
-            .from('chats')
-            .update({ 
-              exchange_state: 'active_exchange',
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', chatId);
-
-          setExchangeState('active_exchange');
-          
-          // Send notification to other user
-          try {
-            const senderName = user.name || user.email || 'Someone';
-            await notificationService.createNotification({
-              userId: otherUser.id,
-              title: 'Exchange Active!',
-              message: `Your exchange with ${senderName} is now active. Start learning!`,
-              isRead: false,
-              type: 'learning_match',
-              actionUrl: `/chat/${chatId}`,
-              metadata: { 
-                senderId: user.id,
-                senderName: senderName,
-                chatId: chatId
-              }
-            });
-          } catch (notificationError) {
-            console.error('Failed to create activation notification:', notificationError);
-          }
-
-          toast.success("Exchange is now active! Start your learning session.");
-        } else {
-          toast.success("You agreed to the exchange. Waiting for the other person to agree.");
-        }
+        toast.success("Exchange is now active! Start your learning session.");
+      } else {
+        toast.success("You agreed to the exchange. Waiting for the other person to agree.");
       }
 
       // Close the modal
       setShowExchangeModal(false);
 
+      // Add a small delay to ensure state updates are processed
+      setTimeout(() => {
+        console.log('✅ Contract agreement modal closed and state updated');
+      }, 100);
+
     } catch (error) {
-      console.error('Error in handleExchangeAgreed:', error);
-      toast.error("Failed to process exchange agreement");
+      console.error('Error in handleAgreeToContract:', error);
+      toast.error("Failed to agree to contract");
+    } finally {
+      setIsUpdatingState(false); // Re-enable polling
     }
   };
 
@@ -674,7 +740,7 @@ const Chat = () => {
     // Add system message
     const systemMessage: ChatMessage = {
       id: Date.now().toString(),
-      senderId: 'system',
+      senderId: '00000000-0000-0000-0000-000000000000', // Use the system user UUID
       message: updatedContract.status === 'completed' 
         ? 'Exchange completed! Please leave a review for your learning partner.'
         : `Someone marked the exchange as finished.`,
@@ -699,13 +765,13 @@ const Chat = () => {
 
   const renderMessage = (msg: ChatMessage) => {
     const isCurrentUser = msg.senderId === user?.id;
-    const isSystemMessage = msg.type === 'system';
+    const isSystemMessage = msg.type === 'system' || msg.message.startsWith('[SYSTEM]');
 
     if (isSystemMessage) {
       return (
         <div key={msg.id} className="flex justify-center my-4">
           <div className="bg-muted px-4 py-2 rounded-lg text-sm text-muted-foreground">
-            {msg.message}
+            {msg.message.replace('[SYSTEM] ', '')}
           </div>
         </div>
       );
@@ -887,6 +953,7 @@ const Chat = () => {
           setShowExchangeModal(false);
         }}
         onAgree={handleExchangeAgreed}
+        onFinalAgree={handleAgreeToContract}
         chatId={chatId || ''}
         otherUserName={otherUser?.display_name || 'User'}
         currentUserSkills={(() => {
@@ -903,7 +970,7 @@ const Chat = () => {
         isOpen={showFinishModal}
         onClose={() => setShowFinishModal(false)}
         onConfirm={handleExchangeFinished}
-        exchange={contractData as Exchange} // Pass contractData as exchange
+        exchange={contractData as Exchange}
         currentUserId={user?.id || ''}
       />
 

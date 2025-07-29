@@ -22,9 +22,22 @@ export interface SearchResponse {
 class SearchService {
   private allSkills: Set<string> = new Set();
   private searchLog: Array<{ term: string; timestamp: Date; results: number }> = [];
+  private isInitialized = false;
+  private initializationPromise: Promise<void> | null = null;
 
   // Initialize with all available skills for suggestion generation
-  initialize(users: any[]) {
+  async initialize(users: any[]) {
+    if (this.isInitialized) return;
+    
+    if (this.initializationPromise) {
+      return this.initializationPromise;
+    }
+
+    this.initializationPromise = this._initialize(users);
+    await this.initializationPromise;
+  }
+
+  private async _initialize(users: any[]) {
     console.log('SearchService: Initializing with', users.length, 'users');
     
     // Extract all unique skills for suggestion generation
@@ -74,10 +87,11 @@ class SearchService {
     });
     
     console.log('SearchService: Extracted skills:', Array.from(this.allSkills));
+    this.isInitialized = true;
   }
 
   // Main search function - NO fuzzy matching, only exact and partial
-  search(users: any[], searchTerm: string): SearchResponse {
+  async search(users: any[], searchTerm: string): Promise<SearchResponse> {
     if (!searchTerm.trim()) {
       return {
         results: [],
@@ -97,8 +111,8 @@ class SearchService {
     console.log('SearchService: Users available:', users.length);
 
     // Initialize if not already done
-    if (this.allSkills.size === 0) {
-      this.initialize(users);
+    if (!this.isInitialized) {
+      await this.initialize(users);
     }
 
     // Perform exact and partial matching (NO fuzzy)

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Star, MessageCircle, Eye, MapPin, Award } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,7 +18,7 @@ interface ProfileCardProps {
   searchResult?: SearchResult;
 }
 
-export const ProfileCard = ({ user, isBlurred = false, searchResult }: ProfileCardProps) => {
+export const ProfileCard = React.memo(({ user, isBlurred = false, searchResult }: ProfileCardProps) => {
   const navigate = useNavigate();
   const { isAuthenticated, user: currentUser, signup } = useAuth();
   const [showSignupModal, setShowSignupModal] = useState(false);
@@ -268,4 +268,4 @@ export const ProfileCard = ({ user, isBlurred = false, searchResult }: ProfileCa
       )}
     </Card>
   );
-};
+});

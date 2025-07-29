@@ -3,6 +3,7 @@ import { Notification, NotificationCounts } from "@/types/notifications";
 import { notificationService } from "@/services/notificationService";
 import { useAuth } from "./useAuth";
 import { useToast } from "./use-toast";
+import { useOptimizedPolling } from "./useOptimizedPolling";
 
 interface NotificationContextType {
   generalNotifications: Notification[];
@@ -128,17 +129,22 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
     await loadNotifications();
   };
 
+  // Optimized polling for notifications
+  const { isActive: isPollingNotifications } = useOptimizedPolling(
+    async () => {
+      await loadNotifications();
+    },
+    { 
+      interval: 10000, 
+      enabled: !!user,
+      maxRetries: 3
+    }
+  );
+
   // Load notifications when user changes
   useEffect(() => {
     if (user) {
       loadNotifications();
-      
-      // Poll for updates every 10 seconds for more responsive notifications
-      const pollInterval = setInterval(loadNotifications, 10000);
-      
-      return () => {
-        clearInterval(pollInterval);
-      };
     } else {
       setGeneralNotifications([]);
       setChatNotifications([]);

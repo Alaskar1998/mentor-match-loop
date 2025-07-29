@@ -10,6 +10,7 @@ import { useMonetization } from "@/hooks/useMonetization";
 import { useAuth } from "@/hooks/useAuth";
 import { searchService, SearchResponse } from "@/services/searchService";
 import { SearchSuggestionCard, NoResultsMessage } from "@/components/search/SearchSuggestion";
+import { isSearchDisabled } from "@/utils/userValidation";
 
 export interface UserProfile {
   id: string;
@@ -62,27 +63,8 @@ const SearchResultsPage = () => {
     window.location.reload(); // Simple way to trigger search with new term
   };
 
-  // Function to check if search should be disabled based on user name
-  const isSearchDisabled = () => {
-    if (!user?.name) return false;
-    
-    // List of usernames that should have search disabled
-    const disabledUsernames = [
-      'test',
-      'demo',
-      'admin',
-      'moderator',
-      'system',
-      'blocked',
-      'suspended',
-      'banned',
-      'restricted'
-    ];
-    
-    return disabledUsernames.some(disabledName => 
-      user.name.toLowerCase().includes(disabledName.toLowerCase())
-    );
-  };
+  // Use centralized validation
+  const searchDisabled = isSearchDisabled(user?.name);
 
   // Fetch real user data from Supabase
   useEffect(() => {
@@ -227,11 +209,11 @@ const SearchResultsPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <SearchHeader searchQuery={searchQuery} disabled={isSearchDisabled()} />
+      <SearchHeader searchQuery={searchQuery} disabled={searchDisabled} />
       
       <div className="container mx-auto px-6 py-8">
         {/* Check if search is disabled */}
-        {isSearchDisabled() ? (
+        {searchDisabled ? (
           <div className="text-center py-12">
             <div className="max-w-md mx-auto">
               <div className="text-6xl mb-4">🔒</div>
@@ -308,7 +290,7 @@ const SearchResultsPage = () => {
       </div>
 
       {/* Filter Sidebar - Rendered outside main content flow */}
-      {!isSearchDisabled() && (
+      {!searchDisabled && (
         <FilterSidebar
           filters={filters}
           onFiltersChange={setFilters}

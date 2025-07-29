@@ -8,6 +8,7 @@ import { AuthModal } from "@/components/auth/AuthModal";
 import { UserAvatar } from "@/components/auth/UserAvatar";
 import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
 import { toast } from "sonner";
+import { isSearchDisabled } from "@/utils/userValidation";
 
 export const Header = () => {
   const { isAuthenticated, user } = useAuth();
@@ -16,31 +17,12 @@ export const Header = () => {
   const [authMode, setAuthMode] = useState<'signup' | 'signin'>('signin');
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Function to check if search should be disabled based on user name
-  const isSearchDisabled = () => {
-    if (!user?.name) return false;
-    
-    // List of usernames that should have search disabled
-    const disabledUsernames = [
-      'test',
-      'demo',
-      'admin',
-      'moderator',
-      'system',
-      'blocked',
-      'suspended',
-      'banned',
-      'restricted'
-    ];
-    
-    return disabledUsernames.some(disabledName => 
-      user.name.toLowerCase().includes(disabledName.toLowerCase())
-    );
-  };
+  // Use centralized validation
+  const searchDisabled = isSearchDisabled(user?.name);
 
   const handleSearch = () => {
     // Prevent search if user is disabled
-    if (isSearchDisabled()) {
+    if (searchDisabled) {
       toast.error("Search is disabled for your account type");
       return;
     }
@@ -86,18 +68,18 @@ export const Header = () => {
 
             {/* Search Bar - Center */}
             <div className="hidden md:flex flex-1 max-w-md mx-4">
-              <div className={`relative w-full ${isSearchDisabled() ? 'opacity-50' : ''}`}>
+              <div className={`relative w-full ${searchDisabled ? 'opacity-50' : ''}`}>
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input
                   type="text"
-                  placeholder={isSearchDisabled() ? "Search disabled" : "Search for skills only..."}
+                  placeholder={searchDisabled ? "Search disabled" : "Search for skills only..."}
                   value={searchQuery}
-                  onChange={(e) => !isSearchDisabled() && setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => !isSearchDisabled() && e.key === "Enter" && handleSearch()}
+                  onChange={(e) => !searchDisabled && setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => !searchDisabled && e.key === "Enter" && handleSearch()}
                   className="pl-10 pr-4"
-                  disabled={isSearchDisabled()}
+                  disabled={searchDisabled}
                 />
-                {searchQuery && !isSearchDisabled() && (
+                {searchQuery && !searchDisabled && (
                   <Button
                     size="sm"
                     onClick={handleSearch}
@@ -146,16 +128,16 @@ export const Header = () => {
 
           {/* Mobile Search Bar */}
           <div className="md:hidden mt-3">
-            <div className={`relative ${isSearchDisabled() ? 'opacity-50' : ''}`}>
+            <div className={`relative ${searchDisabled ? 'opacity-50' : ''}`}>
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
                 type="text"
-                placeholder={isSearchDisabled() ? "Search disabled" : "Search for skills only..."}
+                placeholder={searchDisabled ? "Search disabled" : "Search for skills only..."}
                 value={searchQuery}
-                onChange={(e) => !isSearchDisabled() && setSearchQuery(e.target.value)}
-                onKeyDown={(e) => !isSearchDisabled() && e.key === "Enter" && handleSearch()}
+                onChange={(e) => !searchDisabled && setSearchQuery(e.target.value)}
+                onKeyDown={(e) => !searchDisabled && e.key === "Enter" && handleSearch()}
                 className="pl-10"
-                disabled={isSearchDisabled()}
+                disabled={searchDisabled}
               />
             </div>
           </div>

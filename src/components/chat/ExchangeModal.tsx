@@ -14,6 +14,7 @@ interface ExchangeModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAgree: (data: { userSkill: string; isMentorship: boolean }) => void;
+  onFinalAgree: () => void;
   chatId: string;
   otherUserName: string;
   currentUserSkills: Array<{name: string; level: string; description: string; category?: string}>;
@@ -32,6 +33,7 @@ export const ExchangeModal = ({
   isOpen,
   onClose,
   onAgree,
+  onFinalAgree,
   chatId,
   otherUserName,
   currentUserSkills,
@@ -53,6 +55,14 @@ export const ExchangeModal = ({
   const handleAgree = () => {
     console.log('🎯 ExchangeModal handleAgree called with:', { selectedSkill, isMentorship });
     
+    // If we're in contract_proposed state and user hasn't agreed yet, use onFinalAgree
+    if (exchangeState === 'contract_proposed' && !contractData?.currentUserAgreed) {
+      console.log('🎯 Calling onFinalAgree for contract agreement');
+      onFinalAgree();
+      return;
+    }
+    
+    // Otherwise, handle skill selection
     if (!isMentorship && !selectedSkill) {
       toast.error("Please select a skill or choose mentorship session");
       return;
@@ -204,7 +214,10 @@ export const ExchangeModal = ({
           {exchangeState !== 'active_exchange' && (
             <Button
               onClick={handleAgree}
-              disabled={!canProceed || (exchangeState === 'contract_proposed' && contractData?.currentUserAgreed)}
+              disabled={
+                (exchangeState === 'contract_proposed' && contractData?.currentUserAgreed) ||
+                (exchangeState !== 'contract_proposed' && !canProceed)
+              }
               className="flex-1"
             >
               {modalContent.buttonText}
