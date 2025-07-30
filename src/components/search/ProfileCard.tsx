@@ -154,12 +154,7 @@ export const ProfileCard = React.memo(({ user, isBlurred = false, searchResult }
               <h3 className="text-lg font-semibold text-foreground truncate">
                 {user.name}
               </h3>
-              {user.isMentor && (
-                <Badge variant="secondary" className="text-xs bg-accent/10 text-accent border-accent/20">
-                  🌟 Mentor
-                </Badge>
-              )}
-              {user.willingToTeachWithoutReturn && (
+              {(user.isMentor || user.willingToTeachWithoutReturn) && (
                 <Badge variant="secondary" className="text-xs bg-accent/10 text-accent border-accent/20">
                   🌟 Mentor
                 </Badge>

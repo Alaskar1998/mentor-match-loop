@@ -1,271 +1,229 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Coins, Crown, Info } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { SKILL_LEVELS, getAllSkills } from "@/data/skills";
+import { Button } from "@/components/ui/button";
+import { 
+  Plus, 
+  Target, 
+  Clock, 
+  MapPin, 
+  Star, 
+  Sparkles,
+  Users,
+  TrendingUp,
+  Heart,
+  Award,
+  Zap,
+  Globe,
+  Filter,
+  MessageSquare,
+  BookOpen
+} from "lucide-react";
 
-const COUNTRIES = [
-  "United States", "United Kingdom", "Canada", "Australia", "Germany", 
-  "France", "Spain", "Italy", "Japan", "South Korea", "India", "Brazil",
-  "United Arab Emirates", "Saudi Arabia", "Egypt", "Jordan", "Lebanon",
-  "Kuwait", "Qatar", "Bahrain", "Oman", "Morocco", "Tunisia", "Algeria",
-  "Libya", "Iraq", "Syria", "Yemen", "Palestine", "Sudan", "Iran",
-  "Turkey", "Israel", "Cyprus"
-];
-
-interface LearningRequest {
-  skill: string;
-  level: string;
-  description: string;
-  country: string;
-  urgency: string;
-}
-
-export const CreateRequest = () => {
-  const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [request, setRequest] = useState<LearningRequest>({
-    skill: "",
-    level: "",
-    description: "",
-    country: "",
-    urgency: "flexible"
-  });
-
-  // Mock user data - in real app, this would come from user profile/subscription
-  const [userTier] = useState<"free" | "premium">("free");
-  const remainingPosts = userTier === "premium" ? 2 : 0; // For premium users
-  const postPrice = 2.99; // Price per post for free users
-
-  const handleSubmit = async () => {
-    if (!isAuthenticated) {
-      toast.error("Please sign in to create a learning request");
-      return;
+const CreateRequest = () => {
+  const futureFeatures = [
+    {
+      icon: <Plus className="w-8 h-8 text-blue-500" />,
+      title: "Create Learning Request",
+      description: "Post detailed learning requests with your goals, preferences, and timeline to find the perfect teacher.",
+      status: "Coming Soon",
+      color: "bg-blue-50 border-blue-200"
+    },
+    {
+      icon: <Target className="w-8 h-8 text-green-500" />,
+      title: "Smart Request Templates",
+      description: "Pre-built templates for common learning requests to make posting faster and more effective.",
+      status: "In Development",
+      color: "bg-green-50 border-green-200"
+    },
+    {
+      icon: <Clock className="w-8 h-8 text-orange-500" />,
+      title: "Urgency Settings",
+      description: "Set urgency levels to help teachers prioritize and get faster responses when needed.",
+      status: "Coming Soon",
+      color: "bg-orange-50 border-orange-200"
+    },
+    {
+      icon: <MapPin className="w-8 h-8 text-purple-500" />,
+      title: "Location-Based Matching",
+      description: "Specify your location to find local teachers or connect with teachers in specific regions.",
+      status: "In Development",
+      color: "bg-purple-50 border-purple-200"
+    },
+    {
+      icon: <Star className="w-8 h-8 text-yellow-500" />,
+      title: "Teacher Preferences",
+      description: "Specify preferred teaching styles, experience levels, and availability to find your ideal match.",
+      status: "Coming Soon",
+      color: "bg-yellow-50 border-yellow-200"
+    },
+    {
+      icon: <Sparkles className="w-8 h-8 text-cyan-500" />,
+      title: "AI-Powered Matching",
+      description: "Advanced algorithms that match you with the best teachers based on your specific requirements.",
+      status: "Planned",
+      color: "bg-cyan-50 border-cyan-200"
+    },
+    {
+      icon: <Users className="w-8 h-8 text-indigo-500" />,
+      title: "Multiple Teacher Responses",
+      description: "Get responses from multiple teachers so you can choose the best fit for your learning style.",
+      status: "Coming Soon",
+      color: "bg-indigo-50 border-indigo-200"
+    },
+    {
+      icon: <TrendingUp className="w-8 h-8 text-emerald-500" />,
+      title: "Request Analytics",
+      description: "Track your request performance, response rates, and success metrics to improve future requests.",
+      status: "In Development",
+      color: "bg-emerald-50 border-emerald-200"
+    },
+    {
+      icon: <Heart className="w-8 h-8 text-pink-500" />,
+      title: "Favorite Teachers",
+      description: "Save and favorite teachers you've worked with for future learning requests.",
+      status: "Planned",
+      color: "bg-pink-50 border-pink-200"
+    },
+    {
+      icon: <Award className="w-8 h-8 text-amber-500" />,
+      title: "Request Rewards",
+      description: "Earn points and recognition for creating quality requests that help the community.",
+      status: "Coming Soon",
+      color: "bg-amber-50 border-amber-200"
+    },
+    {
+      icon: <Zap className="w-8 h-8 text-lime-500" />,
+      title: "Quick Request Builder",
+      description: "One-click request creation with smart defaults and auto-completion for faster posting.",
+      status: "Planned",
+      color: "bg-lime-50 border-lime-200"
+    },
+    {
+      icon: <Globe className="w-8 h-8 text-teal-500" />,
+      title: "Global Learning Network",
+      description: "Connect with teachers from around the world, breaking down geographical barriers.",
+      status: "In Development",
+      color: "bg-teal-50 border-teal-200"
+    },
+    {
+      icon: <Filter className="w-8 h-8 text-violet-500" />,
+      title: "Advanced Filtering",
+      description: "Filter and sort teachers by skills, ratings, availability, and more to find perfect matches.",
+      status: "Coming Soon",
+      color: "bg-violet-50 border-violet-200"
+    },
+    {
+      icon: <MessageSquare className="w-8 h-8 text-red-500" />,
+      title: "Direct Communication",
+      description: "Chat directly with teachers before making a decision to ensure the right fit.",
+      status: "Planned",
+      color: "bg-red-50 border-red-200"
+    },
+    {
+      icon: <BookOpen className="w-8 h-8 text-rose-500" />,
+      title: "Learning Paths",
+      description: "Create structured learning paths with multiple teachers for comprehensive skill development.",
+      status: "Coming Soon",
+      color: "bg-rose-50 border-rose-200"
     }
+  ];
 
-    if (!request.skill || !request.level || !request.description) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      if (userTier === "free") {
-        // Free user - needs to pay
-        await handlePayment();
-      } else if (userTier === "premium" && remainingPosts > 0) {
-        // Premium user with remaining posts
-        await submitRequest();
-      } else if (userTier === "premium" && remainingPosts === 0) {
-        // Premium user exceeded free posts
-        await handlePayment();
-      }
-    } catch (error) {
-      toast.error("Failed to create request. Please try again.");
-    } finally {
-      setIsSubmitting(false);
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "Coming Soon":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "In Development":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "Planned":
+        return "bg-gray-100 text-gray-800 border-gray-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
-
-  const handlePayment = async () => {
-    // TODO: Integrate with Stripe for one-off payment
-    toast.info(`Payment integration needed - $${postPrice} per post`);
-    // After successful payment, call submitRequest()
-    await submitRequest();
-  };
-
-  const submitRequest = async () => {
-    if (!user?.id) {
-      toast.error("User not authenticated");
-      return;
-    }
-
-    try {
-      // Submit to Supabase database
-      const { data, error } = await supabase
-        .from('learning_requests')
-        .insert({
-          user_id: user.id,
-          skill: request.skill,
-          level: request.level,
-          description: request.description,
-          country: request.country || 'Unknown',
-          urgency: request.urgency as 'urgent' | 'soon' | 'flexible',
-          responses_count: 0
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error creating learning request:', error);
-        toast.error("Failed to create learning request. Please try again.");
-        return;
-      }
-
-      console.log("Learning request created successfully:", data);
-      toast.success("✅ Learning request created successfully! Redirecting to requests feed...");
-      
-      // Add a small delay to show the success message before navigating
-      setTimeout(() => {
-        navigate("/requests-feed");
-      }, 1500);
-    } catch (error) {
-      console.error('Error creating learning request:', error);
-      toast.error("Failed to create learning request. Please try again.");
-    }
-  };
-
-  const isPaymentRequired = userTier === "free" || (userTier === "premium" && remainingPosts === 0);
 
   return (
-    <div className="min-h-screen bg-gradient-subtle">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold mb-2">Create Learning Request</h1>
-            <p className="text-muted-foreground">
-              Tell the community what you want to learn and get matched with teachers
-            </p>
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
+      <div className="container mx-auto px-6 py-12">
+        {/* Header */}
+        <div className="text-center mb-16">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-accent to-warm rounded-full mb-6 shadow-elegant">
+            <Plus className="w-10 h-10 text-white" />
           </div>
+          <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
+            📝 Create Learning Request
+          </h1>
+          <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
+            We're building an amazing system to help you create perfect learning requests and find the best teachers!
+          </p>
+          <div className="inline-flex items-center gap-2 bg-gradient-warm text-warm-foreground px-6 py-3 rounded-full shadow-elegant">
+            <div className="w-3 h-3 bg-success rounded-full animate-pulse" />
+            <span className="font-semibold text-lg">
+              Coming Soon - Stay Tuned!
+            </span>
+          </div>
+        </div>
 
-          {/* User Status */}
-          <Card className="mb-6">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {userTier === "premium" ? (
-                    <Crown className="w-5 h-5 text-amber-500" />
-                  ) : (
-                    <Coins className="w-5 h-5 text-muted-foreground" />
-                  )}
-                  <div>
-                    <div className="font-medium">
-                      {userTier === "premium" ? "Premium Member" : "Free Member"}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {userTier === "premium" 
-                        ? `${remainingPosts} free posts remaining this month`
-                        : `$${postPrice} per learning request post`
-                      }
-                    </div>
+        {/* Features Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+          {futureFeatures.map((feature, index) => (
+            <Card 
+              key={index}
+              className={`${feature.color} border-2 hover:shadow-elegant transition-all duration-300 hover:scale-105`}
+            >
+              <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    {feature.icon}
+                    <CardTitle className="text-lg font-semibold text-foreground">
+                      {feature.title}
+                    </CardTitle>
                   </div>
-                </div>
-                {userTier === "premium" && (
-                  <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-200">
-                    <Crown className="w-3 h-3 mr-1" />
-                    Premium
+                  <Badge 
+                    variant="outline" 
+                    className={`text-xs ${getStatusColor(feature.status)}`}
+                  >
+                    {feature.status}
                   </Badge>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {feature.description}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
 
-          {/* Form */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Request Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <Label htmlFor="skill">What do you want to learn? *</Label>
-                <Input
-                  id="skill"
-                  placeholder="e.g., Guitar, Spanish, Photography, Coding"
-                  value={request.skill}
-                  onChange={(e) => setRequest(prev => ({ ...prev, skill: e.target.value }))}
-                  className="mt-1"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="level">Your current level *</Label>
-                <Select onValueChange={(value) => setRequest(prev => ({ ...prev, level: value }))}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select your current level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SKILL_LEVELS.map(level => (
-                      <SelectItem key={level} value={level}>{level}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="description">Tell us more about what you want to learn *</Label>
-                <Textarea
-                  id="description"
-                  placeholder="Describe your learning goals, preferred teaching style, time availability, etc."
-                  value={request.description}
-                  onChange={(e) => setRequest(prev => ({ ...prev, description: e.target.value }))}
-                  className="mt-1"
-                  rows={4}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="country">Your Country</Label>
-                <Select onValueChange={(value) => setRequest(prev => ({ ...prev, country: value }))}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select your country" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {COUNTRIES.map(country => (
-                      <SelectItem key={country} value={country}>{country}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="urgency">Urgency</Label>
-                <Select onValueChange={(value) => setRequest(prev => ({ ...prev, urgency: value }))}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="How urgent is this request?" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="urgent">Urgent - Within a week</SelectItem>
-                    <SelectItem value="soon">Soon - Within a month</SelectItem>
-                    <SelectItem value="flexible">Flexible - No rush</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {isPaymentRequired && (
-                <Alert>
-                  <Info className="h-4 w-4" />
-                  <AlertDescription>
-                    {userTier === "free" 
-                      ? `This post costs $${postPrice}. You'll be redirected to payment after clicking "Create Request".`
-                      : "You've used all your free posts this month. This post will be charged separately."
-                    }
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              <div className="flex gap-3 pt-4">
-                <Button variant="outline" onClick={() => navigate(-1)} className="flex-1">
-                  Cancel
+        {/* Call to Action */}
+        <div className="text-center">
+          <Card className="max-w-2xl mx-auto bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20">
+            <CardContent className="p-8">
+              <h3 className="text-2xl font-bold text-foreground mb-4">
+                🚀 Be the First to Know!
+              </h3>
+              <p className="text-muted-foreground mb-6">
+                We're working hard to bring these exciting features to life. 
+                The learning request creation system will make finding teachers easier than ever!
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button 
+                  variant="default" 
+                  size="lg"
+                  onClick={() => window.history.back()}
+                  className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Explore Other Features
                 </Button>
                 <Button 
-                  onClick={handleSubmit}
-                  disabled={isSubmitting || !isAuthenticated}
-                  className="flex-1"
+                  variant="outline" 
+                  size="lg"
+                  onClick={() => window.location.href = '/'}
                 >
-                  {isSubmitting ? "Creating..." : `Create Request ${isPaymentRequired ? `($${postPrice})` : ""}`}
+                  <Plus className="w-4 h-4 mr-2" />
+                  Back to Home
                 </Button>
               </div>
             </CardContent>
@@ -275,3 +233,5 @@ export const CreateRequest = () => {
     </div>
   );
 };
+
+export default CreateRequest;

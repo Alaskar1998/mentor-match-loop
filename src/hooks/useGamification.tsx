@@ -55,7 +55,30 @@ const GamificationContext = createContext<GamificationContextType | null>(null);
 export const useGamification = () => {
   const context = useContext(GamificationContext);
   if (!context) {
-    throw new Error("useGamification must be used within a GamificationProvider");
+    // Return lightweight fallback when gamification is disabled
+    return {
+      state: {
+        appCoins: 0,
+        loginStreak: 0,
+        lastLoginDate: null,
+        profileCompletion: 0,
+        badges: [],
+        totalExchanges: 0,
+        dailyAdsWatched: 0,
+        challenges: []
+      },
+      earnCoins: () => {}, // No-op
+      spendCoins: () => false, // No-op
+      checkDailyLogin: async () => {}, // No-op
+      awardBadge: () => {}, // No-op
+      updateProfileCompletion: async () => {}, // No-op
+      watchAd: async () => {}, // No-op
+      completeExchange: async () => {}, // No-op
+      purchaseCoins: () => {}, // No-op
+      purchaseItem: async () => false, // No-op
+      getTransactionHistory: async () => [], // No-op
+      refreshBalance: async () => {} // No-op
+    };
   }
   return context;
 };

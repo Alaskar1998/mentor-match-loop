@@ -39,7 +39,16 @@ export const useOptimizedSearch = (options: UseOptimizedSearchOptions = {}) => {
 
     setIsLoading(true);
     try {
-      const response = searchService.search(userList, term);
+      // Fix: Properly await the async search method
+      const response = await searchService.search(userList, term);
+      
+      // Add null check for response
+      if (!response || !response.results) {
+        console.warn('SearchService returned invalid response:', response);
+        setResults([]);
+        setSearchResponse(null);
+        return;
+      }
       
       // Cache the result
       if (cacheResults) {

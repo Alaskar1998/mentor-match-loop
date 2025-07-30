@@ -1,21 +1,27 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useNotifications } from '@/hooks/useNotifications';
+import { useOptimizedPolling } from '@/hooks/useOptimizedPolling';
+import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Send, ArrowLeft, Play, Square, Loader2 } from 'lucide-react';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ExchangeModal } from '@/components/chat/ExchangeModal';
 import { FinishExchangeModal } from '@/components/chat/FinishExchangeModal';
 import { ReviewModal } from '@/components/review/ReviewModal';
-import { useToast } from '@/hooks/use-toast';
-import { notificationService } from '@/services/notificationService';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { useOptimizedPolling } from '@/hooks/useOptimizedPolling';
-import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
+import { 
+  Send, 
+  ArrowLeft, 
+  Play, 
+  Square, 
+  Loader2,
+  ChevronDown
+} from 'lucide-react';
 
 interface ChatMessage {
   id: string;
@@ -54,31 +60,155 @@ interface ChatData {
   updated_at: string;
 }
 
-const Chat = () => {
-  // Performance monitoring
-  usePerformanceMonitor('Chat', {
-    threshold: 16,
-    onSlowRender: (metrics) => {
-      console.warn('Slow render in Chat component:', metrics);
-    }
-  });
-
+const Chat = React.memo(() => {
   const { chatId } = useParams<{ chatId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { toast: toastHook } = useToast();
-  const [message, setMessage] = useState('');
+  const { createNotification } = useNotifications();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [chatData, setChatData] = useState<ChatData | null>(null);
+  const [otherUser, setOtherUser] = useState<OtherUser | null>(null);
+  const [exchangeState, setExchangeState] = useState<string>('pending_start');
+  const [contractData, setContractData] = useState<any>(null);
   const [showExchangeModal, setShowExchangeModal] = useState(false);
   const [showFinishModal, setShowFinishModal] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
-  const [isUpdatingState, setIsUpdatingState] = useState(false); // Flag to prevent modal conflicts
-  const [exchangeState, setExchangeState] = useState('pending_start');
-  const [contractData, setContractData] = useState<any>(null);
-  const [otherUser, setOtherUser] = useState<OtherUser | null>(null);
-  const [chatData, setChatData] = useState<ChatData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isUpdatingState, setIsUpdatingState] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+  // Performance monitoring
+  usePerformanceMonitor('Chat');
+
+  // Memoized ChatMessage component to prevent unnecessary re-renders
+  const ChatMessageComponent = React.memo(({ 
+    msg, 
+    currentUserId, 
+    otherUser 
+  }: { 
+    msg: ChatMessage; 
+    currentUserId?: string; 
+    otherUser?: any; 
+  }) => {
+    const isCurrentUser = msg.senderId === currentUserId;
+    const isSystemMessage = msg.type === 'system' || msg.message.startsWith('[SYSTEM]');
+
+    if (isSystemMessage) {
+      return (
+        <div key={msg.id} className="flex justify-center my-4">
+          <div className="bg-muted px-4 py-2 rounded-lg text-sm text-muted-foreground">
+            {msg.message.replace('[SYSTEM] ', '')}
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div key={msg.id} className={`flex gap-2 mb-4 ${isCurrentUser ? 'flex-row-reverse' : ''}`}>
+        <Avatar className="w-8 h-8 flex-shrink-0">
+          <AvatarImage src={isCurrentUser ? undefined : otherUser?.avatar_url} />
+          <AvatarFallback>
+            {isCurrentUser 
+              ? (currentUserId?.charAt(0).toUpperCase() || 'Y')
+              : (otherUser?.display_name?.charAt(0).toUpperCase() || 'U')
+            }
+          </AvatarFallback>
+        </Avatar>
+        <div className={`max-w-[70%] ${isCurrentUser ? 'text-right' : ''}`}>
+          <div className={`inline-block p-3 rounded-lg ${
+            isCurrentUser 
+              ? 'bg-primary text-primary-foreground' 
+              : 'bg-muted'
+          }`}>
+            {msg.message}
+          </div>
+          <div className="text-xs text-muted-foreground mt-1">
+            {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </div>
+        </div>
+      </div>
+    );
+  });
+
+  // Memoize expensive calculations
+  const canStartExchange = useMemo(() => {
+    return exchangeState === 'pending_start' || 
+      (exchangeState === 'draft_contract' && 
+       (!contractData?.currentUserSkill && !contractData?.currentUserIsMentorship));
+  }, [exchangeState, contractData?.currentUserSkill, contractData?.currentUserIsMentorship]);
+
+  const canFinishExchange = useMemo(() => {
+    if (exchangeState !== 'active_exchange' || !chatData?.updated_at) return false;
+    const exchangeStartTime = new Date(chatData.updated_at).getTime();
+    const currentTime = new Date().getTime();
+    const thirtyMinutes = 30 * 60 * 1000;
+    return (currentTime - exchangeStartTime) >= thirtyMinutes;
+  }, [exchangeState, chatData?.updated_at]);
+
+  const exchangeActive = useMemo(() => {
+    return exchangeState === 'active_exchange';
+  }, [exchangeState]);
+
+  // Check if user arrived via exchange notification
+  useEffect(() => {
+    const checkExchangeNotification = async () => {
+      if (!user?.id || !chatId) return;
+      
+      try {
+        // Check for recent exchange notifications for this chat
+        const { data: notifications } = await supabase
+          .from('notifications')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('chat_id', chatId)
+          .eq('type', 'learning_match')
+          .eq('is_read', false)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (notifications && notifications.length > 0) {
+          const notification = notifications[0];
+          const metadata = notification.metadata || {};
+          
+          // Check if this is an exchange request notification
+          const isExchangeRequest = notification.title === 'Exchange Request' && 
+            (notification.message.includes('wants to start the exchange') || 
+             metadata.shouldOpenModal === true);
+          
+          // Check if this is an exchange activation notification
+          const isExchangeActivation = notification.title === 'Exchange Active!' &&
+            notification.message.includes('is now active');
+          
+          if (isExchangeRequest) {
+            console.log('🎯 Auto-opening exchange modal from notification');
+            setShowExchangeModal(true);
+            
+            // Mark notification as read
+            await supabase
+              .from('notifications')
+              .update({ is_read: true })
+              .eq('id', notification.id);
+          } else if (isExchangeActivation) {
+            console.log('🎯 Exchange is now active - showing success message');
+            toast.success("Exchange is now active! Start your learning session.");
+            
+            // Mark notification as read
+            await supabase
+              .from('notifications')
+              .update({ is_read: true })
+              .eq('id', notification.id);
+          }
+        }
+      } catch (error) {
+        console.error('Error checking exchange notifications:', error);
+      }
+    };
+
+    checkExchangeNotification();
+  }, [user?.id, chatId]);
 
   useEffect(() => {
     if (chatId && user) {
@@ -89,90 +219,137 @@ const Chat = () => {
   // Optimized polling for messages
   const { isActive: isPollingMessages } = useOptimizedPolling(
     async () => {
-      if (isUpdatingState) return; // Skip if we're updating state
+      if (!chatId || !user) return;
       
       try {
-        const { data: messagesData, error: messagesError } = await supabase
-          .from('chat_messages')
-          .select('*')
-          .eq('chat_id', chatId)
-          .order('created_at', { ascending: true });
+        let newMessages = null;
+        
+        // Try 'messages' table first
+        try {
+          const { data, error } = await supabase
+            .from('messages')
+            .select('*')
+            .eq('chat_id', chatId)
+            .order('created_at', { ascending: true });
 
-        if (!messagesError && messagesData) {
-          const formattedMessages: ChatMessage[] = messagesData.map(msg => ({
-            id: msg.id,
-            senderId: msg.sender_id,
-            message: msg.message,
-            timestamp: new Date(msg.created_at),
-            type: msg.message.startsWith('[SYSTEM]') ? 'system' : 'text'
-          }));
+          if (!error && data) {
+            newMessages = data;
+          }
+        } catch (e) {
+          console.log('⚠️ "messages" table not found in polling, trying "chat_messages"');
+        }
 
-          // Only update if messages have changed
-          if (JSON.stringify(formattedMessages) !== JSON.stringify(messages)) {
-            setMessages(formattedMessages);
-            console.log('🔄 Messages updated via polling:', formattedMessages);
+        // Try 'chat_messages' table if 'messages' failed
+        if (!newMessages) {
+          try {
+            const { data, error } = await supabase
+              .from('chat_messages')
+              .select('*')
+              .eq('chat_id', chatId)
+              .order('created_at', { ascending: true });
+
+            if (!error && data) {
+              newMessages = data;
+            }
+          } catch (e) {
+            console.log('⚠️ "chat_messages" table not found in polling');
           }
         }
+
+        if (newMessages) {
+          const transformedMessages = newMessages.map((msg: any) => ({
+            id: msg.id,
+            senderId: msg.sender_id,
+            message: msg.content || msg.message,
+            timestamp: new Date(msg.created_at),
+            type: msg.type || 'text'
+          }));
+          
+          // Only update if messages actually changed
+          setMessages(prevMessages => {
+            if (JSON.stringify(prevMessages) !== JSON.stringify(transformedMessages)) {
+              return transformedMessages;
+            }
+            return prevMessages;
+          });
+        }
       } catch (error) {
-        console.error('Error polling messages:', error);
+        console.error('Error in message polling:', error);
       }
     },
     { 
-      interval: 5000, 
+      interval: 8000, // Increased interval to reduce scrolling frequency
       enabled: !!chatId && !!user,
       maxRetries: 3
     }
   );
 
-  // Optimized polling for exchange state
+  // Optimized polling for exchange state and contract data
   const { isActive: isPollingExchange } = useOptimizedPolling(
     async () => {
-      if (isUpdatingState) return; // Skip if we're updating state
+      if (!chatId || !user) return;
       
       try {
-        // Check for exchange state changes
-        const { data: chat } = await supabase
+        // Fetch updated chat state
+        const { data: updatedChat, error: chatError } = await supabase
           .from('chats')
           .select('*, exchange_state')
           .eq('id', chatId)
           .single();
 
-        if (chat && chat.exchange_state !== exchangeState) {
-          setExchangeState(chat.exchange_state || 'pending_start');
-          console.log('🔄 Exchange state updated:', chat.exchange_state);
+        if (chatError) {
+          console.error('Error polling chat state:', chatError);
+          return;
         }
 
-        // Check for contract changes
-        const { data: contract } = await supabase
+        if (updatedChat) {
+          setExchangeState(updatedChat.exchange_state || 'pending_start');
+        }
+
+        // Fetch updated contract data
+        const { data: updatedContract, error: contractError } = await supabase
           .from('exchange_contracts')
           .select('*')
           .eq('chat_id', chatId)
           .single();
 
-        if (contract) {
-          const isUser1 = contract.user1_id === user.id;
-          const newContractData = {
-            currentUserSkill: isUser1 ? contract.user1_skill : contract.user2_skill,
-            otherUserSkill: isUser1 ? contract.user2_skill : contract.user1_skill,
-            currentUserIsMentorship: isUser1 ? contract.user1_is_mentorship : contract.user2_is_mentorship,
-            otherUserIsMentorship: isUser1 ? contract.user2_is_mentorship : contract.user1_is_mentorship,
-            currentUserAgreed: isUser1 ? contract.user1_agreed : contract.user2_agreed,
-            otherUserAgreed: isUser1 ? contract.user2_agreed : contract.user1_agreed,
-          };
+        if (contractError && contractError.code !== 'PGRST116') {
+          console.error('Error polling contract data:', contractError);
+          return;
+        }
 
-          // Only update if contract data has changed
-          if (JSON.stringify(newContractData) !== JSON.stringify(contractData)) {
-            setContractData(newContractData);
-            console.log('🔄 Contract data updated:', newContractData);
+        if (updatedContract) {
+          const isUser1 = chatData?.user1_id === user.id;
+          const contractData = {
+            currentUserSkill: isUser1 ? updatedContract.user1_skill : updatedContract.user2_skill,
+            otherUserSkill: isUser1 ? updatedContract.user2_skill : updatedContract.user1_skill,
+            currentUserIsMentorship: isUser1 ? updatedContract.user1_is_mentorship : updatedContract.user2_is_mentorship,
+            otherUserIsMentorship: isUser1 ? updatedContract.user2_is_mentorship : updatedContract.user1_is_mentorship,
+            currentUserAgreed: isUser1 ? updatedContract.user1_agreed : updatedContract.user2_agreed,
+            otherUserAgreed: isUser1 ? updatedContract.user2_agreed : updatedContract.user1_agreed,
+          };
+          setContractData(contractData);
+
+          // Auto-open modal for second user when contract is created
+          if (updatedContract && !showExchangeModal && exchangeState === 'draft_contract') {
+            const hasUserSelected = contractData.currentUserSkill || contractData.currentUserIsMentorship;
+            const hasOtherUserSelected = contractData.otherUserSkill || contractData.otherUserIsMentorship;
+            
+            // If other user has selected but current user hasn't, auto-open modal
+            if (hasOtherUserSelected && !hasUserSelected) {
+              console.log('🎯 Auto-opening modal - other user has selected their skill');
+              setShowExchangeModal(true);
+            }
           }
         }
       } catch (error) {
-        console.error('Error polling exchange state:', error);
+        console.error('Error in exchange polling:', error);
+        // Don't let polling errors crash the component
       }
     },
     { 
-      interval: 8000, 
-      enabled: !!chatId && !!user,
+      interval: 5000, // Increased interval to reduce load
+      enabled: !!chatId && !!user && exchangeState !== 'active_exchange',
       maxRetries: 3
     }
   );
@@ -279,41 +456,65 @@ const Chat = () => {
       setOtherUser(otherUserData);
       console.log('✅ Other user data set:', otherUserData);
 
-      // Fetch messages
+      // Fetch messages - try different table names
       console.log('💬 Fetching messages...');
-      const { data: messagesData, error: messagesError } = await supabase
-        .from('chat_messages')
-        .select('*')
-        .eq('chat_id', chatId)
-        .order('created_at', { ascending: true });
+      let messagesData = null;
+      let messagesError = null;
 
-      console.log('💬 Messages query result:', { messagesData, messagesError });
-
-      if (messagesError) {
-        console.error('Error fetching messages:', messagesError);
-        toast.error("Failed to load messages");
-        return;
+      // Try 'messages' table first
+      try {
+        const { data, error } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('chat_id', chatId)
+          .order('created_at', { ascending: true });
+        
+        if (!error && data) {
+          messagesData = data;
+          console.log('✅ Messages found in "messages" table');
+        }
+      } catch (e) {
+        console.log('⚠️ "messages" table not found, trying "chat_messages"');
       }
 
-      // Transform messages to match the expected format
-      const formattedMessages: ChatMessage[] = (messagesData || []).map(msg => ({
-        id: msg.id,
-        senderId: msg.sender_id,
-        message: msg.message,
-        timestamp: new Date(msg.created_at),
-        type: msg.message.startsWith('[SYSTEM]') ? 'system' : 'text'
-      }));
+      // Try 'chat_messages' table if 'messages' failed
+      if (!messagesData) {
+        try {
+          const { data, error } = await supabase
+            .from('chat_messages')
+            .select('*')
+            .eq('chat_id', chatId)
+            .order('created_at', { ascending: true });
+          
+          if (!error && data) {
+            messagesData = data;
+            console.log('✅ Messages found in "chat_messages" table');
+          }
+        } catch (e) {
+          console.log('⚠️ "chat_messages" table not found');
+        }
+      }
 
-      setMessages(formattedMessages);
-      console.log('✅ Messages set:', formattedMessages);
-      console.log('🎉 fetchChatData completed successfully!');
-      
+      if (messagesData) {
+        const transformedMessages = messagesData.map((msg: any) => ({
+          id: msg.id,
+          senderId: msg.sender_id,
+          message: msg.content || msg.message,
+          timestamp: new Date(msg.created_at),
+          type: msg.type || 'text'
+        }));
+        setMessages(transformedMessages);
+        console.log('✅ Messages set:', transformedMessages.length, 'messages');
+      } else {
+        console.log('⚠️ No messages found, setting empty array');
+        setMessages([]);
+      }
+
     } catch (error) {
-      console.error('❌ Error in fetchChatData:', error);
-      toast.error("Failed to load chat");
+      console.error('Error in fetchChatData:', error);
+      toast.error("Failed to load chat data");
       navigate('/messages');
     } finally {
-      console.log('🏁 Setting loading to false');
       setLoading(false);
     }
   };
@@ -322,9 +523,33 @@ const Chat = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Only scroll to bottom if user is already at the bottom or if it's a new message
+  const shouldScrollToBottom = () => {
+    const messagesContainer = document.querySelector('.h-96.overflow-y-auto');
+    if (!messagesContainer) return false;
+    
+    const { scrollTop, scrollHeight, clientHeight } = messagesContainer as HTMLElement;
+    const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10; // 10px threshold
+    return isAtBottom;
+  };
+
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    // Only auto-scroll if user is at the bottom and it's not the initial load
+    if (!isInitialLoad && shouldScrollToBottom()) {
+      scrollToBottom();
+    }
+  }, [messages, isInitialLoad]);
+
+  // Initial load - scroll to top to show messages from the beginning
+  useEffect(() => {
+    if (messages.length > 0 && isInitialLoad) {
+      const messagesContainer = document.querySelector('.h-96.overflow-y-auto');
+      if (messagesContainer) {
+        (messagesContainer as HTMLElement).scrollTop = 0;
+        setIsInitialLoad(false); // Mark initial load as complete
+      }
+    }
+  }, [messages.length, isInitialLoad]);
 
   const handleSendMessage = async () => {
     if (!message.trim() || !user || !otherUser || !chatId) return;
@@ -367,7 +592,7 @@ const Chat = () => {
 
       // Create notification for the other user about new message
       try {
-        await notificationService.createNotification({
+        await createNotification({
           userId: otherUser.id,
           title: 'New Message',
           message: `${senderName}: ${message.trim().substring(0, 50)}${message.trim().length > 50 ? '...' : ''}`,
@@ -472,7 +697,7 @@ const Chat = () => {
         // Send notification to other user
         try {
           const senderName = user.name || user.email || 'Someone';
-          await notificationService.createNotification({
+          await createNotification({
             userId: otherUser.id,
             title: 'Exchange Request',
             message: `${senderName} wants to start the exchange. Choose what you will teach.`,
@@ -483,7 +708,10 @@ const Chat = () => {
               senderId: user.id,
               senderName: senderName,
               chatId: chatId,
-              skill: data.userSkill
+              skill: data.userSkill,
+              isMentorship: data.isMentorship,
+              exchangeState: 'draft_contract',
+              shouldOpenModal: true
             }
           });
 
@@ -651,7 +879,7 @@ const Chat = () => {
         // Send notification to other user
         try {
           const senderName = user.name || user.email || 'Someone';
-          await notificationService.createNotification({
+          await createNotification({
             userId: otherUser.id,
             title: 'Exchange Active!',
             message: `Your exchange with ${senderName} is now active. Start learning!`,
@@ -718,7 +946,7 @@ const Chat = () => {
 
           const partnerName = partnerProfile?.display_name || 'Someone';
 
-          await notificationService.createNotification({
+          await createNotification({
             userId: otherUser.id,
             title: 'Exchange Completed!',
             message: `Your skill exchange with ${partnerName} has been completed`,
@@ -757,13 +985,13 @@ const Chat = () => {
   };
 
   const handleReviewSubmitted = () => {
-    toastHook({
-      title: "Thank you!",
+    toast.success("Thank you!", {
       description: "Your review helps improve our community. Keep learning and teaching!",
     });
   };
 
-  const renderMessage = (msg: ChatMessage) => {
+  // Memoize the renderMessage function to prevent unnecessary re-renders
+  const renderMessage = useCallback((msg: ChatMessage) => {
     const isCurrentUser = msg.senderId === user?.id;
     const isSystemMessage = msg.type === 'system' || msg.message.startsWith('[SYSTEM]');
 
@@ -783,7 +1011,7 @@ const Chat = () => {
           <AvatarImage src={isCurrentUser ? undefined : otherUser?.avatar_url} />
           <AvatarFallback>
             {isCurrentUser 
-              ? (user?.email?.charAt(0).toUpperCase() || 'Y')
+              ? (user?.id?.charAt(0).toUpperCase() || 'Y')
               : (otherUser?.display_name?.charAt(0).toUpperCase() || 'U')
             }
           </AvatarFallback>
@@ -802,7 +1030,7 @@ const Chat = () => {
         </div>
       </div>
     );
-  };
+  }, [user?.id, otherUser?.avatar_url, otherUser?.display_name]);
 
   if (loading) {
     console.log('⏳ Showing loading state');
@@ -814,6 +1042,12 @@ const Chat = () => {
         </div>
       </div>
     );
+  }
+
+  if (!user) {
+    console.log('❌ No user found, redirecting to login');
+    navigate('/');
+    return null;
   }
 
   if (!otherUser || !chatData) {
@@ -829,179 +1063,197 @@ const Chat = () => {
     );
   }
 
-  if (!user) {
-    console.log('❌ No user found, redirecting to login');
-    navigate('/');
-    return null;
-  }
+  // Add error boundary for the main content
+  try {
+    console.log('🔍 Chat component render state:', {
+      loading,
+      user: user?.id,
+      otherUser: otherUser?.id,
+      chatData: chatData?.id,
+      exchangeState,
+      contractData,
+      canStartExchange,
+      canFinishExchange
+    });
 
-  const canStartExchange = exchangeState === 'pending_start' || 
-    (exchangeState === 'draft_contract' && 
-     (!contractData?.currentUserSkill && !contractData?.currentUserIsMentorship));
-  const canFinishExchange = exchangeState === 'active_exchange' && (() => {
-    // Check if 30 minutes have passed since exchange became active
-    if (!chatData?.updated_at) return false;
-    const exchangeStartTime = new Date(chatData.updated_at).getTime();
-    const currentTime = new Date().getTime();
-    const thirtyMinutes = 30 * 60 * 1000; // 30 minutes in milliseconds
-    return (currentTime - exchangeStartTime) >= thirtyMinutes;
-  })();
-  const exchangeActive = exchangeState === 'active_exchange';
-
-  console.log('🔍 Chat component render state:', {
-    loading,
-    user: user?.id,
-    otherUser: otherUser?.id,
-    chatData: chatData?.id,
-    exchangeState,
-    contractData,
-    canStartExchange,
-    canFinishExchange
-  });
-
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b bg-card p-4">
-        <div className="container mx-auto flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate('/messages')}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <Avatar className="w-10 h-10">
-            <AvatarImage src={otherUser.avatar_url} />
-            <AvatarFallback>{otherUser.display_name.charAt(0).toUpperCase()}</AvatarFallback>
-          </Avatar>
-          <div>
-            <h2 className="font-semibold">{otherUser.display_name}</h2>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline">{chatData.skill}</Badge>
-              <Badge variant={chatData.status === 'active' ? 'default' : 'secondary'}>
-                {chatData.status}
-              </Badge>
+    return (
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <div className="border-b bg-card p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button
+                onClick={() => navigate('/messages')}
+                variant="ghost"
+                size="sm"
+                className="gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Messages
+              </Button>
+              <div className="flex items-center gap-3">
+                <Avatar className="w-10 h-10">
+                  <AvatarImage src={otherUser.avatar_url} />
+                  <AvatarFallback>
+                    {otherUser.display_name?.charAt(0).toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h2 className="font-semibold">{otherUser.display_name}</h2>
+                  <p className="text-sm text-muted-foreground">
+                    {exchangeState === 'active_exchange' ? 'Active Exchange' : 'Chat'}
+                  </p>
+                </div>
+              </div>
             </div>
+            
+            {/* Exchange Status Badge */}
+            {exchangeState !== 'pending_start' && (
+              <Badge variant={exchangeState === 'active_exchange' ? 'default' : 'secondary'}>
+                {exchangeState === 'active_exchange' ? 'Active Exchange' : 'Draft Exchange'}
+              </Badge>
+            )}
           </div>
-          {exchangeState !== 'pending_start' && (
-            <Badge 
-              variant={exchangeState === 'active' ? 'default' : 'secondary'}
-              className="ml-auto"
-            >
-              Exchange {exchangeState}
-            </Badge>
-          )}
+        </div>
+
+        {/* Messages */}
+        <div className="container mx-auto max-w-4xl p-4 pb-24">
+          <Card>
+            <CardContent className="p-6">
+              <div className="h-96 overflow-y-auto mb-4 relative">
+                {messages.map(msg => (
+                  <ChatMessageComponent 
+                    key={msg.id}
+                    msg={msg} 
+                    currentUserId={user?.id} 
+                    otherUser={otherUser} 
+                  />
+                ))}
+                <div ref={messagesEndRef} />
+                
+                {/* Scroll to bottom button - only show if not at bottom */}
+                {messages.length > 0 && !shouldScrollToBottom() && !isInitialLoad && (
+                  <Button
+                    onClick={scrollToBottom}
+                    size="sm"
+                    className="absolute bottom-4 right-4 rounded-full w-10 h-10 p-0 shadow-lg"
+                    variant="secondary"
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+
+              {/* Exchange Action Buttons */}
+              <div className="flex gap-2 mb-4">
+                {canStartExchange && (
+                  <Button
+                    onClick={handleStartExchange}
+                    className="gap-2"
+                    variant="default"
+                  >
+                    <Play className="h-4 w-4" />
+                    Start Exchange
+                  </Button>
+                )}
+                {canFinishExchange && exchangeActive && (
+                  <Button
+                    onClick={handleFinishExchange}
+                    className="gap-2"
+                    variant="outline"
+                  >
+                    <Square className="h-4 w-4" />
+                    Finish Exchange
+                  </Button>
+                )}
+              </div>
+
+              {/* Message Input */}
+              <div className="flex gap-2">
+                <Input
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Type your message... (You can share Zoom links, WhatsApp contacts, etc.)"
+                  className="flex-1"
+                />
+                <Button onClick={handleSendMessage} size="icon">
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Exchange Modal */}
+        <ExchangeModal
+          isOpen={showExchangeModal}
+          onClose={() => {
+            console.log('🚪 ExchangeModal onClose called');
+            setShowExchangeModal(false);
+          }}
+          onAgree={handleExchangeAgreed}
+          onFinalAgree={handleAgreeToContract}
+          chatId={chatId || ''}
+          otherUserName={otherUser?.display_name || 'User'}
+          currentUserSkills={(() => {
+            const skills = user?.skillsToTeach || [];
+            console.log('🎓 Current user skills being passed to modal:', skills);
+            return skills;
+          })()}
+          exchangeState={exchangeState}
+          contractData={contractData}
+        />
+
+        {/* Finish Exchange Modal */}
+        <FinishExchangeModal
+          isOpen={showFinishModal}
+          onClose={() => setShowFinishModal(false)}
+          onConfirm={handleExchangeFinished}
+          exchange={contractData as Exchange}
+          currentUserId={user?.id || ''}
+        />
+
+        {/* Review Modal */}
+        {showReviewModal && otherUser && contractData && (
+          <ReviewModal
+            isOpen={showReviewModal}
+            onClose={() => setShowReviewModal(false)}
+            exchange={{
+              id: chatId || '',
+              status: 'completed',
+              initiatorSkill: contractData.currentUserSkill || '',
+              recipientSkill: contractData.otherUserSkill || '',
+              isMentorship: contractData.currentUserIsMentorship || contractData.otherUserIsMentorship || false,
+              initiatorAgreed: true,
+              recipientAgreed: true,
+              initiatorFinished: true,
+              recipientFinished: true
+            }}
+            otherUser={{
+              id: otherUser.id,
+              name: otherUser.display_name,
+              display_name: otherUser.display_name,
+              profilePicture: otherUser.avatar_url,
+              avatar_url: otherUser.avatar_url
+            }}
+            onReviewSubmitted={handleReviewSubmitted}
+          />
+        )}
+      </div>
+    );
+  } catch (error) {
+    console.error('Error rendering Chat component:', error);
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-2">Something went wrong</h2>
+          <p className="text-muted-foreground mb-4">There was an error loading the chat.</p>
+          <Button onClick={() => window.location.reload()}>Reload Page</Button>
         </div>
       </div>
-
-      {/* Messages */}
-      <div className="container mx-auto max-w-4xl p-4 pb-24">
-        <Card>
-          <CardContent className="p-6">
-            <div className="h-96 overflow-y-auto mb-4">
-              {messages.map(renderMessage)}
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Exchange Action Buttons */}
-            <div className="flex gap-2 mb-4">
-              {canStartExchange && (
-                <Button
-                  onClick={handleStartExchange}
-                  className="gap-2"
-                  variant="default"
-                >
-                  <Play className="h-4 w-4" />
-                  Start Exchange
-                </Button>
-              )}
-              {canFinishExchange && exchangeActive && (
-                <Button
-                  onClick={handleFinishExchange}
-                  className="gap-2"
-                  variant="outline"
-                >
-                  <Square className="h-4 w-4" />
-                  Finish Exchange
-                </Button>
-              )}
-            </div>
-
-            {/* Message Input */}
-            <div className="flex gap-2">
-              <Input
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Type your message... (You can share Zoom links, WhatsApp contacts, etc.)"
-                className="flex-1"
-              />
-              <Button onClick={handleSendMessage} size="icon">
-                <Send className="h-4 w-4" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Exchange Modal */}
-      <ExchangeModal
-        isOpen={showExchangeModal}
-        onClose={() => {
-          console.log('🚪 ExchangeModal onClose called');
-          setShowExchangeModal(false);
-        }}
-        onAgree={handleExchangeAgreed}
-        onFinalAgree={handleAgreeToContract}
-        chatId={chatId || ''}
-        otherUserName={otherUser?.display_name || 'User'}
-        currentUserSkills={(() => {
-          const skills = user?.skillsToTeach || [];
-          console.log('🎓 Current user skills being passed to modal:', skills);
-          return skills;
-        })()}
-        exchangeState={exchangeState}
-        contractData={contractData}
-      />
-
-      {/* Finish Exchange Modal */}
-      <FinishExchangeModal
-        isOpen={showFinishModal}
-        onClose={() => setShowFinishModal(false)}
-        onConfirm={handleExchangeFinished}
-        exchange={contractData as Exchange}
-        currentUserId={user?.id || ''}
-      />
-
-      {/* Review Modal */}
-      {showReviewModal && otherUser && contractData && (
-        <ReviewModal
-          isOpen={showReviewModal}
-          onClose={() => setShowReviewModal(false)}
-          exchange={{
-            id: chatId || '',
-            status: 'completed',
-            initiatorSkill: contractData.currentUserSkill || '',
-            recipientSkill: contractData.otherUserSkill || '',
-            isMentorship: contractData.currentUserIsMentorship || contractData.otherUserIsMentorship || false,
-            initiatorAgreed: true,
-            recipientAgreed: true,
-            initiatorFinished: true,
-            recipientFinished: true
-          }}
-          otherUser={{
-            id: otherUser.id,
-            name: otherUser.display_name,
-            display_name: otherUser.display_name,
-            profilePicture: otherUser.avatar_url,
-            avatar_url: otherUser.avatar_url
-          }}
-          onReviewSubmitted={handleReviewSubmitted}
-        />
-      )}
-    </div>
-  );
-};
+    );
+  }
+});
 
 export default Chat;

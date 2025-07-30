@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { searchService, SearchResponse } from "@/services/searchService";
 import { SearchSuggestionCard, NoResultsMessage } from "@/components/search/SearchSuggestion";
 import { isSearchDisabled } from "@/utils/userValidation";
+import { useOptimizedSearch } from "@/hooks/useOptimizedSearch";
 
 export interface UserProfile {
   id: string;
@@ -39,7 +40,6 @@ const SearchResultsPage = () => {
   const [searchParams] = useSearchParams();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<UserProfile[]>([]);
-  const [searchResponse, setSearchResponse] = useState<SearchResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<SearchFilters>({
     country: "",
@@ -55,6 +55,20 @@ const SearchResultsPage = () => {
   const { user } = useAuth();
 
   const searchQuery = searchParams.get("q") || "";
+
+  // Initialize optimized search hook
+  const {
+    results: searchResults,
+    searchResponse,
+    isLoading: isSearchLoading,
+    setUsers: setSearchUsers,
+    updateSearchTerm,
+    clearCache
+  } = useOptimizedSearch({
+    debounceMs: 300,
+    cacheResults: true,
+    maxCacheSize: 50
+  });
 
   // Handle search suggestions
   const handleSuggestionClick = (suggestedTerm: string) => {
@@ -126,10 +140,13 @@ const SearchResultsPage = () => {
           bio: user.bio,
           avatar: user.profilePicture
         })));
+        
         setUsers(transformedUsers);
+        setSearchUsers(transformedUsers); // Update optimized search hook
       } catch (error) {
         console.error('Error fetching users:', error);
         setUsers([]);
+        setSearchUsers([]);
       } finally {
         setLoading(false);
       }
@@ -138,74 +155,47 @@ const SearchResultsPage = () => {
     fetchUsers();
   }, []);
 
+  // Update search term when URL changes
   useEffect(() => {
-    // Use the new fuzzy search service
-    if (searchQuery && users.length > 0) {
-      console.log('Searching for:', searchQuery);
-      console.log('Available users:', users.length);
-      console.log('Sample user skills:', users.slice(0, 3).map(u => ({ name: u.name, skills: u.skills })));
-      
-      const response = searchService.search(users, searchQuery);
-      console.log('Search response:', response);
-      setSearchResponse(response);
-      
-      // Apply additional filters to the search results
-      let filtered = response.results.map(result => result.user);
+    updateSearchTerm(searchQuery);
+  }, [searchQuery, updateSearchTerm]);
 
-      // Apply filters - Country filter only for premium users
-      if (filters.country && canUseFeature('country_filter')) {
-        filtered = filtered.filter(user => user.country === filters.country);
-      }
+  // Apply filters to search results
+  useEffect(() => {
+    let filtered = searchQuery ? searchResults : users;
 
-      if (filters.skillLevel) {
-        filtered = filtered.filter(user => user.skillLevel === filters.skillLevel);
-      }
-
-      if (filters.rating) {
-        const ratingThreshold = parseFloat(filters.rating);
-        filtered = filtered.filter(user => user.rating >= ratingThreshold);
-      }
-
-      if (filters.gender.length > 0) {
-        filtered = filtered.filter(user => filters.gender.includes(user.gender));
-      }
-
-      // Apply mentor filter only for premium users
-      if (filters.mentorOnly && canUseFeature('mentor_filter')) {
-        filtered = filtered.filter(user => user.willingToTeachWithoutReturn);
-      }
-
-      setFilteredUsers(filtered);
-    } else {
-      // No search query - show all users with filters
-      let filtered = users;
-
-      // Apply filters
-      if (filters.country && canUseFeature('country_filter')) {
-        filtered = filtered.filter(user => user.country === filters.country);
-      }
-
-      if (filters.skillLevel) {
-        filtered = filtered.filter(user => user.skillLevel === filters.skillLevel);
-      }
-
-      if (filters.rating) {
-        const ratingThreshold = parseFloat(filters.rating);
-        filtered = filtered.filter(user => user.rating >= ratingThreshold);
-      }
-
-      if (filters.gender.length > 0) {
-        filtered = filtered.filter(user => filters.gender.includes(user.gender));
-      }
-
-      if (filters.mentorOnly && canUseFeature('mentor_filter')) {
-        filtered = filtered.filter(user => user.willingToTeachWithoutReturn);
-      }
-
-      setFilteredUsers(filtered);
-      setSearchResponse(null);
+    // Apply filters - Country filter only for premium users
+    if (filters.country && canUseFeature('country_filter')) {
+      filtered = filtered.filter(user => user.country === filters.country);
     }
-  }, [searchQuery, filters, users, canUseFeature]);
+
+    if (filters.skillLevel) {
+      filtered = filtered.filter(user => user.skillLevel === filters.skillLevel);
+    }
+
+    if (filters.rating) {
+      const ratingThreshold = parseFloat(filters.rating);
+      filtered = filtered.filter(user => user.rating >= ratingThreshold);
+    }
+
+    if (filters.gender.length > 0) {
+      filtered = filtered.filter(user => filters.gender.includes(user.gender));
+    }
+
+    // Apply mentor filter only for premium users
+    if (filters.mentorOnly && canUseFeature('mentor_filter')) {
+      filtered = filtered.filter(user => user.willingToTeachWithoutReturn);
+    }
+
+    setFilteredUsers(filtered);
+  }, [searchResults, users, searchQuery, filters, canUseFeature]);
+
+  // Clear search cache when filters change (to ensure fresh results)
+  useEffect(() => {
+    if (searchQuery) {
+      clearCache();
+    }
+  }, [filters, clearCache]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -265,24 +255,24 @@ const SearchResultsPage = () => {
                     (filters.mentorOnly ? 1 : 0)
                   }
                 />
-                            <span className="text-sm text-muted-foreground">
-              {filteredUsers.length} results found
-            </span>
+                <span className="text-sm text-muted-foreground">
+                  {filteredUsers.length} results found
+                </span>
               </div>
             </div>
 
             {/* Search Results */}
             <div className="flex-1">
-              {loading ? (
+              {loading || isSearchLoading ? (
                 <div className="text-center py-8">Loading...</div>
               ) : (
-                            <SearchResults 
-              users={filteredUsers} 
-              searchQuery={searchQuery} 
-              isPremium={isPremium}
-              searchResponse={searchResponse}
-              onSuggestionClick={handleSuggestionClick}
-            />
+                <SearchResults 
+                  users={filteredUsers} 
+                  searchQuery={searchQuery} 
+                  isPremium={isPremium}
+                  searchResponse={searchResponse}
+                  onSuggestionClick={handleSuggestionClick}
+                />
               )}
             </div>
           </>

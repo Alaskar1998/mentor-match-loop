@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,14 +8,40 @@ import { toast } from "sonner";
 import heroImage from "@/assets/hero-image.jpg";
 import { POPULAR_SKILLS } from "@/data/skills";
 import { isSearchDisabled } from "@/utils/userValidation";
+import { getPopularSkillsFromDatabase, getCategoryEmoji, DatabaseSkill } from "@/services/skillService";
 
 export const HeroSection = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [popularSkills, setPopularSkills] = useState<DatabaseSkill[]>([]);
+  const [isLoadingSkills, setIsLoadingSkills] = useState(true);
   const navigate = useNavigate();
   const { user } = useAuth();
 
   // Use centralized validation
   const searchDisabled = isSearchDisabled(user?.name);
+
+  // Fetch popular skills from database
+  useEffect(() => {
+    const fetchPopularSkills = async () => {
+      try {
+        setIsLoadingSkills(true);
+        const skills = await getPopularSkillsFromDatabase(20);
+        setPopularSkills(skills);
+      } catch (error) {
+        console.error('Error fetching popular skills:', error);
+        // Fallback to static skills if database fetch fails
+        setPopularSkills(POPULAR_SKILLS.map(skill => ({
+          name: skill.name,
+          count: 1,
+          category: skill.category
+        })));
+      } finally {
+        setIsLoadingSkills(false);
+      }
+    };
+
+    fetchPopularSkills();
+  }, []);
 
   const handleSearch = (skill?: string) => {
     // Prevent search if user is disabled
@@ -86,23 +112,40 @@ export const HeroSection = () => {
 
           {/* Popular Skills */}
           <div className="mb-12">
-            <p className="text-white/80 mb-4 text-lg">Popular skills:</p>
+            <p className="text-white/80 mb-4 text-lg">
+              {isLoadingSkills ? "Loading popular skills..." : "Popular skills:"}
+            </p>
             <div className="flex flex-wrap justify-center gap-3">
-              {POPULAR_SKILLS.map((skill) => (
-                <button
-                  key={skill.name}
-                  onClick={() => !searchDisabled && handleSearch(skill.name)}
-                  disabled={searchDisabled}
-                  className={`bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full transition-all duration-300 border border-white/20 ${
-                    searchDisabled 
-                      ? 'opacity-50 cursor-not-allowed' 
-                      : 'hover:bg-white/30 hover:scale-105'
-                  }`}
-                >
-                  <span className="mr-2">{skill.emoji}</span>
-                  {skill.name}
-                </button>
-              ))}
+              {isLoadingSkills ? (
+                // Loading skeleton
+                Array.from({ length: 8 }).map((_, index) => (
+                  <div
+                    key={index}
+                    className="bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full animate-pulse"
+                  >
+                    <span className="mr-2">📝</span>
+                    Loading...
+                  </div>
+                ))
+              ) : (
+                popularSkills.map((skill) => (
+                  <button
+                    key={skill.name}
+                    onClick={() => !searchDisabled && handleSearch(skill.name)}
+                    disabled={searchDisabled}
+                    className={`bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full transition-all duration-300 border border-white/20 ${
+                      searchDisabled 
+                        ? 'opacity-50 cursor-not-allowed' 
+                        : 'hover:bg-white/30 hover:scale-105'
+                    }`}
+                    title={`${skill.count} people teach this skill`}
+                  >
+                    <span className="mr-2">{getCategoryEmoji(skill.category || 'Other')}</span>
+                    {skill.name}
+                    <span className="ml-2 text-xs opacity-75">({skill.count})</span>
+                  </button>
+                ))
+              )}
             </div>
           </div>
 

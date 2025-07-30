@@ -19,6 +19,12 @@ export interface SkillDatabaseRecord {
   updated_at: string;
 }
 
+export interface DatabaseSkill {
+  name: string;
+  count: number;
+  category?: string;
+}
+
 /**
  * Skill Service - Handles all skill-related operations
  * 
@@ -246,3 +252,268 @@ class SkillService {
 }
 
 export const skillService = new SkillService(); 
+
+export const getPopularSkillsFromDatabase = async (limit: number = 20): Promise<DatabaseSkill[]> => {
+  try {
+    console.log('Fetching popular skills from database...');
+    
+    // Query to get skills that actually exist in user profiles
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('skills_to_teach')
+      .not('skills_to_teach', 'is', null)
+      .neq('skills_to_teach', '[]');
+
+    if (error) {
+      console.error('Error fetching skills from database:', error);
+      return getDefaultPopularSkills(limit);
+    }
+
+    console.log('Raw profiles data:', data);
+    console.log('Number of profiles with skills:', data?.length || 0);
+
+    // Count occurrences of each skill
+    const skillCounts: { [key: string]: number } = {};
+    
+    data?.forEach(profile => {
+      console.log('Profile skills_to_teach:', profile.skills_to_teach);
+      
+      if (profile.skills_to_teach) {
+        // Handle jsonb format - could be array of strings or array of objects
+        let skills: string[] = [];
+        
+        if (Array.isArray(profile.skills_to_teach)) {
+          // If it's an array, extract skill names
+          skills = profile.skills_to_teach.map((skill: any) => {
+            if (typeof skill === 'string') {
+              return skill;
+            } else if (skill && typeof skill === 'object' && skill.name) {
+              return skill.name;
+            } else if (skill && typeof skill === 'object' && skill.skill) {
+              return skill.skill;
+            }
+            return null;
+          }).filter(Boolean);
+        }
+        
+        // Count each skill
+        skills.forEach((skillName: string) => {
+          if (skillName && typeof skillName === 'string') {
+            const normalizedSkillName = skillName.trim();
+            if (normalizedSkillName) {
+              skillCounts[normalizedSkillName] = (skillCounts[normalizedSkillName] || 0) + 1;
+            }
+          }
+        });
+      }
+    });
+
+    console.log('Skill counts:', skillCounts);
+
+    // Convert to array and sort by count (most popular first)
+    const popularSkills = Object.entries(skillCounts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, limit);
+
+    console.log('Popular skills found:', popularSkills);
+
+    // If no skills found in database, return default skills
+    if (popularSkills.length === 0) {
+      console.log('No skills found in database, using default skills');
+      return getDefaultPopularSkills(limit);
+    }
+
+    // Add category information for each skill
+    const skillsWithCategory = popularSkills.map(skill => ({
+      ...skill,
+      category: findCategoryForSkill(skill.name)
+    }));
+
+    console.log('Final skills with categories:', skillsWithCategory);
+    return skillsWithCategory;
+  } catch (error) {
+    console.error('Error in getPopularSkillsFromDatabase:', error);
+    return getDefaultPopularSkills(limit);
+  }
+};
+
+// Helper function to get default popular skills when database is empty
+const getDefaultPopularSkills = (limit: number = 20): DatabaseSkill[] => {
+  const defaultSkills = [
+    { name: "JavaScript", count: 15, category: "Programming & Tech" },
+    { name: "Python", count: 12, category: "Programming & Tech" },
+    { name: "React", count: 10, category: "Programming & Tech" },
+    { name: "Cooking", count: 8, category: "Culinary Arts" },
+    { name: "Guitar", count: 7, category: "Music & Arts" },
+    { name: "Spanish", count: 6, category: "Languages" },
+    { name: "Photography", count: 5, category: "Music & Arts" },
+    { name: "Yoga", count: 4, category: "Health & Wellness" },
+    { name: "Marketing", count: 4, category: "Business & Professional" },
+    { name: "Drawing", count: 3, category: "Music & Arts" },
+    { name: "Fitness", count: 3, category: "Health & Wellness" },
+    { name: "Writing", count: 3, category: "Writing & Communication" },
+    { name: "Piano", count: 2, category: "Music & Arts" },
+    { name: "French", count: 2, category: "Languages" },
+    { name: "Baking", count: 2, category: "Culinary Arts" },
+    { name: "Web Development", count: 2, category: "Programming & Tech" },
+    { name: "Public Speaking", count: 2, category: "Business & Professional" },
+    { name: "Swimming", count: 1, category: "Health & Wellness" },
+    { name: "Singing", count: 1, category: "Music & Arts" },
+    { name: "Data Analysis", count: 1, category: "Science & Education" }
+  ];
+
+  return defaultSkills.slice(0, limit);
+};
+
+// Helper function to find category for a skill (import from skills.ts)
+const findCategoryForSkill = (skillName: string): string => {
+  const normalizedSkillName = skillName.toLowerCase().trim();
+  
+  const SKILL_CATEGORIES = [
+    {
+      category: "Business & Professional",
+      skills: [
+        "Marketing", "Public Speaking", "Entrepreneurship", "Finance", "Accounting", 
+        "Project Management", "Sales", "Negotiation", "Leadership", "Business Strategy",
+        "Digital Marketing", "SEO", "Content Marketing", "Social Media Marketing",
+        "Financial Planning", "Investment", "Stock Trading", "Real Estate", "Consulting",
+        "Human Resources", "Operations Management", "Supply Chain Management"
+      ]
+    },
+    {
+      category: "Crafts & DIY",
+      skills: [
+        "Knitting", "Sewing", "Woodworking", "Pottery", "Origami", "Jewelry Making", 
+        "Scrapbooking", "Candle Making", "Soap Making", "Gardening", "Beekeeping",
+        "Carpentry", "Metalworking", "Leather Crafting", "Glass Blowing", "Weaving",
+        "Embroidery", "Cross-stitch", "Quilting", "Macrame", "Paper Crafting"
+      ]
+    },
+    {
+      category: "Culinary Arts",
+      skills: [
+        "Baking", "Cooking", "Nutrition", "Vegan Cooking", "Grilling", "Pastry", 
+        "Meal Prep", "Food Photography", "Wine Tasting", "Bartending", "Coffee Making",
+        "Sushi Making", "Bread Making", "Cake Decorating", "Chocolate Making",
+        "Fermentation", "Canning", "Food Safety", "Menu Planning", "Catering"
+      ]
+    },
+    {
+      category: "Health & Wellness",
+      skills: [
+        "Yoga", "Fitness", "Swimming", "Meditation", "Pilates", "Running", "Cycling", 
+        "Personal Training", "Nutrition", "Weight Training", "Cardio", "Stretching",
+        "Mindfulness", "Stress Management", "Mental Health", "First Aid", "CPR",
+        "Physical Therapy", "Massage Therapy", "Acupuncture", "Herbal Medicine"
+      ]
+    },
+    {
+      category: "Languages",
+      skills: [
+        "English", "Spanish", "French", "German", "Mandarin", "Arabic", "Russian", 
+        "Japanese", "Korean", "Italian", "Portuguese", "Hindi", "Turkish", "Dutch", 
+        "Swedish", "Norwegian", "Danish", "Finnish", "Polish", "Czech", "Hungarian",
+        "Greek", "Hebrew", "Thai", "Vietnamese", "Indonesian", "Malay", "Filipino"
+      ]
+    },
+    {
+      category: "Life Skills",
+      skills: [
+        "Time Management", "Productivity", "Mindfulness", "Parenting", "Self Defense", 
+        "Financial Planning", "Budgeting", "Tax Preparation", "Home Maintenance",
+        "Car Maintenance", "Cooking Basics", "Cleaning", "Organization", "Planning",
+        "Communication", "Conflict Resolution", "Networking", "Public Speaking",
+        "Writing", "Reading", "Critical Thinking", "Problem Solving"
+      ]
+    },
+    {
+      category: "Music & Arts",
+      skills: [
+        "Guitar", "Piano", "Singing", "Drums", "Violin", "Bass", "Saxophone", 
+        "Trumpet", "Flute", "Clarinet", "Cello", "Ukulele", "Harmonica", "DJing", 
+        "Music Production", "Composition", "Music Theory", "Drawing", "Painting", 
+        "Graphic Design", "Photography", "Illustration", "Animation", "3D Modeling", 
+        "Digital Art", "Sculpture", "Fashion Design", "Interior Design"
+      ]
+    },
+    {
+      category: "Programming & Tech",
+      skills: [
+        "Python", "JavaScript", "Java", "C++", "C#", "TypeScript", "Go", "Rust", 
+        "PHP", "Ruby", "Swift", "Kotlin", "SQL", "HTML", "CSS", "React", "Vue.js", 
+        "Angular", "Node.js", "Django", "Flask", "Spring", "Laravel", "Express.js",
+        "Web Development", "Mobile Development", "DevOps", "Machine Learning", 
+        "Artificial Intelligence", "Data Science", "Cloud Computing", "Cybersecurity",
+        "Blockchain", "UI/UX Design", "Game Development", "IoT", "AR/VR"
+      ]
+    },
+    {
+      category: "Science & Education",
+      skills: [
+        "Mathematics", "Physics", "Chemistry", "Biology", "Statistics", "Data Analysis",
+        "Robotics", "Astronomy", "Geology", "Psychology", "Sociology", "History",
+        "Geography", "Economics", "Philosophy", "Literature", "Linguistics",
+        "Computer Science", "Engineering", "Architecture", "Medicine", "Nursing"
+      ]
+    },
+    {
+      category: "Sports & Recreation",
+      skills: [
+        "Soccer", "Basketball", "Tennis", "Martial Arts", "Golf", "Baseball", 
+        "Table Tennis", "Volleyball", "Chess", "Swimming", "Rock Climbing", "Hiking",
+        "Skiing", "Snowboarding", "Surfing", "Skateboarding", "Dancing", "Gymnastics",
+        "Boxing", "Wrestling", "Archery", "Fishing", "Hunting", "Camping"
+      ]
+    },
+    {
+      category: "Travel & Culture",
+      skills: [
+        "Travel Planning", "Cultural Awareness", "History", "Geography", "World Cuisine",
+        "Photography", "Videography", "Language Learning", "Cultural Exchange",
+        "Tourism", "Hospitality", "Event Planning", "International Relations",
+        "Cultural Studies", "Anthropology", "Archaeology", "Museum Studies"
+      ]
+    },
+    {
+      category: "Writing & Communication",
+      skills: [
+        "Creative Writing", "Copywriting", "Blogging", "Editing", "Storytelling", 
+        "Resume Writing", "Speech Writing", "Technical Writing", "Journalism",
+        "Content Creation", "Social Media", "Email Writing", "Grant Writing",
+        "Translation", "Interpretation", "Public Relations", "Advertising"
+      ]
+    }
+  ];
+
+  for (const category of SKILL_CATEGORIES) {
+    const foundSkill = category.skills.find(skill => 
+      skill.toLowerCase() === normalizedSkillName
+    );
+    if (foundSkill) {
+      return category.category;
+    }
+  }
+  return 'Other';
+};
+
+// Helper function to get emoji for category
+export const getCategoryEmoji = (category: string): string => {
+  const categoryEmojis: { [key: string]: string } = {
+    "Business & Professional": "💼",
+    "Crafts & DIY": "🛠️",
+    "Culinary Arts": "🍳",
+    "Health & Wellness": "🧘",
+    "Languages": "🗣️",
+    "Life Skills": "🎯",
+    "Music & Arts": "🎵",
+    "Programming & Tech": "💻",
+    "Science & Education": "🔬",
+    "Sports & Recreation": "⚽",
+    "Travel & Culture": "✈️",
+    "Writing & Communication": "✍️",
+    "Other": "📝"
+  };
+  
+  return categoryEmojis[category] || "📝";
+}; 

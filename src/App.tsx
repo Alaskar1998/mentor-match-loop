@@ -16,8 +16,8 @@ import Help from "./pages/Help";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 import SearchResults from "./pages/SearchResults";
-import { CreateRequest } from "./pages/CreateRequest";
-import { RequestsFeed } from "./pages/RequestsFeed";
+import CreateRequest from "./pages/CreateRequest";
+import RequestsFeed from "./pages/RequestsFeed";
 import Chat from "./pages/Chat";
 import Profile from "./pages/Profile";
 import Messages from "./pages/Messages";
@@ -44,7 +44,8 @@ const App = () => (
     <TooltipProvider>
       <AuthProvider>
         <NotificationProvider>
-          <GamificationProvider>
+          {/* Temporarily disabled for performance optimization */}
+          {/* <GamificationProvider> */}
             <MonetizationProvider>
         <Toaster />
         <Sonner />
@@ -80,7 +81,7 @@ const App = () => (
           </div>
         </BrowserRouter>
         </MonetizationProvider>
-        </GamificationProvider>
+        {/* </GamificationProvider> */}
         </NotificationProvider>
       </AuthProvider>
     </TooltipProvider>

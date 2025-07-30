@@ -1,3 +1,4 @@
+import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ProfileCard } from "./ProfileCard";
@@ -13,7 +14,7 @@ interface SearchResultsProps {
   onSuggestionClick?: (suggestedTerm: string) => void;
 }
 
-export const SearchResults = ({ 
+export const SearchResults = React.memo(({ 
   users, 
   searchQuery, 
   isPremium, 
@@ -99,7 +100,6 @@ export const SearchResults = ({
       </div>
       
 
-
       {/* Load More (for pagination) */}
       {users.length >= 6 && (
         <div className="text-center pt-8">
@@ -110,4 +110,4 @@ export const SearchResults = ({
       )}
     </div>
   );
-};
+});
