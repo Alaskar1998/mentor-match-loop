@@ -86,12 +86,13 @@ export default function Messages() {
             .order("created_at", { ascending: false })
             .limit(1);
 
-          // Get unread count (messages not from current user)
+          // Get unread count (messages not from current user AND not read)
           const { count: unreadCount } = await supabase
             .from("chat_messages")
             .select("*", { count: "exact", head: true })
             .eq("chat_id", chat.id)
-            .neq("sender_id", user?.id);
+            .neq("sender_id", user?.id)
+            .eq("is_read", false);
 
           // Get recipient profile
           const { data: profileData } = await supabase
@@ -122,7 +123,27 @@ export default function Messages() {
     }
   };
 
-  const handleChatClick = (chatId: string) => {
+  const handleChatClick = async (chatId: string) => {
+    try {
+      // Mark all messages in this chat as read for the current user
+      const { error } = await supabase
+        .from("chat_messages")
+        .update({ is_read: true })
+        .eq("chat_id", chatId)
+        .neq("sender_id", user?.id);
+
+      if (error) {
+        console.error("Error marking messages as read:", error);
+      } else {
+        console.log("✅ Messages marked as read for chat:", chatId);
+        // Refresh the chats list to update unread counts
+        await fetchChats();
+      }
+    } catch (error) {
+      console.error("Error in handleChatClick:", error);
+    }
+    
+    // Navigate to the chat
     navigate(`/chat/${chatId}`);
   };
 

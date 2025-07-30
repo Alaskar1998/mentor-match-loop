@@ -25,7 +25,6 @@ import { Badge } from '../components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { ExchangeReviewModal } from '../components/review/ExchangeReviewModal';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { ReviewModal } from '../components/review/ReviewModal';
 import { ResponseModal } from '../components/requests/ResponseModal';
 import { useOptimizedPolling } from '../hooks/useOptimizedPolling';
 
@@ -43,12 +42,17 @@ interface Exchange {
   id: string;
   type: string;
   status: string;
-  otherUser: { name: string; avatar: string | null };
+  otherUser: { 
+    id: string;
+    name: string; 
+    avatar: string | null 
+  };
   skill: string;
   date: string;
   location: string;
   description: string;
   rating?: number;
+  hasReviewed?: boolean;
 }
 
 // Interface for learning response data
@@ -197,26 +201,34 @@ const MyExchanges = () => {
 
   const fetchActiveExchanges = async () => {
     try {
-      // First fetch exchange contracts without joins
+      console.log('🔄 Fetching active exchanges for user:', user?.id);
+      
+      // Fetch active exchanges using our contract structure
       const { data: contractsData, error: contractsError } = await supabase
         .from('exchange_contracts')
         .select(`
           id,
-          contract_data,
-          status,
+          chat_id,
+          user1_id,
+          user2_id,
+          user1_skill,
+          user2_skill,
+          user1_agreed,
+          user2_agreed,
           created_at,
-          updated_at,
-          student_id,
-          mentor_id
+          updated_at
         `)
-        .or(`student_id.eq.${user?.id},mentor_id.eq.${user?.id}`)
-        .in('status', ['active', 'pending', 'in_progress']);
+        .or(`user1_id.eq.${user?.id},user2_id.eq.${user?.id}`)
+        .eq('user1_agreed', true)
+        .eq('user2_agreed', true);
 
       if (contractsError) {
         console.error('Error fetching active exchanges:', contractsError);
         setExchanges(prev => ({ ...prev, active: [] }));
         return;
       }
+
+      console.log('📋 Found contracts:', contractsData?.length || 0);
 
       if (!contractsData || contractsData.length === 0) {
         setExchanges(prev => ({ ...prev, active: [] }));
@@ -225,8 +237,8 @@ const MyExchanges = () => {
 
       // Get unique user IDs to fetch profiles separately
       const userIds = [...new Set([
-        ...contractsData.map(c => c.student_id),
-        ...contractsData.map(c => c.mentor_id)
+        ...contractsData.map(c => c.user1_id),
+        ...contractsData.map(c => c.user2_id)
       ])];
 
       // Fetch profiles separately
@@ -246,28 +258,52 @@ const MyExchanges = () => {
         profilesMap.set(profile.id, profile);
       });
 
-      const activeExchanges: Exchange[] = contractsData.map(exchange => {
-        const contractData = exchange.contract_data || {};
-        const isStudent = exchange.student_id === user?.id;
-        const otherUserId = isStudent ? exchange.mentor_id : exchange.student_id;
+      const activeExchanges: Exchange[] = contractsData.map(contract => {
+        const isUser1 = contract.user1_id === user?.id;
+        const otherUserId = isUser1 ? contract.user2_id : contract.user1_id;
         const otherUser = profilesMap.get(otherUserId);
         
+        // Determine what the current user is teaching
+        const currentUserSkill = isUser1 ? contract.user1_skill : contract.user2_skill;
+        const otherUserSkill = isUser1 ? contract.user2_skill : contract.user1_skill;
+        
+        const teachingSkill = currentUserSkill;
+        const learningSkill = otherUserSkill;
+        
+        // Handle mentee case (when one user selected "Nothing")
+        const isMentee = currentUserSkill === "Nothing";
+        const otherIsMentee = otherUserSkill === "Nothing";
+        
+        let skillDisplay, description;
+        if (isMentee) {
+          skillDisplay = `Mentee ↔ ${learningSkill}`;
+          description = `You are mentee | You learn: ${learningSkill}`;
+        } else if (otherIsMentee) {
+          skillDisplay = `${teachingSkill} ↔ Mentee`;
+          description = `You teach: ${teachingSkill} | You are mentee`;
+        } else {
+          skillDisplay = `${teachingSkill} ↔ ${learningSkill}`;
+          description = `You teach: ${teachingSkill} | You learn: ${learningSkill}`;
+        }
+        
         return {
-          id: exchange.id,
-          type: isStudent ? 'learning' : 'teaching',
-          status: exchange.status,
+          id: contract.chat_id, // Use chat_id for navigation
+          type: 'exchange', // Both users are teaching and learning
+          status: 'active',
           otherUser: {
+            id: otherUserId,
             name: otherUser?.display_name || 'Unknown User',
             avatar: otherUser?.avatar_url || null
           },
-          skill: contractData.student_skill || contractData.mentor_skill || 'Unknown Skill',
-          date: exchange.created_at,
+          skill: skillDisplay,
+          date: contract.created_at,
           location: 'Online',
-          description: contractData.description || 'No description available',
+          description: description,
           rating: undefined
         };
       });
 
+      console.log('✅ Active exchanges processed:', activeExchanges.length);
       setExchanges(prev => ({ ...prev, active: activeExchanges }));
     } catch (error) {
       console.error('Error in fetchActiveExchanges:', error);
@@ -277,26 +313,34 @@ const MyExchanges = () => {
 
   const fetchCompletedExchanges = async () => {
     try {
-      // First fetch exchange contracts without joins
+      console.log('🔄 Fetching completed exchanges for user:', user?.id);
+      
+      // Fetch completed exchanges using our contract structure
       const { data: contractsData, error: contractsError } = await supabase
         .from('exchange_contracts')
         .select(`
           id,
-          contract_data,
-          status,
+          chat_id,
+          user1_id,
+          user2_id,
+          user1_skill,
+          user2_skill,
+          user1_finished,
+          user2_finished,
+          finished_at,
           created_at,
-          updated_at,
-          student_id,
-          mentor_id
+          updated_at
         `)
-        .or(`student_id.eq.${user?.id},mentor_id.eq.${user?.id}`)
-        .eq('status', 'completed');
+        .or(`user1_id.eq.${user?.id},user2_id.eq.${user?.id}`)
+        .not('finished_at', 'is', null);
 
       if (contractsError) {
         console.error('Error fetching completed exchanges:', contractsError);
         setExchanges(prev => ({ ...prev, completed: [] }));
         return;
       }
+
+      console.log('📋 Found completed contracts:', contractsData?.length || 0);
 
       if (!contractsData || contractsData.length === 0) {
         setExchanges(prev => ({ ...prev, completed: [] }));
@@ -305,8 +349,8 @@ const MyExchanges = () => {
 
       // Get unique user IDs to fetch profiles separately
       const userIds = [...new Set([
-        ...contractsData.map(c => c.student_id),
-        ...contractsData.map(c => c.mentor_id)
+        ...contractsData.map(c => c.user1_id),
+        ...contractsData.map(c => c.user2_id)
       ])];
 
       // Fetch profiles separately
@@ -326,29 +370,59 @@ const MyExchanges = () => {
         profilesMap.set(profile.id, profile);
       });
 
-      const completedExchanges: Exchange[] = contractsData.map(exchange => {
-        const contractData = exchange.contract_data || {};
-        const isStudent = exchange.student_id === user?.id;
-        const otherUserId = isStudent ? exchange.mentor_id : exchange.student_id;
+      // Check which exchanges the current user has already reviewed
+      const chatIds = contractsData.map(c => c.chat_id);
+      const { data: existingReviews, error: reviewsError } = await supabase
+        .from('reviews')
+        .select('chat_id')
+        .eq('reviewer_id', user?.id)
+        .in('chat_id', chatIds);
+
+      if (reviewsError) {
+        console.error('Error fetching existing reviews:', reviewsError);
+      }
+
+      // Create a set of chat IDs that the current user has already reviewed
+      const reviewedChatIds = new Set(existingReviews?.map(r => r.chat_id) || []);
+
+      const completedExchanges: Exchange[] = contractsData.map(contract => {
+        const isUser1 = contract.user1_id === user?.id;
+        const otherUserId = isUser1 ? contract.user2_id : contract.user1_id;
         const otherUser = profilesMap.get(otherUserId);
         
+        // Determine what the current user was teaching
+        const currentUserSkill = isUser1 ? contract.user1_skill : contract.user2_skill;
+        const otherUserSkill = isUser1 ? contract.user2_skill : contract.user1_skill;
+        
+        const teachingSkill = currentUserSkill;
+        const learningSkill = otherUserSkill;
+        
         return {
-          id: exchange.id,
-          type: isStudent ? 'learning' : 'teaching',
-          status: exchange.status,
+          id: contract.chat_id, // Use chat_id for navigation
+          type: 'exchange', // Both users were teaching and learning
+          status: 'completed',
           otherUser: {
+            id: otherUserId,
             name: otherUser?.display_name || 'Unknown User',
             avatar: otherUser?.avatar_url || null
           },
-          skill: contractData.student_skill || contractData.mentor_skill || 'Unknown Skill',
-          date: exchange.updated_at,
+          skill: `${teachingSkill} ↔ ${learningSkill}`,
+          date: contract.finished_at || contract.updated_at,
           location: 'Online',
-          description: contractData.description || 'No description available',
-          rating: undefined
+          description: `You taught: ${teachingSkill} | You learned: ${learningSkill}`,
+          rating: undefined,
+          hasReviewed: reviewedChatIds.has(contract.chat_id)
         };
       });
 
-      setExchanges(prev => ({ ...prev, completed: completedExchanges }));
+      console.log('✅ Completed exchanges processed:', completedExchanges.length);
+      
+      // Sort completed exchanges from newest to oldest
+      const sortedCompletedExchanges = completedExchanges.sort((a, b) => 
+        new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
+      
+      setExchanges(prev => ({ ...prev, completed: sortedCompletedExchanges }));
     } catch (error) {
       console.error('Error in fetchCompletedExchanges:', error);
       setExchanges(prev => ({ ...prev, completed: [] }));
@@ -456,6 +530,7 @@ const MyExchanges = () => {
             type: 'invitation',
             status: invite.status,
             otherUser: {
+              id: invite.recipient_id,
               name: otherUser?.display_name || 'Unknown User',
               avatar: otherUser?.avatar_url || null
             },
@@ -542,6 +617,7 @@ const MyExchanges = () => {
             type: 'invitation',
             status: invite.status,
             otherUser: {
+              id: invite.sender_id,
               name: otherUser?.display_name || 'Unknown User',
               avatar: otherUser?.avatar_url || null
             },
@@ -618,6 +694,14 @@ const MyExchanges = () => {
   };
 
   const handleOpenReview = (exchange: Exchange) => {
+    if (exchange.hasReviewed) {
+      toast({
+        title: "Already Reviewed",
+        description: "You have already reviewed this exchange.",
+        variant: "destructive"
+      });
+      return;
+    }
     setSelectedExchange(exchange);
     setReviewModalOpen(true);
   };
@@ -676,14 +760,7 @@ const MyExchanges = () => {
         console.log('Using existing chat:', chatData.id);
       } else {
         // Create a new chat between the users
-        console.log('Creating new chat with data:', {
-          user1_id: invite.sender_id,
-          user2_id: invite.recipient_id,
-          skill: invite.skill,
-          status: 'active',
-          exchange_state: 'pending_start'
-        });
-        
+        console.log('💬 Creating new chat for accepted invitation...');
         const { data: newChatData, error: chatError } = await supabase
           .from('chats')
           .insert({
@@ -702,6 +779,7 @@ const MyExchanges = () => {
           return;
         }
         chatData = newChatData;
+        console.log('✅ Chat created successfully:', chatData.id);
       }
 
       // Get current user's profile for notification
@@ -715,6 +793,7 @@ const MyExchanges = () => {
 
       // Create notification for the sender about the acceptance
       try {
+        console.log('📧 Creating acceptance notification with chat ID:', chatData.id);
         await notificationService.createNotification({
           userId: invite.sender_id,
           title: 'Invitation Accepted!',
@@ -729,6 +808,7 @@ const MyExchanges = () => {
             skill: invite.skill
           }
         });
+        console.log('✅ Acceptance notification created successfully');
       } catch (notificationError) {
         console.error('Failed to create acceptance notification:', notificationError);
       }
@@ -748,18 +828,28 @@ const MyExchanges = () => {
 
   const handleSendMessage = async (invite: Invitation) => {
     try {
+      console.log('🔍 Looking for existing chat for invitation:', invite.id);
+      
       // Check if a chat already exists between these users for this skill
-      const { data: existingChat } = await supabase
+      const { data: existingChat, error: chatQueryError } = await supabase
         .from('chats')
         .select('id')
         .or(`and(user1_id.eq.${invite.sender_id},user2_id.eq.${invite.recipient_id}),and(user1_id.eq.${invite.recipient_id},user2_id.eq.${invite.sender_id})`)
         .eq('skill', invite.skill)
-        .single();
+        .maybeSingle();
+
+      if (chatQueryError) {
+        console.error('Error querying for existing chat:', chatQueryError);
+        toast.error('Failed to find chat');
+        return;
+      }
 
       if (existingChat) {
+        console.log('✅ Found existing chat:', existingChat.id);
         // Navigate to existing chat
         navigate(`/chat/${existingChat.id}`);
       } else {
+        console.log('❌ No existing chat found, creating new one...');
         // Create a new chat and navigate to it
         const { data: newChatData, error: chatError } = await supabase
           .from('chats')
@@ -779,6 +869,7 @@ const MyExchanges = () => {
           return;
         }
 
+        console.log('✅ Created new chat:', newChatData.id);
         navigate(`/chat/${newChatData.id}`);
       }
     } catch (error) {
@@ -1108,14 +1199,21 @@ const MyExchanges = () => {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handleOpenReview(exchange)}
-                          >
-                            <Star className="w-4 h-4 mr-1" />
-                            Review
-                          </Button>
+                          {exchange.hasReviewed ? (
+                            <Badge variant="secondary" className="text-xs">
+                              <Star className="w-3 h-3 mr-1" />
+                              Reviewed
+                            </Badge>
+                          ) : (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleOpenReview(exchange)}
+                            >
+                              <Star className="w-4 h-4 mr-1" />
+                              Review
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </CardContent>

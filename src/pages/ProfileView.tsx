@@ -529,7 +529,7 @@ export default function ProfileView() {
           recipientName={user.display_name || 'User'}
           userType={currentUser.userType}
           remainingInvites={currentUser.remainingInvites}
-          appCoins={currentUser.appCoins}
+          isPremium={currentUser.isPremium || false}
           skillsToTeach={Array.isArray(user.skills_to_teach) ? user.skills_to_teach.map((s: any) => typeof s === 'string' ? s : s.name || s.skill || s.title || JSON.stringify(s)) : []}
         />
       )}

@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ExchangeModal } from '@/components/chat/ExchangeModal';
 import { FinishExchangeModal } from '@/components/chat/FinishExchangeModal';
-import { ReviewModal } from '@/components/review/ReviewModal';
+import { ExchangeReviewModal } from '@/components/review/ExchangeReviewModal';
 import { toast } from 'sonner';
 import { 
   Send, 
@@ -36,7 +36,6 @@ interface Exchange {
   status: 'pending' | 'active' | 'completed';
   initiatorSkill: string;
   recipientSkill?: string;
-  isMentorship: boolean;
   initiatorAgreed: boolean;
   recipientAgreed: boolean;
   initiatorFinished: boolean;
@@ -73,7 +72,14 @@ const Chat = React.memo(() => {
   const [chatData, setChatData] = useState<ChatData | null>(null);
   const [otherUser, setOtherUser] = useState<OtherUser | null>(null);
   const [exchangeState, setExchangeState] = useState<string>('pending_start');
-  const [contractData, setContractData] = useState<any>(null);
+  const [contractData, setContractData] = useState<{
+    currentUserSkill?: string;
+    otherUserSkill?: string;
+    currentUserAgreed?: boolean;
+    otherUserAgreed?: boolean;
+    currentUserFinished?: boolean;
+    otherUserFinished?: boolean;
+  } | null>(null);
   const [showExchangeModal, setShowExchangeModal] = useState(false);
   const [showFinishModal, setShowFinishModal] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -137,16 +143,14 @@ const Chat = React.memo(() => {
   const canStartExchange = useMemo(() => {
     return exchangeState === 'pending_start' || 
       (exchangeState === 'draft_contract' && 
-       (!contractData?.currentUserSkill && !contractData?.currentUserIsMentorship));
-  }, [exchangeState, contractData?.currentUserSkill, contractData?.currentUserIsMentorship]);
+       !contractData?.currentUserSkill);
+  }, [exchangeState, contractData?.currentUserSkill]);
 
   const canFinishExchange = useMemo(() => {
-    if (exchangeState !== 'active_exchange' || !chatData?.updated_at) return false;
-    const exchangeStartTime = new Date(chatData.updated_at).getTime();
-    const currentTime = new Date().getTime();
-    const thirtyMinutes = 30 * 60 * 1000;
-    return (currentTime - exchangeStartTime) >= thirtyMinutes;
-  }, [exchangeState, chatData?.updated_at]);
+    if (exchangeState !== 'active_exchange') return false;
+    // Show finish button if exchange is active and user hasn't finished yet
+    return !contractData?.currentUserFinished;
+  }, [exchangeState, contractData?.currentUserFinished]);
 
   const exchangeActive = useMemo(() => {
     return exchangeState === 'active_exchange';
@@ -268,6 +272,25 @@ const Chat = React.memo(() => {
           // Only update if messages actually changed
           setMessages(prevMessages => {
             if (JSON.stringify(prevMessages) !== JSON.stringify(transformedMessages)) {
+              // Mark new messages as read when they come in
+              const newMessageIds = transformedMessages
+                .filter(msg => msg.senderId !== user?.id)
+                .map(msg => msg.id);
+              
+              if (newMessageIds.length > 0) {
+                // Mark messages as read in the background
+                supabase
+                  .from('chat_messages')
+                  .update({ is_read: true })
+                  .in('id', newMessageIds)
+                  .then(() => {
+                    console.log('✅ New messages marked as read during polling');
+                  })
+                  .catch(error => {
+                    console.error('Error marking new messages as read:', error);
+                  });
+              }
+              
               return transformedMessages;
             }
             return prevMessages;
@@ -323,22 +346,49 @@ const Chat = React.memo(() => {
           const contractData = {
             currentUserSkill: isUser1 ? updatedContract.user1_skill : updatedContract.user2_skill,
             otherUserSkill: isUser1 ? updatedContract.user2_skill : updatedContract.user1_skill,
-            currentUserIsMentorship: isUser1 ? updatedContract.user1_is_mentorship : updatedContract.user2_is_mentorship,
-            otherUserIsMentorship: isUser1 ? updatedContract.user2_is_mentorship : updatedContract.user1_is_mentorship,
             currentUserAgreed: isUser1 ? updatedContract.user1_agreed : updatedContract.user2_agreed,
             otherUserAgreed: isUser1 ? updatedContract.user2_agreed : updatedContract.user1_agreed,
+            currentUserFinished: isUser1 ? updatedContract.user1_finished : updatedContract.user2_finished,
+            otherUserFinished: isUser1 ? updatedContract.user2_finished : updatedContract.user1_finished,
           };
           setContractData(contractData);
 
           // Auto-open modal for second user when contract is created
           if (updatedContract && !showExchangeModal && exchangeState === 'draft_contract') {
-            const hasUserSelected = contractData.currentUserSkill || contractData.currentUserIsMentorship;
-            const hasOtherUserSelected = contractData.otherUserSkill || contractData.otherUserIsMentorship;
+            const hasUserSelected = contractData.currentUserSkill;
+            const hasOtherUserSelected = contractData.otherUserSkill;
             
             // If other user has selected but current user hasn't, auto-open modal
             if (hasOtherUserSelected && !hasUserSelected) {
               console.log('🎯 Auto-opening modal - other user has selected their skill');
               setShowExchangeModal(true);
+            }
+          }
+
+          // Auto-open modal for contract agreement when both users have selected skills
+          if (updatedContract && !showExchangeModal && exchangeState === 'contract_proposed') {
+            const hasUserSelected = contractData.currentUserSkill;
+            const hasOtherUserSelected = contractData.otherUserSkill;
+            const userAgreed = contractData.currentUserAgreed;
+            
+            // If both users have selected skills but current user hasn't agreed yet, auto-open modal
+            if (hasUserSelected && hasOtherUserSelected && !userAgreed) {
+              console.log('🎯 Auto-opening modal - contract ready for agreement');
+              setShowExchangeModal(true);
+            }
+          }
+
+
+
+          // Auto-open finish modal when other user has finished
+          if (updatedContract && !showFinishModal && exchangeState === 'active_exchange') {
+            const userFinished = contractData.currentUserFinished;
+            const otherUserFinished = contractData.otherUserFinished;
+            
+            // If other user has finished but current user hasn't, auto-open finish modal
+            if (otherUserFinished && !userFinished) {
+              console.log('🎯 Auto-opening finish modal - other user has finished');
+              setShowFinishModal(true);
             }
           }
         }
@@ -421,10 +471,10 @@ const Chat = React.memo(() => {
           const contractData = {
             currentUserSkill: isUser1 ? contract.user1_skill : contract.user2_skill,
             otherUserSkill: isUser1 ? contract.user2_skill : contract.user1_skill,
-            currentUserIsMentorship: isUser1 ? contract.user1_is_mentorship : contract.user2_is_mentorship,
-            otherUserIsMentorship: isUser1 ? contract.user2_is_mentorship : contract.user1_is_mentorship,
             currentUserAgreed: isUser1 ? contract.user1_agreed : contract.user2_agreed,
             otherUserAgreed: isUser1 ? contract.user2_agreed : contract.user1_agreed,
+            currentUserFinished: isUser1 ? contract.user1_finished : contract.user2_finished,
+            otherUserFinished: isUser1 ? contract.user2_finished : contract.user1_finished,
           };
           setContractData(contractData);
           console.log('✅ Contract data set:', contractData);
@@ -505,6 +555,23 @@ const Chat = React.memo(() => {
         }));
         setMessages(transformedMessages);
         console.log('✅ Messages set:', transformedMessages.length, 'messages');
+        
+        // Mark messages as read when chat is opened
+        try {
+          const { error } = await supabase
+            .from('chat_messages')
+            .update({ is_read: true })
+            .eq('chat_id', chatId)
+            .neq('sender_id', user?.id);
+          
+          if (error) {
+            console.error('Error marking messages as read:', error);
+          } else {
+            console.log('✅ Messages marked as read for chat:', chatId);
+          }
+        } catch (error) {
+          console.error('Error marking messages as read:', error);
+        }
       } else {
         console.log('⚠️ No messages found, setting empty array');
         setMessages([]);
@@ -631,7 +698,7 @@ const Chat = React.memo(() => {
     setShowFinishModal(true);
   };
 
-  const handleExchangeAgreed = async (data: { userSkill: string; isMentorship: boolean }) => {
+  const handleExchangeAgreed = async (data: { userSkill: string }) => {
     if (!user || !chatData || !otherUser) return;
 
     try {
@@ -657,11 +724,9 @@ const Chat = React.memo(() => {
             user1_id: chatData.user1_id,
             user2_id: chatData.user2_id,
             ...(isUser1 ? {
-              user1_skill: data.userSkill,
-              user1_is_mentorship: data.isMentorship
+              user1_skill: data.userSkill || null
             } : {
-              user2_skill: data.userSkill,
-              user2_is_mentorship: data.isMentorship
+              user2_skill: data.userSkill || null
             })
           })
           .select()
@@ -687,8 +752,6 @@ const Chat = React.memo(() => {
         const contractData = {
           currentUserSkill: isUser1 ? data.userSkill : undefined,
           otherUserSkill: isUser1 ? undefined : data.userSkill,
-          currentUserIsMentorship: isUser1 ? data.isMentorship : false,
-          otherUserIsMentorship: isUser1 ? false : data.isMentorship,
           currentUserAgreed: false,
           otherUserAgreed: false,
         };
@@ -709,7 +772,6 @@ const Chat = React.memo(() => {
               senderName: senderName,
               chatId: chatId,
               skill: data.userSkill,
-              isMentorship: data.isMentorship,
               exchangeState: 'draft_contract',
               shouldOpenModal: true
             }
@@ -719,7 +781,7 @@ const Chat = React.memo(() => {
           const systemMessage = {
             id: Date.now().toString(),
             sender_id: user?.id || '', // Use current user's ID
-            message: `[SYSTEM] ${senderName} wants to start an exchange and will teach: ${data.isMentorship ? 'Mentorship Session' : data.userSkill}. Click "Start Exchange" to choose what you'll teach.`,
+            message: `[SYSTEM] ${senderName} wants to start an exchange and will teach: ${data.userSkill}. Click "Start Exchange" to choose what you'll teach.`,
             created_at: new Date().toISOString(),
             chat_id: chatId
           };
@@ -746,11 +808,9 @@ const Chat = React.memo(() => {
       } else {
         // Update existing contract with current user's selection
         const updateData = isUser1 ? {
-          user1_skill: data.userSkill,
-          user1_is_mentorship: data.isMentorship
+          user1_skill: data.userSkill
         } : {
-          user2_skill: data.userSkill,
-          user2_is_mentorship: data.isMentorship
+          user2_skill: data.userSkill
         };
 
         const { error: updateError } = await supabase
@@ -769,16 +829,15 @@ const Chat = React.memo(() => {
         const contractData = {
           currentUserSkill: isUser1 ? updatedContract.user1_skill : updatedContract.user2_skill,
           otherUserSkill: isUser1 ? updatedContract.user2_skill : updatedContract.user1_skill,
-          currentUserIsMentorship: isUser1 ? updatedContract.user1_is_mentorship : updatedContract.user2_is_mentorship,
-          otherUserIsMentorship: isUser1 ? updatedContract.user2_is_mentorship : updatedContract.user1_is_mentorship,
           currentUserAgreed: isUser1 ? updatedContract.user1_agreed : updatedContract.user2_agreed,
           otherUserAgreed: isUser1 ? updatedContract.user2_agreed : updatedContract.user1_agreed,
         };
         setContractData(contractData);
 
-        // Check if both users have selected their skills
-        const bothSelected = (updatedContract.user1_skill || updatedContract.user1_is_mentorship) && 
-                           (updatedContract.user2_skill || updatedContract.user2_is_mentorship);
+        // Check if both users have selected their skills (including "Nothing" case)
+        const user1Selected = updatedContract.user1_skill;
+        const user2Selected = updatedContract.user2_skill;
+        const bothSelected = user1Selected && user2Selected;
 
         if (bothSelected) {
           // Move to contract_proposed state
@@ -898,6 +957,27 @@ const Chat = React.memo(() => {
 
         toast.success("Exchange is now active! Start your learning session.");
       } else {
+        // Send notification to other user to review the contract
+        try {
+          const senderName = user.name || user.email || 'Someone';
+          await createNotification({
+            userId: otherUser.id,
+            title: 'Contract Ready for Review',
+            message: `${senderName} has agreed to the exchange contract. Please review and agree to start the exchange.`,
+            isRead: false,
+            type: 'learning_match',
+            actionUrl: `/chat/${chatId}`,
+            metadata: { 
+              senderId: user.id,
+              senderName: senderName,
+              chatId: chatId,
+              shouldOpenModal: true
+            }
+          });
+        } catch (notificationError) {
+          console.error('Failed to create contract review notification:', notificationError);
+        }
+        
         toast.success("You agreed to the exchange. Waiting for the other person to agree.");
       }
 
@@ -917,70 +997,251 @@ const Chat = React.memo(() => {
     }
   };
 
-  const handleExchangeFinished = () => {
-    if (!contractData || !user || !otherUser) return;
+  const handleDeclineContract = async () => {
+    if (!user || !chatData || !otherUser) return;
 
-    const updatedContract = {
-      ...contractData,
-      initiatorFinished: true,
-      recipientFinished: contractData.otherUserAgreed, // Assuming recipientFinished is based on otherUserAgreed
-    };
+    try {
+      console.log('❌ Declining contract');
+      setIsUpdatingState(true); // Prevent polling interference
+      
+      // Delete the contract completely to start fresh
+      await supabase
+        .from('exchange_contracts')
+        .delete()
+        .eq('chat_id', chatId);
 
-    if (updatedContract.initiatorFinished && updatedContract.otherUserAgreed) {
-      updatedContract.status = 'completed';
+      // Reset chat state to pending_start to allow new exchange
+      await supabase
+        .from('chats')
+        .update({ 
+          exchange_state: 'pending_start',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', chatId);
+
+      setExchangeState('pending_start');
+      
+      // Clear local contract data completely
+      setContractData(null);
+      
+      // Add system message to chat
+      const systemMessage = {
+        id: Date.now().toString(),
+        sender_id: user?.id || '', // Use current user's ID
+        message: `[SYSTEM] Exchange was declined. You can discuss and start a new exchange anytime.`,
+        created_at: new Date().toISOString(),
+        chat_id: chatId
+      };
+
+      // Save system message to database
+      await supabase
+        .from('chat_messages')
+        .insert(systemMessage);
+
+      // Add to local messages
+      setMessages(prev => [...prev, {
+        id: systemMessage.id,
+        senderId: user?.id || '', // Use current user's ID
+        message: systemMessage.message,
+        timestamp: new Date(),
+        type: 'system'
+      }]);
+      
+      // Send notification to other user
+      try {
+        const senderName = user.name || user.email || 'Someone';
+        await createNotification({
+          userId: otherUser.id,
+          title: 'Exchange Declined',
+          message: `${senderName} declined the exchange. You can discuss and start a new one anytime.`,
+          isRead: false,
+          type: 'learning_match',
+          actionUrl: `/chat/${chatId}`,
+          metadata: { 
+            senderId: user.id,
+            senderName: senderName,
+            chatId: chatId
+          }
+        });
+      } catch (notificationError) {
+        console.error('Failed to create decline notification:', notificationError);
+      }
+
+      toast.success("Exchange declined. You can discuss and start a new exchange anytime.");
+      
+      // Close the modal
+      setShowExchangeModal(false);
+
+    } catch (error) {
+      console.error('Error in handleDeclineContract:', error);
+      toast.error("Failed to decline contract");
+    } finally {
+      setIsUpdatingState(false); // Re-enable polling
     }
+  };
 
-    setExchangeState(updatedContract.status); // Update state based on completion
-    setShowFinishModal(false);
+  const handleExchangeFinished = async () => {
+    if (!contractData || !user || !chatData || !otherUser) return;
 
-    // Create notification for the other user if exchange is completed
-    if (updatedContract.status === 'completed') {
-      (async () => {
+    try {
+      console.log('🏁 Marking exchange as finished');
+      setIsUpdatingState(true); // Prevent polling interference
+      
+      // Mark current user as finished
+      const isUser1 = chatData.user1_id === user.id;
+      const finishData = isUser1 ? { user1_finished: true } : { user2_finished: true };
+
+      console.log('🏁 Attempting to update contract with finish data:', finishData);
+      console.log('🏁 Chat ID:', chatId);
+      
+      const { data: updateResult, error: finishError } = await supabase
+        .from('exchange_contracts')
+        .update(finishData)
+        .eq('chat_id', chatId)
+        .select();
+
+      console.log('🏁 Update result:', updateResult);
+      console.log('🏁 Update error:', finishError);
+
+      if (finishError) {
+        console.error('Error marking exchange as finished:', finishError);
+        toast.error(`Failed to mark exchange as finished: ${finishError.message}`);
+        return;
+      }
+
+      // Update local state
+      const updatedContractData = { ...contractData, currentUserFinished: true };
+      setContractData(updatedContractData);
+
+      // Check if both users have finished
+      const bothFinished = isUser1 
+        ? (true && contractData.otherUserFinished)
+        : (contractData.otherUserFinished && true);
+
+      if (bothFinished) {
+        // Mark exchange as completed
+        await supabase
+          .from('exchange_contracts')
+          .update({ 
+            finished_at: new Date().toISOString()
+          })
+          .eq('chat_id', chatId);
+
+        // Update chat state to completed
+        await supabase
+          .from('chats')
+          .update({ 
+            exchange_state: 'completed',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', chatId);
+
+        setExchangeState('completed');
+        
+        // Add system message to chat
+        const systemMessage = {
+          id: Date.now().toString(),
+          sender_id: user?.id || '', // Use current user's ID
+          message: `[SYSTEM] Exchange completed! Both users have finished. Please leave a review for your learning partner.`,
+          created_at: new Date().toISOString(),
+          chat_id: chatId
+        };
+
+        // Save system message to database
+        await supabase
+          .from('chat_messages')
+          .insert(systemMessage);
+
+        // Add to local messages
+        setMessages(prev => [...prev, {
+          id: systemMessage.id,
+          senderId: user?.id || '', // Use current user's ID
+          message: systemMessage.message,
+          timestamp: new Date(),
+          type: 'system'
+        }]);
+        
+        // Send notification to other user
         try {
-          // Get partner's display name for notification
-          const { data: partnerProfile } = await supabase
-            .from('profiles')
-            .select('display_name')
-            .eq('id', user?.id)
-            .single();
-
-          const partnerName = partnerProfile?.display_name || 'Someone';
-
+          const senderName = user.name || user.email || 'Someone';
           await createNotification({
             userId: otherUser.id,
             title: 'Exchange Completed!',
-            message: `Your skill exchange with ${partnerName} has been completed`,
+            message: `Your exchange with ${senderName} has been completed. Please leave a review!`,
             isRead: false,
             type: 'exchange_completed',
             actionUrl: `/chat/${chatId}`,
             metadata: { 
-              partnerId: user?.id,
-              partnerName: partnerName,
-              skill: contractData.currentUserSkill
+              senderId: user.id,
+              senderName: senderName,
+              chatId: chatId
             }
           });
         } catch (notificationError) {
-          console.error('Failed to create exchange completion notification:', notificationError);
+          console.error('Failed to create completion notification:', notificationError);
         }
-      })();
-    }
 
-    // Add system message
-    const systemMessage: ChatMessage = {
-      id: Date.now().toString(),
-      senderId: '00000000-0000-0000-0000-000000000000', // Use the system user UUID
-      message: updatedContract.status === 'completed' 
-        ? 'Exchange completed! Please leave a review for your learning partner.'
-        : `Someone marked the exchange as finished.`,
-      timestamp: new Date(),
-      type: 'system'
-    };
-    setMessages(prev => [...prev, systemMessage]);
+        toast.success("Exchange completed! Please leave a review for your learning partner.");
+        
+        // Show review modal after a short delay
+        setTimeout(() => {
+          setShowReviewModal(true);
+        }, 1000);
+      } else {
+        // Add system message to chat
+        const systemMessage = {
+          id: Date.now().toString(),
+          sender_id: user?.id || '', // Use current user's ID
+          message: `[SYSTEM] You marked the exchange as finished. Waiting for the other person to finish.`,
+          created_at: new Date().toISOString(),
+          chat_id: chatId
+        };
 
-    if (updatedContract.status === 'completed') {
-      setTimeout(() => {
-        setShowReviewModal(true);
-      }, 1000);
+        // Save system message to database
+        await supabase
+          .from('chat_messages')
+          .insert(systemMessage);
+
+        // Add to local messages
+        setMessages(prev => [...prev, {
+          id: systemMessage.id,
+          senderId: user?.id || '', // Use current user's ID
+          message: systemMessage.message,
+          timestamp: new Date(),
+          type: 'system'
+        }]);
+        
+        // Send notification to other user
+        try {
+          const senderName = user.name || user.email || 'Someone';
+          await createNotification({
+            userId: otherUser.id,
+            title: 'Exchange Finished',
+            message: `${senderName} marked the exchange as finished. Please finish yours too!`,
+            isRead: false,
+            type: 'exchange_finished',
+            actionUrl: `/chat/${chatId}`,
+            metadata: { 
+              senderId: user.id,
+              senderName: senderName,
+              chatId: chatId
+            }
+          });
+        } catch (notificationError) {
+          console.error('Failed to create finish notification:', notificationError);
+        }
+
+        toast.success("You marked the exchange as finished. Waiting for the other person to finish.");
+      }
+
+      // Close the modal
+      setShowFinishModal(false);
+
+    } catch (error) {
+      console.error('Error in handleExchangeFinished:', error);
+      toast.error("Failed to mark exchange as finished");
+    } finally {
+      setIsUpdatingState(false); // Re-enable polling
     }
   };
 
@@ -1194,6 +1455,7 @@ const Chat = React.memo(() => {
           }}
           onAgree={handleExchangeAgreed}
           onFinalAgree={handleAgreeToContract}
+          onDecline={handleDeclineContract}
           chatId={chatId || ''}
           otherUserName={otherUser?.display_name || 'User'}
           currentUserSkills={(() => {
@@ -1210,32 +1472,25 @@ const Chat = React.memo(() => {
           isOpen={showFinishModal}
           onClose={() => setShowFinishModal(false)}
           onConfirm={handleExchangeFinished}
-          exchange={contractData as Exchange}
+          exchange={contractData}
           currentUserId={user?.id || ''}
         />
 
         {/* Review Modal */}
         {showReviewModal && otherUser && contractData && (
-          <ReviewModal
+          <ExchangeReviewModal
             isOpen={showReviewModal}
             onClose={() => setShowReviewModal(false)}
             exchange={{
               id: chatId || '',
-              status: 'completed',
-              initiatorSkill: contractData.currentUserSkill || '',
-              recipientSkill: contractData.otherUserSkill || '',
-              isMentorship: contractData.currentUserIsMentorship || contractData.otherUserIsMentorship || false,
-              initiatorAgreed: true,
-              recipientAgreed: true,
-              initiatorFinished: true,
-              recipientFinished: true
-            }}
-            otherUser={{
-              id: otherUser.id,
-              name: otherUser.display_name,
-              display_name: otherUser.display_name,
-              profilePicture: otherUser.avatar_url,
-              avatar_url: otherUser.avatar_url
+              otherUser: {
+                id: otherUser.id,
+                name: otherUser.display_name,
+                avatar: otherUser.avatar_url
+              },
+              skill: `${contractData.currentUserSkill || ''} ↔ ${contractData.otherUserSkill || ''}`,
+              type: 'exchange',
+              description: `Exchange between ${user?.display_name || 'You'} and ${otherUser.display_name}`
             }}
             onReviewSubmitted={handleReviewSubmitted}
           />

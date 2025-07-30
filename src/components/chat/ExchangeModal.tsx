@@ -15,8 +15,9 @@ import { Users, BookOpen, Handshake, CheckCircle, Clock, ArrowRight, Sparkles, A
 interface ExchangeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAgree: (data: { userSkill: string; isMentorship: boolean }) => void;
+  onAgree: (data: { userSkill: string }) => void;
   onFinalAgree: () => void;
+  onDecline?: () => void;
   chatId: string;
   otherUserName: string;
   currentUserSkills: Array<{name: string; level: string; description: string; category?: string}>;
@@ -24,8 +25,6 @@ interface ExchangeModalProps {
   contractData?: {
     currentUserSkill?: string;
     otherUserSkill?: string;
-    currentUserIsMentorship?: boolean;
-    otherUserIsMentorship?: boolean;
     currentUserAgreed?: boolean;
     otherUserAgreed?: boolean;
   };
@@ -36,6 +35,7 @@ export const ExchangeModal = React.memo(({
   onClose,
   onAgree,
   onFinalAgree,
+  onDecline,
   chatId,
   otherUserName,
   currentUserSkills,
@@ -44,7 +44,6 @@ export const ExchangeModal = React.memo(({
 }: ExchangeModalProps) => {
   const { user } = useAuth();
   const [selectedSkill, setSelectedSkill] = useState<string>('');
-  const [isMentorship, setIsMentorship] = useState(false);
   
   // Error recovery state
   const [error, setError] = useState<string | null>(null);
@@ -55,34 +54,39 @@ export const ExchangeModal = React.memo(({
   // Reset form when modal opens, but preserve user's current selection
   useEffect(() => {
     if (isOpen) {
-      // Only reset if user hasn't made a selection yet or if contract data is available
-      const hasUserSelected = contractData?.currentUserSkill || contractData?.currentUserIsMentorship;
-      
-      if (!hasUserSelected) {
-        // User hasn't made a selection yet, keep current form state or reset to empty
-        if (!selectedSkill && !isMentorship) {
-          setSelectedSkill('');
-          setIsMentorship(false);
-        }
-        // If user has already started selecting, don't reset their progress
-      } else {
-        // User has already made a selection, update form to match contract data
-        setSelectedSkill(contractData?.currentUserSkill || '');
-        setIsMentorship(contractData?.currentUserIsMentorship || false);
-      }
-      
-      // Clear any previous errors when modal opens
+      // Reset form state when modal opens
+      setSelectedSkill('');
       setError(null);
       setRetryCount(0);
       setShowErrorRecovery(false);
+      
+      // If exchange state is pending_start, always start fresh
+      if (exchangeState === 'pending_start') {
+        setSelectedSkill('');
+      } else if (contractData?.currentUserSkill) {
+        // If there's existing contract data, update form to match
+        setSelectedSkill(contractData.currentUserSkill);
+      }
     }
-  }, [isOpen, contractData?.currentUserSkill, contractData?.currentUserIsMentorship]);
+  }, [isOpen, contractData?.currentUserSkill, exchangeState]);
 
   // Memoize modal content to prevent unnecessary recalculations
   const modalContent = useMemo(() => {
+    // If exchange state is pending_start, treat as fresh start regardless of contract data
+    if (exchangeState === 'pending_start') {
+      return {
+        title: "Step 1: Start Your Exchange",
+        description: `Choose what you'll teach ${otherUserName} in this skill exchange.`,
+        buttonText: "Select My Skill",
+        showForm: true,
+        showSummary: false,
+        canEdit: true
+      };
+    }
+    
     // Determine if user has already made their selection
-    const hasUserSelected = contractData?.currentUserSkill || contractData?.currentUserIsMentorship;
-    const hasOtherUserSelected = contractData?.otherUserSkill || contractData?.otherUserIsMentorship;
+    const hasUserSelected = contractData?.currentUserSkill;
+    const hasOtherUserSelected = contractData?.otherUserSkill;
     const bothSelected = hasUserSelected && hasOtherUserSelected;
     const userAgreed = contractData?.currentUserAgreed;
     const otherAgreed = contractData?.otherUserAgreed;
@@ -119,7 +123,8 @@ export const ExchangeModal = React.memo(({
         buttonText: "Agree & Start Exchange",
         showForm: false,
         showSummary: true,
-        canEdit: false
+        canEdit: false,
+        showDecline: true
       };
     }
 
@@ -145,13 +150,15 @@ export const ExchangeModal = React.memo(({
       };
     }
 
+
+
     if (hasUserSelected && !hasOtherUserSelected) {
       return {
         title: "Step 2: Waiting for Partner",
         description: `You've selected your skill. ${otherUserName} is now choosing theirs.`,
         buttonText: "Update My Selection",
         showForm: true,
-        showSummary: true,
+        showSummary: false,
         canEdit: true
       };
     }
@@ -162,7 +169,7 @@ export const ExchangeModal = React.memo(({
         description: `${otherUserName} has selected their skill. Now choose yours to complete the setup.`,
         buttonText: "Select My Skill",
         showForm: true,
-        showSummary: true,
+        showSummary: false,
         canEdit: true
       };
     }
@@ -197,12 +204,12 @@ export const ExchangeModal = React.memo(({
   // Determine if user can proceed with their selection
   const isButtonDisabled = () => {
     if (modalContent.buttonText === "Close") return false;
-    if (modalContent.buttonText === "Confirm & Start Exchange") return false;
+    if (modalContent.buttonText === "Agree & Start Exchange") return false;
     if (modalContent.buttonText === "Retry") return false;
     if (modalContent.buttonText === "Update My Selection") return false; // Allow updates
     
-    // For skill selection, require either skill or mentorship
-    return !isMentorship && !selectedSkill;
+    // For skill selection, require a selection (including "Nothing")
+    return !selectedSkill;
   };
 
   // Error recovery functions
@@ -262,7 +269,7 @@ export const ExchangeModal = React.memo(({
 
   // Main agreement handler
   const handleAgree = async () => {
-    console.log('🎯 ExchangeModal handleAgree called with:', { selectedSkill, isMentorship });
+    console.log('🎯 ExchangeModal handleAgree called with:', { selectedSkill });
     
     setIsLoading(true);
     setError(null);
@@ -275,16 +282,17 @@ export const ExchangeModal = React.memo(({
         return;
       }
       
+
+      
       // Otherwise, handle skill selection
-      if (!isMentorship && !selectedSkill) {
-        toast.error("Please select a skill or choose mentorship session");
+      if (!selectedSkill) {
+        toast.error("Please select a skill or choose 'Nothing'");
         return;
       }
 
-      console.log('🎯 Calling onAgree with data:', { userSkill: selectedSkill, isMentorship });
+      console.log('🎯 Calling onAgree with data:', { userSkill: selectedSkill });
       await onAgree({
-        userSkill: selectedSkill,
-        isMentorship
+        userSkill: selectedSkill
       });
       
       console.log('🎯 onAgree called, about to close modal');
@@ -297,10 +305,40 @@ export const ExchangeModal = React.memo(({
     }
   };
 
+  const handleDecline = async () => {
+    console.log('🎯 ExchangeModal handleDecline called');
+    
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      if (onDecline) {
+        await onDecline();
+      }
+      
+      // Reset form state for fresh start
+      setSelectedSkill('');
+      setError(null);
+      setRetryCount(0);
+      setShowErrorRecovery(false);
+      
+      // Close modal to allow restart
+      onClose();
+      
+      toast.success("Exchange declined. You can start a new exchange from the beginning.");
+    } catch (err) {
+      console.error('Decline error:', err);
+      setError("Failed to decline the exchange. Please try again.");
+      setShowErrorRecovery(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Progress tracking functions - 4-Step Mini Agreement System
   const getProgressSteps = () => {
-    const hasUserSelected = contractData?.currentUserSkill || contractData?.currentUserIsMentorship;
-    const hasOtherUserSelected = contractData?.otherUserSkill || contractData?.otherUserIsMentorship;
+    const hasUserSelected = contractData?.currentUserSkill;
+    const hasOtherUserSelected = contractData?.otherUserSkill;
     const bothSelected = hasUserSelected && hasOtherUserSelected;
     const userAgreed = contractData?.currentUserAgreed;
     const otherAgreed = contractData?.otherUserAgreed;
@@ -366,8 +404,8 @@ export const ExchangeModal = React.memo(({
   };
 
   const getCurrentStepDescription = () => {
-    const hasUserSelected = contractData?.currentUserSkill || contractData?.currentUserIsMentorship;
-    const hasOtherUserSelected = contractData?.otherUserSkill || contractData?.otherUserIsMentorship;
+    const hasUserSelected = contractData?.currentUserSkill;
+    const hasOtherUserSelected = contractData?.otherUserSkill;
     const bothSelected = hasUserSelected && hasOtherUserSelected;
     const userAgreed = contractData?.currentUserAgreed;
     const otherAgreed = contractData?.otherUserAgreed;
@@ -535,6 +573,9 @@ export const ExchangeModal = React.memo(({
                       <SelectValue placeholder="Choose a skill to teach" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="Nothing">
+                        Nothing (I won't teach anything)
+                      </SelectItem>
                       {currentUserSkills.map((skill) => (
                         <SelectItem key={skill.name} value={skill.name}>
                           {skill.name}
@@ -544,28 +585,16 @@ export const ExchangeModal = React.memo(({
                   </Select>
                 </div>
 
-                {/* Mentorship Toggle */}
-                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <div className="space-y-1">
-                    <Label className="text-sm font-medium">Mentorship Session</Label>
-                    <p className="text-xs text-muted-foreground">
-                      Offer guidance and coaching instead of a specific skill
-                    </p>
-                  </div>
-                  <Switch
-                    checked={isMentorship}
-                    onCheckedChange={setIsMentorship}
-                  />
-                </div>
+
 
                 {/* Selected Skill Preview */}
-                {(selectedSkill || isMentorship) && (
+                {selectedSkill && (
                   <Card className="bg-accent/10 border-accent/20">
                     <CardContent className="p-3">
                       <div className="flex items-center gap-2">
                         <Sparkles className="w-4 h-4 text-accent" />
                         <span className="text-sm font-medium">
-                          You'll teach: {isMentorship ? 'Mentorship Session' : selectedSkill}
+                          You'll teach: {selectedSkill}
                         </span>
                       </div>
                     </CardContent>
@@ -591,7 +620,7 @@ export const ExchangeModal = React.memo(({
                       </div>
                       {contractData?.currentUserSkill ? (
                         <Badge variant="secondary" className="bg-primary/10 text-primary">
-                          {contractData?.currentUserIsMentorship ? 'Mentorship Session' : contractData?.currentUserSkill}
+                          {contractData?.currentUserSkill}
                         </Badge>
                       ) : (
                         <Badge variant="outline" className="text-muted-foreground">
@@ -615,7 +644,7 @@ export const ExchangeModal = React.memo(({
                       </div>
                       {contractData?.otherUserSkill ? (
                         <Badge variant="secondary" className="bg-accent/10 text-accent">
-                          {contractData?.otherUserIsMentorship ? 'Mentorship Session' : contractData?.otherUserSkill}
+                          {contractData?.otherUserSkill}
                         </Badge>
                       ) : (
                         <Badge variant="outline" className="text-muted-foreground">
@@ -636,13 +665,13 @@ export const ExchangeModal = React.memo(({
                         <div className="bg-background/50 p-2 rounded">
                           <div className="font-medium text-primary">You will teach:</div>
                           <div className="text-muted-foreground">
-                            {contractData?.currentUserIsMentorship ? 'Mentorship Session' : contractData?.currentUserSkill}
+                            {contractData?.currentUserSkill}
                           </div>
                         </div>
                         <div className="bg-background/50 p-2 rounded">
                           <div className="font-medium text-primary">{otherUserName} will teach:</div>
                           <div className="text-muted-foreground">
-                            {contractData?.otherUserIsMentorship ? 'Mentorship Session' : contractData?.otherUserSkill}
+                            {contractData?.otherUserSkill}
                           </div>
                         </div>
                       </div>
@@ -658,48 +687,108 @@ export const ExchangeModal = React.memo(({
             {/* Action Buttons */}
             {!error && (
               <div className="flex gap-3">
-                <Button
-                  onClick={() => {
-                    try {
-                      if (modalContent.buttonText === "Agree & Start Exchange") {
-                        onFinalAgree();
-                      } else {
-                        handleAgree();
-                      }
-                    } catch (error) {
-                      console.error('Button click error:', error);
-                      setError("An error occurred. Please try again.");
-                    }
-                  }}
-                  disabled={isButtonDisabled() || isLoading}
-                  className="flex-1 gap-2"
-                  size="lg"
-                >
-                  {isLoading ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      {modalContent.buttonText === "Agree & Start Exchange" ? (
-                        <CheckCircle className="w-4 h-4" />
+                {modalContent.showDecline ? (
+                  <>
+                    <Button
+                      onClick={handleDecline}
+                      disabled={isLoading}
+                      variant="destructive"
+                      size="lg"
+                      className="flex-1 gap-2"
+                    >
+                      {isLoading ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          Processing...
+                        </>
                       ) : (
-                        <Sparkles className="w-4 h-4" />
+                        <>
+                          <XCircle className="w-4 h-4" />
+                          Decline
+                        </>
                       )}
-                      {modalContent.buttonText}
-                    </>
-                  )}
-                </Button>
-                
-                <Button
-                  onClick={onClose}
-                  variant="outline"
-                  disabled={isLoading}
-                  size="lg"
-                >
-                  Cancel
-                </Button>
+                    </Button>
+                    
+                    <Button
+                      onClick={() => {
+                        try {
+                          if (modalContent.buttonText === "Agree & Start Exchange") {
+                            onFinalAgree();
+                          } else {
+                            handleAgree();
+                          }
+                        } catch (error) {
+                          console.error('Button click error:', error);
+                          setError("An error occurred. Please try again.");
+                        }
+                      }}
+                      disabled={isButtonDisabled() || isLoading}
+                      className="flex-1 gap-2"
+                      size="lg"
+                    >
+                      {isLoading ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          {modalContent.buttonText === "Agree & Start Exchange" ? (
+                            <CheckCircle className="w-4 h-4" />
+                          ) : (
+                            <Sparkles className="w-4 h-4" />
+                          )}
+                          {modalContent.buttonText}
+                        </>
+                      )}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      onClick={() => {
+                        try {
+                          if (modalContent.buttonText === "Agree & Start Exchange") {
+                            onFinalAgree();
+                          } else {
+                            handleAgree();
+                          }
+                        } catch (error) {
+                          console.error('Button click error:', error);
+                          setError("An error occurred. Please try again.");
+                        }
+                      }}
+                      disabled={isButtonDisabled() || isLoading}
+                      className="flex-1 gap-2"
+                      size="lg"
+                    >
+                      {isLoading ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          {modalContent.buttonText === "Agree & Start Exchange" ? (
+                            <CheckCircle className="w-4 h-4" />
+                          ) : (
+                            <Sparkles className="w-4 h-4" />
+                          )}
+                          {modalContent.buttonText}
+                        </>
+                      )}
+                    </Button>
+                    
+                    <Button
+                      onClick={onClose}
+                      variant="outline"
+                      disabled={isLoading}
+                      size="lg"
+                    >
+                      Cancel
+                    </Button>
+                  </>
+                )}
               </div>
             )}
 

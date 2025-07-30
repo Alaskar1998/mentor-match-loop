@@ -13,13 +13,12 @@ import { CheckCircle, Clock } from 'lucide-react';
 interface Exchange {
   id: string;
   status: 'pending' | 'active' | 'completed';
-  initiatorSkill: string;
-  recipientSkill?: string;
-  isMentorship: boolean;
-  initiatorAgreed: boolean;
-  recipientAgreed: boolean;
-  initiatorFinished: boolean;
-  recipientFinished: boolean;
+  currentUserSkill?: string;
+  otherUserSkill?: string;
+  currentUserAgreed?: boolean;
+  otherUserAgreed?: boolean;
+  currentUserFinished?: boolean;
+  otherUserFinished?: boolean;
 }
 
 interface FinishExchangeModalProps {
@@ -39,10 +38,9 @@ export const FinishExchangeModal = ({
 }: FinishExchangeModalProps) => {
   if (!exchange) return null;
 
-  const isInitiator = currentUserId === 'user-1'; // Mock logic
-  const currentUserFinished = isInitiator ? exchange.initiatorFinished : exchange.recipientFinished;
-  const otherUserFinished = isInitiator ? exchange.recipientFinished : exchange.initiatorFinished;
-  const bothFinished = exchange.initiatorFinished && exchange.recipientFinished;
+  const currentUserFinished = exchange.currentUserFinished || false;
+  const otherUserFinished = exchange.otherUserFinished || false;
+  const bothFinished = currentUserFinished && otherUserFinished;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -62,18 +60,16 @@ export const FinishExchangeModal = ({
             <h3 className="font-medium">Exchange Summary:</h3>
             <div className="p-3 bg-muted rounded-lg space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-sm">Teaching:</span>
-                <Badge variant="secondary">{exchange.initiatorSkill}</Badge>
+                <span className="text-sm">You teach:</span>
+                <Badge variant="secondary">
+                  {exchange.currentUserSkill}
+                </Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm">
-                  {exchange.isMentorship ? 'Mentorship' : 'Learning:'}
-                </span>
-                {exchange.isMentorship ? (
-                  <Badge variant="outline">No return expected</Badge>
-                ) : (
-                  <Badge variant="secondary">{exchange.recipientSkill}</Badge>
-                )}
+                <span className="text-sm">You learn:</span>
+                <Badge variant="secondary">
+                  {exchange.otherUserSkill}
+                </Badge>
               </div>
             </div>
           </div>

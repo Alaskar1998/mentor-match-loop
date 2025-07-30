@@ -1,8 +1,11 @@
 -- FINAL FIX: Add Reviews Table for Exchange Review System
 -- Run this in Supabase Dashboard → SQL Editor
 
--- Create reviews table (using correct column references)
-CREATE TABLE IF NOT EXISTS public.reviews (
+-- Drop the existing reviews table if it exists (to recreate with correct schema)
+DROP TABLE IF EXISTS public.reviews;
+
+-- Create reviews table with correct column names
+CREATE TABLE public.reviews (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     chat_id UUID NOT NULL REFERENCES public.chats(id) ON DELETE CASCADE,
     reviewer_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,

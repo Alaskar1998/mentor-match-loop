@@ -15,6 +15,7 @@ interface NotificationContextType {
   deleteNotification: (notificationId: string) => Promise<void>;
   clearAll: (type?: 'general' | 'chat') => Promise<void>;
   refreshNotifications: () => Promise<void>;
+  createNotification: (notification: Omit<Notification, 'id' | 'createdAt'>) => Promise<Notification>;
 }
 
 const NotificationContext = createContext<NotificationContextType | null>(null);
@@ -129,6 +130,17 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
     await loadNotifications();
   };
 
+  const createNotification = async (notification: Omit<Notification, 'id' | 'createdAt'>): Promise<Notification> => {
+    try {
+      const createdNotification = await notificationService.createNotification(notification);
+      await loadNotifications(); // Refresh to update counts
+      return createdNotification;
+    } catch (error) {
+      console.error('Failed to create notification:', error);
+      throw error;
+    }
+  };
+
   // Optimized polling for notifications
   const { isActive: isPollingNotifications } = useOptimizedPolling(
     async () => {
@@ -162,7 +174,8 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
       markAllAsRead,
       deleteNotification,
       clearAll,
-      refreshNotifications
+      refreshNotifications,
+      createNotification
     }}>
       {children}
     </NotificationContext.Provider>
