@@ -29,7 +29,7 @@ const PrivacyPolicy = () => {
               <div>
                 <h4 className="font-semibold mb-2">Usage Information</h4>
                 <p className="text-muted-foreground">
-                  We collect information about how you use SkillExchange, including your interactions, 
+                  We collect information about how you use Maharat Hub, including your interactions, 
                   messages sent, skills exchanged, and platform activity.
                 </p>
               </div>
@@ -136,7 +136,7 @@ const PrivacyPolicy = () => {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">
-                SkillExchange is not intended for children under 13 years of age. We do not knowingly 
+                Maharat Hub is not intended for children under 13 years of age. We do not knowingly 
                 collect personal information from children under 13. If we become aware that we have 
                 collected such information, we will take steps to delete it promptly.
               </p>
@@ -164,7 +164,7 @@ const PrivacyPolicy = () => {
               <p className="text-muted-foreground">
                 We may update this privacy policy from time to time. We will notify you of any material 
                 changes by posting the new policy on this page and updating the "Last updated" date. 
-                Your continued use of SkillExchange after changes become effective constitutes acceptance 
+                Your continued use of Maharat Hub after changes become effective constitutes acceptance 
                 of the revised policy.
               </p>
             </CardContent>
@@ -179,8 +179,8 @@ const PrivacyPolicy = () => {
                 If you have any questions about this privacy policy or our data practices, please contact us:
               </p>
               <div className="space-y-2 text-muted-foreground">
-                <p><strong>Email:</strong> privacy@skillexchange.com</p>
-                <p><strong>Address:</strong> SkillExchange Privacy Team, 123 Learning Street, Education City, EC 12345</p>
+                <p><strong>Email:</strong> privacy@Maharat Hub.com</p>
+                <p><strong>Address:</strong> Maharat Hub Privacy Team, 123 Learning Street, Education City, EC 12345</p>
               </div>
             </CardContent>
           </Card>

@@ -209,15 +209,6 @@ const CreateRequest = () => {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button 
-                  variant="default" 
-                  size="lg"
-                  onClick={() => window.history.back()}
-                  className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
-                >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Explore Other Features
-                </Button>
-                <Button 
                   variant="outline" 
                   size="lg"
                   onClick={() => window.location.href = '/'}

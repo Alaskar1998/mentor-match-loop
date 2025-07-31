@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 const contributors = [
   {
     id: 1,
-    name: "Sarah Chen",
+    name: "Fatima Ahmed",
     avatar: "👩‍🎨",
     title: "Design Master",
     badges: ["Teacher of the Month", "🌟 Mentor Badge", "Top Contributor"],
@@ -14,7 +14,7 @@ const contributors = [
   },
   {
     id: 2,
-    name: "Marcus Johnson",
+    name: "Khaled Hassan",
     avatar: "👨‍💻",
     title: "Code Wizard",
     badges: ["Most Active", "🌟 Mentor Badge", "Community Hero"],
@@ -24,7 +24,7 @@ const contributors = [
   },
   {
     id: 3,
-    name: "Elena Rodriguez",
+    name: "Aisha Omar",
     avatar: "👩‍🍳",
     title: "Culinary Expert",
     badges: ["🌟 Mentor Badge", "Rising Star", "Patience Pro"],
@@ -34,7 +34,7 @@ const contributors = [
   },
   {
     id: 4,
-    name: "David Kim",
+    name: "Mohammed Yusuf",
     avatar: "🎸",
     title: "Music Mentor",
     badges: ["🌟 Mentor Badge", "Inspiration Award", "Most Loved"],

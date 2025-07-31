@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Search, MessageCircle, Clock, Users } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
 
 interface Chat {
   id: string;
@@ -23,21 +24,68 @@ interface Chat {
 }
 
 export default function Messages() {
-  const { user } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading, isSessionRestoring } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [chats, setChats] = useState<Chat[]>([]);
   const [filteredChats, setFilteredChats] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
 
   const highlightChatId = searchParams.get("chatId");
 
-  useEffect(() => {
-    if (user) {
-      fetchChats();
+  // Debounced fetch function to prevent excessive calls
+  const debouncedFetchChats = useCallback(async () => {
+    const now = Date.now();
+    const timeSinceLastFetch = now - lastFetchTime;
+    
+    // Only fetch if it's been more than 5 seconds since last fetch
+    if (timeSinceLastFetch < 5000) {
+      console.log('⏱️ Skipping fetch - too soon since last fetch');
+      return;
     }
-  }, [user]);
+    
+    setLastFetchTime(now);
+    await fetchChats();
+  }, [lastFetchTime]);
+
+  useEffect(() => {
+    // Wait for auth to be ready and user to be loaded
+    if (isAuthenticated && user?.id && !authLoading && !isSessionRestoring) {
+      console.log('✅ Auth ready, fetching chats for user:', user.id);
+      // Add a small delay to ensure user object is fully populated
+      setTimeout(() => {
+        debouncedFetchChats();
+      }, 200);
+    } else if (!isAuthenticated && !user && !authLoading && !isSessionRestoring) {
+      // If not authenticated and auth is done loading, stop loading
+      console.log('❌ Not authenticated, stopping loading');
+      setLoading(false);
+    } else {
+      console.log('⏳ Auth state:', { 
+        isAuthenticated, 
+        userId: user?.id, 
+        authLoading, 
+        isSessionRestoring,
+        hasUser: !!user,
+        userEmail: user?.email,
+        userObject: user
+      });
+    }
+  }, [isAuthenticated, user, authLoading, isSessionRestoring, debouncedFetchChats]);
+
+  // Add a separate effect to handle the case where user becomes available after initial load
+  useEffect(() => {
+    // If we have a user with ID but no chats loaded yet, fetch them
+    if (isAuthenticated && user?.id && !authLoading && !isSessionRestoring && chats.length === 0 && !loading) {
+      console.log('🔄 User became available, fetching chats for user:', user.id);
+      // Add a small delay to ensure user object is fully populated
+      setTimeout(() => {
+        debouncedFetchChats();
+      }, 200);
+    }
+  }, [isAuthenticated, user, authLoading, isSessionRestoring, chats.length, loading, debouncedFetchChats]);
 
   useEffect(() => {
     if (searchQuery.trim()) {
@@ -56,7 +104,17 @@ export default function Messages() {
 
   const fetchChats = async () => {
     try {
+      console.log('🔄 fetchChats called with user:', user);
       setLoading(true);
+      
+      // Check if user ID exists before making the query
+      if (!user?.id) {
+        console.log("❌ Waiting for user ID to be available...", { user });
+        setLoading(false);
+        return;
+      }
+      
+      console.log("🔄 Fetching chats for user:", user.id);
       
       const { data: chatsData, error } = await supabase
         .from("chats")
@@ -68,15 +126,22 @@ export default function Messages() {
           status,
           updated_at
         `)
-        .or(`user1_id.eq.${user?.id},user2_id.eq.${user?.id}`)
+        .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
         .order("updated_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching chats:", error);
+        toast.error("Failed to load conversations");
+        setLoading(false);
+        return;
+      }
+
+      console.log("📋 Found chats:", chatsData?.length || 0, chatsData);
 
       // For each chat, get the last message and recipient info
       const chatsWithDetails = await Promise.all(
         chatsData.map(async (chat) => {
-          const recipientId = chat.user1_id === user?.id ? chat.user2_id : chat.user1_id;
+          const recipientId = chat.user1_id === user.id ? chat.user2_id : chat.user1_id;
           
           // Get last message
           const { data: lastMessageData } = await supabase
@@ -91,7 +156,7 @@ export default function Messages() {
             .from("chat_messages")
             .select("*", { count: "exact", head: true })
             .eq("chat_id", chat.id)
-            .neq("sender_id", user?.id)
+            .neq("sender_id", user.id)
             .eq("is_read", false);
 
           // Get recipient profile
@@ -116,8 +181,10 @@ export default function Messages() {
       );
 
       setChats(chatsWithDetails);
+      console.log("✅ Chats loaded successfully:", chatsWithDetails.length);
     } catch (error) {
       console.error("Error fetching chats:", error);
+      toast.error("Failed to load conversations");
     } finally {
       setLoading(false);
     }
@@ -125,19 +192,29 @@ export default function Messages() {
 
   const handleChatClick = async (chatId: string) => {
     try {
+      // Check if user ID exists before making the query
+      if (!user?.id) {
+        console.error("No user ID available for marking messages as read");
+        return;
+      }
+      
       // Mark all messages in this chat as read for the current user
       const { error } = await supabase
         .from("chat_messages")
         .update({ is_read: true })
         .eq("chat_id", chatId)
-        .neq("sender_id", user?.id);
+        .neq("sender_id", user.id);
 
       if (error) {
         console.error("Error marking messages as read:", error);
       } else {
         console.log("✅ Messages marked as read for chat:", chatId);
-        // Refresh the chats list to update unread counts
-        await fetchChats();
+        // Only refresh the chats list if there were unread messages
+        const chat = chats.find(c => c.id === chatId);
+        if (chat && chat.unreadCount > 0) {
+          console.log('🔄 Refreshing chats list due to unread messages being marked as read');
+          await debouncedFetchChats();
+        }
       }
     } catch (error) {
       console.error("Error in handleChatClick:", error);
@@ -160,12 +237,59 @@ export default function Messages() {
     }
   };
 
-  if (loading) {
+  // If not authenticated and auth is done loading, redirect to home
+  useEffect(() => {
+    console.log('🔍 Redirect check:', { 
+      isAuthenticated, 
+      authLoading, 
+      isSessionRestoring, 
+      user: !!user,
+      shouldRedirect: !isAuthenticated && !authLoading && !isSessionRestoring && user === null 
+    });
+    
+    if (!isAuthenticated && !authLoading && !isSessionRestoring && user === null) {
+      console.log('User not authenticated, redirecting to home');
+      navigate('/');
+    }
+  }, [isAuthenticated, authLoading, isSessionRestoring, user, navigate]);
+
+  if (loading || authLoading || isSessionRestoring) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <span className="ml-3 text-muted-foreground">
+              {isSessionRestoring ? "Loading session..." : authLoading ? "Loading..." : "Loading conversations..."}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // If auth is done loading but user is not authenticated, show redirect message
+  if (!authLoading && !isSessionRestoring && !isAuthenticated) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <span className="ml-3 text-muted-foreground">Redirecting...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // If authenticated but user object is not fully loaded yet, show loading
+  if (isAuthenticated && (!user || !user.id)) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <span className="ml-3 text-muted-foreground">Loading user data...</span>
           </div>
         </div>
       </div>

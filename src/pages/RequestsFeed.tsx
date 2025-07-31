@@ -29,9 +29,9 @@ const RequestsFeed = () => {
       color: "bg-blue-50 border-blue-200"
     },
     {
-      icon: <Search className="w-8 h-8 text-green-500" />,
-      title: "Smart Matching",
-      description: "AI-powered matching system that connects learners with the best teachers based on skills, location, and availability.",
+      icon: <div className="w-8 h-8 text-green-500 text-2xl">🔔</div>,
+      title: "Skill Notifications",
+      description: "When you create a request, users who teach that skill will instantly be notified, so you get help faster.",
       status: "In Development",
       color: "bg-green-50 border-green-200"
     },
@@ -41,20 +41,6 @@ const RequestsFeed = () => {
       description: "Multiple teachers can respond to requests, giving learners options and creating healthy competition.",
       status: "Coming Soon",
       color: "bg-purple-50 border-purple-200"
-    },
-    {
-      icon: <Clock className="w-8 h-8 text-orange-500" />,
-      title: "Urgency Levels",
-      description: "Request urgency indicators help teachers prioritize and learners get faster responses when needed.",
-      status: "Planned",
-      color: "bg-orange-50 border-orange-200"
-    },
-    {
-      icon: <MapPin className="w-8 h-8 text-indigo-500" />,
-      title: "Location-Based Matching",
-      description: "Find local learning opportunities or connect with teachers in specific regions and time zones.",
-      status: "In Development",
-      color: "bg-indigo-50 border-indigo-200"
     },
     {
       icon: <Star className="w-8 h-8 text-yellow-500" />,
@@ -76,48 +62,6 @@ const RequestsFeed = () => {
       description: "Filter requests by specific skills, levels, and categories to find your perfect teaching opportunities.",
       status: "Coming Soon",
       color: "bg-red-50 border-red-200"
-    },
-    {
-      icon: <TrendingUp className="w-8 h-8 text-emerald-500" />,
-      title: "Response Analytics",
-      description: "Track your response rates, success metrics, and teaching impact to improve your approach.",
-      status: "In Development",
-      color: "bg-emerald-50 border-emerald-200"
-    },
-    {
-      icon: <Heart className="w-8 h-8 text-pink-500" />,
-      title: "Favorites System",
-      description: "Save interesting requests and favorite teachers to build long-term learning relationships.",
-      status: "Planned",
-      color: "bg-pink-50 border-pink-200"
-    },
-    {
-      icon: <Award className="w-8 h-8 text-amber-500" />,
-      title: "Response Rewards",
-      description: "Earn points, badges, and recognition for helpful responses and successful teaching outcomes.",
-      status: "Coming Soon",
-      color: "bg-amber-50 border-amber-200"
-    },
-    {
-      icon: <Zap className="w-8 h-8 text-lime-500" />,
-      title: "Quick Responses",
-      description: "One-click response templates and quick actions to respond to requests efficiently.",
-      status: "Planned",
-      color: "bg-lime-50 border-lime-200"
-    },
-    {
-      icon: <Globe className="w-8 h-8 text-teal-500" />,
-      title: "Global Learning Network",
-      description: "Connect with learners and teachers from around the world, breaking down geographical barriers.",
-      status: "In Development",
-      color: "bg-teal-50 border-teal-200"
-    },
-    {
-      icon: <Filter className="w-8 h-8 text-violet-500" />,
-      title: "Advanced Filtering",
-      description: "Filter by skill level, location, urgency, response count, and more to find perfect matches.",
-      status: "Coming Soon",
-      color: "bg-violet-50 border-violet-200"
     }
   ];
 
@@ -200,15 +144,6 @@ const RequestsFeed = () => {
                 The learning requests system will revolutionize how students and teachers connect!
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button 
-                  variant="default" 
-                  size="lg"
-                  onClick={() => window.history.back()}
-                  className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
-                >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Explore Other Features
-                </Button>
                 <Button 
                   variant="outline" 
                   size="lg"

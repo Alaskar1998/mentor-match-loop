@@ -46,31 +46,44 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
   const [isLoading, setIsLoading] = useState(false);
 
   const loadNotifications = async () => {
-    if (!user) {
-      console.log('🚫 No user found, skipping notification load');
-      return;
-    }
+    if (!user?.id) return;
     
-    console.log('🔄 Loading notifications for user:', user.id);
-    setIsLoading(true);
     try {
-      const [general, chat, counts] = await Promise.all([
+      setIsLoading(true);
+      
+      // Only log in development mode
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔄 Loading notifications for user:', user.id);
+      }
+      
+      const [generalNotificationsData, chatNotificationsData] = await Promise.all([
         notificationService.getNotifications(user.id, 'general'),
-        notificationService.getNotifications(user.id, 'chat'),
-        notificationService.getUnreadCount(user.id)
+        notificationService.getNotifications(user.id, 'chat')
       ]);
+
+      setGeneralNotifications(generalNotificationsData);
+      setChatNotifications(chatNotificationsData);
+
+      // Calculate unread counts
+      const generalUnread = generalNotificationsData.filter(n => !n.isRead).length;
+      const chatUnread = chatNotificationsData.filter(n => !n.isRead).length;
       
-      console.log('📊 Notification results:', {
-        general: general.length,
-        chat: chat.length,
-        counts
+      setUnreadCounts({
+        general: generalUnread,
+        chat: chatUnread,
+        total: generalUnread + chatUnread
       });
-      
-      setGeneralNotifications(general);
-      setChatNotifications(chat);
-      setUnreadCounts(counts);
+
+      // Only log in development mode
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📊 Notification results:', {
+          general: generalNotificationsData.length,
+          chat: chatNotificationsData.length,
+          counts: { general: generalUnread, chat: chatUnread, total: generalUnread + chatUnread }
+        });
+      }
     } catch (error) {
-      console.error('❌ Failed to load notifications:', error);
+      console.error('Failed to load notifications:', error);
     } finally {
       setIsLoading(false);
     }
@@ -144,11 +157,15 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
   // Optimized polling for notifications
   const { isActive: isPollingNotifications } = useOptimizedPolling(
     async () => {
+      // Only poll if user exists and we're not already loading
+      if (!user?.id || isLoading) {
+        return;
+      }
       await loadNotifications();
     },
     { 
-      interval: 10000, 
-      enabled: !!user,
+      interval: 60000, // Increased interval to 1 minute to reduce frequency
+      enabled: !!user?.id && !isLoading,
       maxRetries: 3
     }
   );

@@ -33,6 +33,8 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
+  isSessionRestoring: boolean; // Add this
   login: (email: string, password: string) => Promise<{ error?: string }>;
   signup: (userData: any) => Promise<{ error?: string }>;
   signInWithGoogle: () => Promise<{ error?: string }>;
@@ -60,17 +62,35 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
+  const [isSessionRestoring, setIsSessionRestoring] = useState(true); // Add this state
 
   // Set up auth state listener and check for existing session
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state change:', event, session?.user?.id);
         setSession(session);
         if (session?.user) {
+          // Prevent multiple simultaneous profile fetches
+          if (isLoadingProfile) {
+            console.log('⏱️ Profile fetch already in progress, skipping...');
+            return;
+          }
+          
           // Use setTimeout to prevent auth deadlock and allow profile updates to complete
           setTimeout(async () => {
             try {
+              setIsLoadingProfile(true);
+              
+              // Check if we already have the user data for this session
+              if (user?.id === session.user.id) {
+                console.log('✅ User data already loaded for this session');
+                setIsLoadingProfile(false);
+                return;
+              }
+              
               // Fetch user profile from database with retry mechanism
               let profile = null;
               let error = null;
@@ -123,6 +143,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                 };
                 setUser(userData);
                 setIsAuthenticated(true);
+                setIsSessionRestoring(false); // Mark session restoration as complete
                 return;
               }
 
@@ -152,6 +173,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                 console.log('Mapped user data:', userData);
                 setUser(userData);
                 setIsAuthenticated(true);
+                setIsSessionRestoring(false); // Mark session restoration as complete
               }
             } catch (error) {
               console.error('Error in auth state change handler:', error);
@@ -179,25 +201,36 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               };
               setUser(userData);
               setIsAuthenticated(true);
+              setIsSessionRestoring(false); // Mark session restoration as complete
+            } finally {
+              setIsLoadingProfile(false);
             }
           }, 100); // Small delay to allow profile updates to complete
         } else {
           setUser(null);
           setIsAuthenticated(false);
+          setIsSessionRestoring(false); // Mark session restoration as complete when no session
         }
       }
     );
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Session restoration check:', session?.user?.id);
       if (session) {
         setSession(session);
-        // The auth state change listener will handle the rest
+        // The auth state change listener will handle the rest and set isSessionRestoring to false
+      } else {
+        // No session found, mark restoration as complete after a small delay
+        setTimeout(() => {
+          console.log('No session found, marking restoration complete');
+          setIsSessionRestoring(false);
+        }, 500); // Small delay to ensure auth state is stable
       }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [user, isLoadingProfile]); // Add user and isLoadingProfile to dependencies
 
   const login = async (email: string, password: string) => {
     try {
@@ -377,6 +410,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       user,
       session,
       isAuthenticated,
+      isLoading: isLoadingProfile, // Expose isLoadingProfile to the context
+      isSessionRestoring, // Expose isSessionRestoring to the context
       login,
       signup,
       signInWithGoogle,

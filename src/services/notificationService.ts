@@ -5,7 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 class RealNotificationService implements NotificationService {
   async getNotifications(userId: string, type?: 'general' | 'chat'): Promise<Notification[]> {
     try {
-      console.log('🔍 Fetching notifications for user:', userId, 'type:', type);
+      // Only log in development mode
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔍 Fetching notifications for user:', userId, 'type:', type);
+      }
       
       let query = (supabase as any)
         .from('notifications')
@@ -21,7 +24,10 @@ class RealNotificationService implements NotificationService {
 
       const { data, error } = await query;
 
-      console.log('📧 Notifications query result:', { data, error, count: data?.length || 0 });
+      // Only log in development mode
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📧 Notifications query result:', { data, error, count: data?.length || 0 });
+      }
 
       if (error) {
         console.error('❌ Error fetching notifications:', error);
@@ -45,7 +51,10 @@ class RealNotificationService implements NotificationService {
         senderName: notification.sender_name
       })) || [];
 
-      console.log('✅ Processed notifications:', notifications.length, notifications);
+      // Only log in development mode
+      if (process.env.NODE_ENV === 'development') {
+        console.log('✅ Processed notifications:', notifications.length, notifications);
+      }
       return notifications;
     } catch (error) {
       console.error('❌ Error fetching notifications:', error);

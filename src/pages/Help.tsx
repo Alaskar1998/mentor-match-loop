@@ -43,11 +43,11 @@ const Help = () => {
         },
         {
           q: "How does skill exchange work?",
-          a: "SkillExchange connects people who want to teach with those who want to learn. You can offer skills you're good at and learn new skills from others in the community."
+          a: "Maharat Hub connects people who want to teach with those who want to learn. You can offer skills you're good at and learn new skills from others in the community."
         },
         {
-          q: "Is SkillExchange free to use?",
-          a: "Yes! SkillExchange offers a free tier with basic features. We also have premium plans with additional features like unlimited invitations and priority support."
+          q: "Is Maharat Hub free to use?",
+          a: "Yes! Maharat Hub offers a free tier with basic features. We also have premium plans with additional features like unlimited invitations and priority support."
         }
       ]
     },
@@ -91,7 +91,7 @@ const Help = () => {
         },
         {
           q: "Can I message users directly?",
-          a: "You can message users you've connected with through accepted invitations. All conversations happen within SkillExchange for safety."
+          a: "You can message users you've connected with through accepted invitations. All conversations happen within Maharat Hub for safety."
         }
       ]
     },
@@ -122,7 +122,7 @@ const Help = () => {
       icon: Shield,
       questions: [
         {
-          q: "Is it safe to meet people from SkillExchange?",
+          q: "Is it safe to meet people from Maharat Hub?",
           a: "We recommend starting with video calls and meeting in public places. Never share personal information like your home address or financial details."
         },
         {
@@ -310,7 +310,7 @@ const Help = () => {
                   <Mail className="w-5 h-5 text-muted-foreground" />
                   <div>
                     <div className="font-medium">Email Support</div>
-                    <div className="text-sm text-muted-foreground">support@skillexchange.com</div>
+                    <div className="text-sm text-muted-foreground">support@Maharat Hub.com</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">

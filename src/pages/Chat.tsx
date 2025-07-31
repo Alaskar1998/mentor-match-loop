@@ -59,6 +59,73 @@ interface ChatData {
   updated_at: string;
 }
 
+// Memoized ChatMessage component moved outside to prevent recreation
+const ChatMessageComponent = React.memo(({ 
+  msg, 
+  currentUserId, 
+  otherUser,
+  currentUserAvatar,
+  currentUserName
+}: { 
+  msg: ChatMessage; 
+  currentUserId?: string; 
+  otherUser?: any;
+  currentUserAvatar?: string;
+  currentUserName?: string;
+}) => {
+  const isCurrentUser = msg.senderId === currentUserId;
+  const isSystemMessage = msg.type === 'system' || msg.message.startsWith('[SYSTEM]');
+
+  if (isSystemMessage) {
+    return (
+      <div key={msg.id} className="flex justify-center my-4">
+        <div className="bg-muted px-4 py-2 rounded-lg text-sm text-muted-foreground">
+          {msg.message.replace('[SYSTEM] ', '')}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div key={msg.id} className={`flex gap-2 mb-4 ${isCurrentUser ? 'flex-row-reverse' : ''}`}>
+      <Avatar className="w-8 h-8 flex-shrink-0">
+        <AvatarImage src={isCurrentUser ? currentUserAvatar : otherUser?.avatar_url} />
+        <AvatarFallback>
+          {isCurrentUser 
+            ? (currentUserName?.charAt(0).toUpperCase() || currentUserId?.charAt(0).toUpperCase() || 'Y')
+            : (otherUser?.display_name?.charAt(0).toUpperCase() || 'U')
+          }
+        </AvatarFallback>
+      </Avatar>
+      <div className={`max-w-[70%] ${isCurrentUser ? 'text-right' : ''}`}>
+        <div className={`inline-block p-3 rounded-lg ${
+          isCurrentUser 
+            ? 'bg-primary text-primary-foreground' 
+            : 'bg-muted'
+        }`}>
+          {msg.message}
+        </div>
+        <div className="text-xs text-muted-foreground mt-1">
+          {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        </div>
+      </div>
+    </div>
+  );
+}, (prevProps, nextProps) => {
+  // Custom comparison function to prevent unnecessary re-renders
+  return (
+    prevProps.msg.id === nextProps.msg.id &&
+    prevProps.msg.message === nextProps.msg.message &&
+    prevProps.msg.timestamp.getTime() === nextProps.msg.timestamp.getTime() &&
+    prevProps.currentUserId === nextProps.currentUserId &&
+    prevProps.currentUserAvatar === nextProps.currentUserAvatar &&
+    prevProps.currentUserName === nextProps.currentUserName &&
+    prevProps.otherUser?.id === nextProps.otherUser?.id &&
+    prevProps.otherUser?.avatar_url === nextProps.otherUser?.avatar_url &&
+    prevProps.otherUser?.display_name === nextProps.otherUser?.display_name
+  );
+});
+
 const Chat = React.memo(() => {
   const { chatId } = useParams<{ chatId: string }>();
   const navigate = useNavigate();
@@ -89,55 +156,15 @@ const Chat = React.memo(() => {
   // Performance monitoring
   usePerformanceMonitor('Chat');
 
-  // Memoized ChatMessage component to prevent unnecessary re-renders
-  const ChatMessageComponent = React.memo(({ 
-    msg, 
-    currentUserId, 
-    otherUser 
-  }: { 
-    msg: ChatMessage; 
-    currentUserId?: string; 
-    otherUser?: any; 
-  }) => {
-    const isCurrentUser = msg.senderId === currentUserId;
-    const isSystemMessage = msg.type === 'system' || msg.message.startsWith('[SYSTEM]');
+  // Memoize user data to prevent unnecessary re-renders
+  const memoizedUserData = useMemo(() => ({
+    id: user?.id,
+    name: user?.name,
+    profilePicture: user?.profilePicture
+  }), [user?.id, user?.name, user?.profilePicture]);
 
-    if (isSystemMessage) {
-      return (
-        <div key={msg.id} className="flex justify-center my-4">
-          <div className="bg-muted px-4 py-2 rounded-lg text-sm text-muted-foreground">
-            {msg.message.replace('[SYSTEM] ', '')}
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <div key={msg.id} className={`flex gap-2 mb-4 ${isCurrentUser ? 'flex-row-reverse' : ''}`}>
-        <Avatar className="w-8 h-8 flex-shrink-0">
-          <AvatarImage src={isCurrentUser ? undefined : otherUser?.avatar_url} />
-          <AvatarFallback>
-            {isCurrentUser 
-              ? (currentUserId?.charAt(0).toUpperCase() || 'Y')
-              : (otherUser?.display_name?.charAt(0).toUpperCase() || 'U')
-            }
-          </AvatarFallback>
-        </Avatar>
-        <div className={`max-w-[70%] ${isCurrentUser ? 'text-right' : ''}`}>
-          <div className={`inline-block p-3 rounded-lg ${
-            isCurrentUser 
-              ? 'bg-primary text-primary-foreground' 
-              : 'bg-muted'
-          }`}>
-            {msg.message}
-          </div>
-          <div className="text-xs text-muted-foreground mt-1">
-            {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </div>
-        </div>
-      </div>
-    );
-  });
+  // Memoize other user data
+  const memoizedOtherUser = useMemo(() => otherUser, [otherUser?.id, otherUser?.display_name, otherUser?.avatar_url]);
 
   // Memoize expensive calculations
   const canStartExchange = useMemo(() => {
@@ -223,7 +250,7 @@ const Chat = React.memo(() => {
   // Optimized polling for messages
   const { isActive: isPollingMessages } = useOptimizedPolling(
     async () => {
-      if (!chatId || !user) return;
+      if (!chatId || !user || loading || !chatData || !otherUser) return; // Don't poll while loading or missing data
       
       try {
         let newMessages = null;
@@ -298,11 +325,12 @@ const Chat = React.memo(() => {
         }
       } catch (error) {
         console.error('Error in message polling:', error);
+        // Don't let polling errors affect the UI
       }
     },
     { 
-      interval: 8000, // Increased interval to reduce scrolling frequency
-      enabled: !!chatId && !!user,
+      interval: 15000, // Increased interval to reduce frequency (15 seconds)
+      enabled: !!chatId && !!user && !loading && !!chatData && !!otherUser, // Don't poll while loading or missing data
       maxRetries: 3
     }
   );
@@ -310,7 +338,7 @@ const Chat = React.memo(() => {
   // Optimized polling for exchange state and contract data
   const { isActive: isPollingExchange } = useOptimizedPolling(
     async () => {
-      if (!chatId || !user) return;
+      if (!chatId || !user || loading || !chatData || !otherUser) return; // Don't poll while loading or missing data
       
       try {
         // Fetch updated chat state
@@ -378,8 +406,6 @@ const Chat = React.memo(() => {
             }
           }
 
-
-
           // Auto-open finish modal when other user has finished
           if (updatedContract && !showFinishModal && exchangeState === 'active_exchange') {
             const userFinished = contractData.currentUserFinished;
@@ -398,8 +424,8 @@ const Chat = React.memo(() => {
       }
     },
     { 
-      interval: 5000, // Increased interval to reduce load
-      enabled: !!chatId && !!user && exchangeState !== 'active_exchange',
+      interval: 20000, // Increased interval to reduce frequency (20 seconds)
+      enabled: !!chatId && !!user && !loading && !!chatData && !!otherUser && exchangeState !== 'active_exchange', // Don't poll while loading or missing data
       maxRetries: 3
     }
   );
@@ -582,7 +608,11 @@ const Chat = React.memo(() => {
       toast.error("Failed to load chat data");
       navigate('/messages');
     } finally {
-      setLoading(false);
+      // Add a small delay to ensure all state updates are processed before setting loading to false
+      setTimeout(() => {
+        setLoading(false);
+        console.log('✅ Loading complete, polling can now start');
+      }, 100);
     }
   };
 
@@ -1386,8 +1416,10 @@ const Chat = React.memo(() => {
                   <ChatMessageComponent 
                     key={msg.id}
                     msg={msg} 
-                    currentUserId={user?.id} 
-                    otherUser={otherUser} 
+                    currentUserId={memoizedUserData.id} 
+                    otherUser={memoizedOtherUser} 
+                    currentUserAvatar={memoizedUserData.profilePicture}
+                    currentUserName={memoizedUserData.name}
                   />
                 ))}
                 <div ref={messagesEndRef} />

@@ -8,7 +8,7 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Company Info */}
           <div className="space-y-4">
-            <h3 className="font-bold text-lg">SkillExchange</h3>
+            <h3 className="font-bold text-lg">Maharat Hub</h3>
             <p className="text-sm text-muted-foreground">
               Connect, learn, and grow together. Exchange skills with people around the world.
             </p>
@@ -40,10 +40,10 @@ export const Footer = () => {
               <Link to="/help" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Help Center
               </Link>
-              <a href="mailto:support@skillexchange.com" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <a href="mailto:support@Maharat Hub.com" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Contact Support
               </a>
-              <a href="mailto:feedback@skillexchange.com" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <a href="mailto:feedback@Maharat Hub.com" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Send Feedback
               </a>
               <Link to="/settings" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
@@ -77,7 +77,7 @@ export const Footer = () => {
         {/* Bottom Footer */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} SkillExchange. All rights reserved.
+            © {new Date().getFullYear()} Maharat Hub. All rights reserved.
           </div>
           <div className="flex items-center gap-4">
             <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">

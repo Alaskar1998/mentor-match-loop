@@ -16,7 +16,7 @@ const TermsOfUse = () => {
         <Alert className="mb-6">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            By accessing and using SkillExchange, you agree to be bound by these Terms of Use. 
+            By accessing and using Maharat Hub, you agree to be bound by these Terms of Use. 
             If you do not agree to these terms, please do not use our platform.
           </AlertDescription>
         </Alert>
@@ -28,8 +28,8 @@ const TermsOfUse = () => {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">
-                These Terms of Use ("Terms") govern your use of the SkillExchange platform ("Service") 
-                operated by SkillExchange ("we," "us," or "our"). By creating an account or using our 
+                These Terms of Use ("Terms") govern your use of the Maharat Hub platform ("Service") 
+                operated by Maharat Hub ("we," "us," or "our"). By creating an account or using our 
                 Service, you agree to comply with and be bound by these Terms and our Privacy Policy.
               </p>
             </CardContent>
@@ -41,7 +41,7 @@ const TermsOfUse = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-muted-foreground">
-                SkillExchange is a platform that connects individuals who want to exchange skills and knowledge. 
+                Maharat Hub is a platform that connects individuals who want to exchange skills and knowledge. 
                 Our Service allows users to:
               </p>
               <ul className="list-disc list-inside space-y-2 text-muted-foreground">
@@ -70,7 +70,7 @@ const TermsOfUse = () => {
               <div>
                 <h4 className="font-semibold mb-2">Age Requirements</h4>
                 <p className="text-muted-foreground">
-                  You must be at least 13 years old to use SkillExchange. Users between 13-17 must have 
+                  You must be at least 13 years old to use Maharat Hub. Users between 13-17 must have 
                   parental consent to use the platform.
                 </p>
               </div>
@@ -89,7 +89,7 @@ const TermsOfUse = () => {
               <CardTitle>4. User Conduct and Prohibited Uses</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-muted-foreground mb-4">You agree not to use SkillExchange to:</p>
+              <p className="text-muted-foreground mb-4">You agree not to use Maharat Hub to:</p>
               <ul className="list-disc list-inside space-y-2 text-muted-foreground">
                 <li>Violate any laws, regulations, or third-party rights</li>
                 <li>Post false, misleading, or fraudulent information</li>
@@ -113,14 +113,14 @@ const TermsOfUse = () => {
               <div>
                 <h4 className="font-semibold mb-2">Platform Content</h4>
                 <p className="text-muted-foreground">
-                  The SkillExchange platform, including its design, features, and functionality, is owned 
+                  The Maharat Hub platform, including its design, features, and functionality, is owned 
                   by us and protected by copyright, trademark, and other intellectual property laws.
                 </p>
               </div>
               <div>
                 <h4 className="font-semibold mb-2">User Content</h4>
                 <p className="text-muted-foreground">
-                  You retain ownership of content you post on SkillExchange but grant us a non-exclusive, 
+                  You retain ownership of content you post on Maharat Hub but grant us a non-exclusive, 
                   worldwide, royalty-free license to use, display, and distribute your content in connection 
                   with operating our Service.
                 </p>
@@ -136,7 +136,7 @@ const TermsOfUse = () => {
               <div>
                 <h4 className="font-semibold mb-2">Subscription Plans</h4>
                 <p className="text-muted-foreground">
-                  SkillExchange offers premium subscription plans with enhanced features. Subscription 
+                  Maharat Hub offers premium subscription plans with enhanced features. Subscription 
                   fees are billed in advance on a monthly or annual basis.
                 </p>
               </div>
@@ -185,7 +185,7 @@ const TermsOfUse = () => {
               <div>
                 <h4 className="font-semibold mb-2">User Interactions</h4>
                 <p className="text-muted-foreground">
-                  SkillExchange facilitates connections between users but is not responsible for the 
+                  Maharat Hub facilitates connections between users but is not responsible for the 
                   quality, safety, or legality of user interactions, skill exchanges, or user-generated content.
                 </p>
               </div>
@@ -205,7 +205,7 @@ const TermsOfUse = () => {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">
-                To the maximum extent permitted by law, SkillExchange shall not be liable for any indirect, 
+                To the maximum extent permitted by law, Maharat Hub shall not be liable for any indirect, 
                 incidental, special, consequential, or punitive damages, including but not limited to loss 
                 of profits, data, or use, arising out of or relating to your use of our Service, regardless 
                 of the theory of liability.
@@ -219,7 +219,7 @@ const TermsOfUse = () => {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">
-                You agree to indemnify and hold SkillExchange harmless from any claims, damages, losses, 
+                You agree to indemnify and hold Maharat Hub harmless from any claims, damages, losses, 
                 liabilities, and expenses arising out of your use of our Service, violation of these Terms, 
                 or infringement of any third-party rights.
               </p>
@@ -272,7 +272,7 @@ const TermsOfUse = () => {
               <p className="text-muted-foreground">
                 We reserve the right to modify these Terms at any time. We will notify users of material 
                 changes by posting the updated Terms on our platform and updating the "Last updated" date. 
-                Your continued use of SkillExchange after changes become effective constitutes acceptance 
+                Your continued use of Maharat Hub after changes become effective constitutes acceptance 
                 of the revised Terms.
               </p>
             </CardContent>
@@ -287,8 +287,8 @@ const TermsOfUse = () => {
                 If you have any questions about these Terms of Use, please contact us:
               </p>
               <div className="space-y-2 text-muted-foreground">
-                <p><strong>Email:</strong> legal@skillexchange.com</p>
-                <p><strong>Address:</strong> SkillExchange Legal Team, 123 Learning Street, Education City, EC 12345</p>
+                <p><strong>Email:</strong> legal@Maharat Hub.com</p>
+                <p><strong>Address:</strong> Maharat Hub Legal Team, 123 Learning Street, Education City, EC 12345</p>
               </div>
             </CardContent>
           </Card>

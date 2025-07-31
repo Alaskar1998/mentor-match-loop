@@ -124,12 +124,15 @@ const MyExchanges = () => {
     }
   }, [searchParams]);
 
-  // Fetch data when component mounts
+  // Load data when user changes
   useEffect(() => {
     if (user?.id) {
-      fetchData(false); // Pass isPolling = false for initial load
-    } else {
-      setLoading(false);
+      // Add a small delay to prevent rapid re-fetches
+      const timeoutId = setTimeout(() => {
+        fetchData();
+      }, 100);
+      
+      return () => clearTimeout(timeoutId);
     }
   }, [user?.id]);
 
@@ -160,39 +163,38 @@ const MyExchanges = () => {
   // );
 
   const fetchData = async (isPolling = false) => {
-    if (!user?.id) {
-      setLoading(false);
-      return;
-    }
-
     try {
-      // Only set loading to true if this is not a polling call
+      // Check if user ID exists before making any queries
+      if (!user?.id) {
+        console.error("No user ID available for fetching exchanges data");
+        return;
+      }
+      
+      // If this is not a polling call, show loading state
       if (!isPolling) {
         setLoading(true);
       }
       
-      // Fetch active exchanges
-      await fetchActiveExchanges();
-      
-      // Fetch completed exchanges
-      await fetchCompletedExchanges();
-      
-      // Fetch user responses (DISABLED - responses tab is disabled)
-      // await fetchUserResponses();
-      
-      // Fetch sent invites
-      await fetchSentInvites();
-      
-      // Fetch received invites
-      await fetchReceivedInvites();
-      
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      if (!isPolling) {
-        toast.error('Failed to load exchanges');
+      // Only log in development mode
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔄 Fetching exchanges data for user:', user.id);
       }
+      
+      // Fetch all data in parallel
+      await Promise.all([
+        fetchActiveExchanges(),
+        fetchCompletedExchanges(),
+        fetchSentInvites(),
+        fetchReceivedInvites()
+      ]);
+      
+      // Only log in development mode
+      if (process.env.NODE_ENV === 'development') {
+        console.log('✅ All exchanges data fetched successfully');
+      }
+    } catch (error) {
+      console.error('Error in fetchData:', error);
     } finally {
-      // Only set loading to false if this is not a polling call
       if (!isPolling) {
         setLoading(false);
       }
@@ -201,13 +203,21 @@ const MyExchanges = () => {
 
   const fetchActiveExchanges = async () => {
     try {
-      console.log('🔄 Fetching active exchanges for user:', user?.id);
+      // Only log in development mode
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔄 Fetching active exchanges for user:', user?.id);
+      }
       
-      // Fetch active exchanges using our contract structure
+      // Check if user ID exists before making the query
+      if (!user?.id) {
+        console.error("No user ID available for fetching active exchanges");
+        setExchanges(prev => ({ ...prev, active: [] }));
+        return;
+      }
+
       const { data: contractsData, error: contractsError } = await supabase
         .from('exchange_contracts')
         .select(`
-          id,
           chat_id,
           user1_id,
           user2_id,
@@ -218,7 +228,7 @@ const MyExchanges = () => {
           created_at,
           updated_at
         `)
-        .or(`user1_id.eq.${user?.id},user2_id.eq.${user?.id}`)
+        .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
         .eq('user1_agreed', true)
         .eq('user2_agreed', true);
 
@@ -228,7 +238,10 @@ const MyExchanges = () => {
         return;
       }
 
-      console.log('📋 Found contracts:', contractsData?.length || 0);
+      // Only log in development mode
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📋 Found contracts:', contractsData?.length || 0);
+      }
 
       if (!contractsData || contractsData.length === 0) {
         setExchanges(prev => ({ ...prev, active: [] }));
@@ -259,7 +272,7 @@ const MyExchanges = () => {
       });
 
       const activeExchanges: Exchange[] = contractsData.map(contract => {
-        const isUser1 = contract.user1_id === user?.id;
+        const isUser1 = contract.user1_id === user.id;
         const otherUserId = isUser1 ? contract.user2_id : contract.user1_id;
         const otherUser = profilesMap.get(otherUserId);
         
@@ -303,7 +316,10 @@ const MyExchanges = () => {
         };
       });
 
-      console.log('✅ Active exchanges processed:', activeExchanges.length);
+      // Only log in development mode
+      if (process.env.NODE_ENV === 'development') {
+        console.log('✅ Active exchanges processed:', activeExchanges.length);
+      }
       setExchanges(prev => ({ ...prev, active: activeExchanges }));
     } catch (error) {
       console.error('Error in fetchActiveExchanges:', error);
@@ -313,13 +329,21 @@ const MyExchanges = () => {
 
   const fetchCompletedExchanges = async () => {
     try {
-      console.log('🔄 Fetching completed exchanges for user:', user?.id);
+      // Only log in development mode
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔄 Fetching completed exchanges for user:', user?.id);
+      }
       
-      // Fetch completed exchanges using our contract structure
+      // Check if user ID exists before making the query
+      if (!user?.id) {
+        console.error("No user ID available for fetching completed exchanges");
+        setExchanges(prev => ({ ...prev, completed: [] }));
+        return;
+      }
+
       const { data: contractsData, error: contractsError } = await supabase
         .from('exchange_contracts')
         .select(`
-          id,
           chat_id,
           user1_id,
           user2_id,
@@ -331,7 +355,7 @@ const MyExchanges = () => {
           created_at,
           updated_at
         `)
-        .or(`user1_id.eq.${user?.id},user2_id.eq.${user?.id}`)
+        .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
         .not('finished_at', 'is', null);
 
       if (contractsError) {
@@ -340,7 +364,10 @@ const MyExchanges = () => {
         return;
       }
 
-      console.log('📋 Found completed contracts:', contractsData?.length || 0);
+      // Only log in development mode
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📋 Found completed contracts:', contractsData?.length || 0);
+      }
 
       if (!contractsData || contractsData.length === 0) {
         setExchanges(prev => ({ ...prev, completed: [] }));
@@ -375,7 +402,7 @@ const MyExchanges = () => {
       const { data: existingReviews, error: reviewsError } = await supabase
         .from('reviews')
         .select('chat_id')
-        .eq('reviewer_id', user?.id)
+        .eq('reviewer_id', user.id)
         .in('chat_id', chatIds);
 
       if (reviewsError) {
@@ -386,7 +413,7 @@ const MyExchanges = () => {
       const reviewedChatIds = new Set(existingReviews?.map(r => r.chat_id) || []);
 
       const completedExchanges: Exchange[] = contractsData.map(contract => {
-        const isUser1 = contract.user1_id === user?.id;
+        const isUser1 = contract.user1_id === user.id;
         const otherUserId = isUser1 ? contract.user2_id : contract.user1_id;
         const otherUser = profilesMap.get(otherUserId);
         
@@ -415,7 +442,10 @@ const MyExchanges = () => {
         };
       });
 
-      console.log('✅ Completed exchanges processed:', completedExchanges.length);
+      // Only log in development mode
+      if (process.env.NODE_ENV === 'development') {
+        console.log('✅ Completed exchanges processed:', completedExchanges.length);
+      }
       
       // Sort completed exchanges from newest to oldest
       const sortedCompletedExchanges = completedExchanges.sort((a, b) => 
@@ -475,6 +505,13 @@ const MyExchanges = () => {
 
   const fetchSentInvites = async () => {
     try {
+      // Check if user ID exists before making the query
+      if (!user?.id) {
+        console.error("No user ID available for fetching sent invites");
+        setExchanges(prev => ({ ...prev, sent: [] }));
+        return;
+      }
+      
       // First fetch invitations without joins
       const { data: invitesData, error: invitesError } = await supabase
         .from('invitations')
@@ -487,7 +524,7 @@ const MyExchanges = () => {
           status,
           created_at
         `)
-        .eq('sender_id', user?.id);
+        .eq('sender_id', user.id);
 
       if (invitesError) {
         console.error('Error fetching sent invites:', invitesError);
@@ -551,6 +588,14 @@ const MyExchanges = () => {
 
   const fetchReceivedInvites = async () => {
     try {
+      // Check if user ID exists before making the query
+      if (!user?.id) {
+        console.error("No user ID available for fetching received invites");
+        setExchanges(prev => ({ ...prev, request: [] }));
+        setInvitations([]);
+        return;
+      }
+      
       // First fetch invitations without joins
       const { data: invitesData, error: invitesError } = await supabase
         .from('invitations')
@@ -563,7 +608,7 @@ const MyExchanges = () => {
           status,
           created_at
         `)
-        .eq('recipient_id', user?.id);
+        .eq('recipient_id', user.id);
 
       if (invitesError) {
         console.error('Error fetching received invites:', invitesError);
@@ -802,7 +847,7 @@ const MyExchanges = () => {
           type: 'invitation_accepted',
           actionUrl: `/chat/${chatData.id}`,
           metadata: { 
-            senderId: user?.id,
+            senderId: user.id,
             senderName: currentUserName,
             chatId: chatData.id,
             skill: invite.skill

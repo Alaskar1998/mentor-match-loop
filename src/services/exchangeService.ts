@@ -25,22 +25,28 @@ export interface LatestExchange {
 
 export const getLatestExchanges = async (limit: number = 10): Promise<LatestExchange[]> => {
   try {
-    console.log('Fetching latest exchanges from database...');
-
-    // Query completed exchanges from the database
+    console.log('Fetching latest exchanges...');
+    
+    // Use a simpler query without foreign key relationships
     const { data, error } = await supabase
       .from('exchange_contracts')
       .select(`
         id,
+        chat_id,
+        user1_id,
+        user2_id,
+        user1_skill,
+        user2_skill,
+        user1_agreed,
+        user2_agreed,
+        user1_finished,
+        user2_finished,
+        finished_at,
         created_at,
-        updated_at,
-        status,
-        contract_data,
-        profiles!exchange_contracts_student_id_fkey(display_name),
-        profiles!exchange_contracts_mentor_id_fkey(display_name)
+        updated_at
       `)
-      .eq('status', 'completed')
-      .order('updated_at', { ascending: false })
+      .not('finished_at', 'is', null)
+      .order('finished_at', { ascending: false })
       .limit(limit);
 
     if (error) {
@@ -57,12 +63,10 @@ export const getLatestExchanges = async (limit: number = 10): Promise<LatestExch
 
     // Transform the data into the expected format
     const exchanges: LatestExchange[] = data.map((exchange, index) => {
-      const contractData = exchange.contract_data || {};
-      const studentSkill = contractData.student_skill || 'Unknown Skill';
-      const mentorSkill = contractData.mentor_skill || 'Unknown Skill';
-      
-      // Use the skill that was actually taught (usually the mentor's skill)
-      const skill = mentorSkill !== 'Unknown Skill' ? mentorSkill : studentSkill;
+      // Determine which skill was taught (usually the non-"Nothing" skill)
+      const user1Skill = exchange.user1_skill;
+      const user2Skill = exchange.user2_skill;
+      const skill = user1Skill !== "Nothing" ? user1Skill : user2Skill;
       
       // Get category emoji for the skill
       const category = findCategoryForSkill(skill);
@@ -70,14 +74,14 @@ export const getLatestExchanges = async (limit: number = 10): Promise<LatestExch
       
       return {
         id: exchange.id,
-        student: exchange.profiles?.display_name || `Student ${index + 1}`,
-        mentor: exchange.profiles?.display_name || `Mentor ${index + 1}`,
+        student: getRandomArabicName(), // Use random Arabic names
+        mentor: getRandomArabicName(), // Use random Arabic names
         skill: skill,
         action: getRandomAction(),
         rating: getRandomRating(),
         avatar: avatar,
         mentorBadge: "🌟",
-        created_at: exchange.updated_at || exchange.created_at
+        created_at: exchange.finished_at || exchange.updated_at || exchange.created_at
       };
     });
 
@@ -94,7 +98,7 @@ export const getExchangeCount = async (): Promise<number> => {
     const { count, error } = await supabase
       .from('exchange_contracts')
       .select('*', { count: 'exact', head: true })
-      .eq('status', 'completed');
+      .not('finished_at', 'is', null);
 
     if (error) {
       console.error('Error fetching exchange count:', error);
@@ -108,13 +112,24 @@ export const getExchangeCount = async (): Promise<number> => {
   }
 };
 
+// Helper function to get random Arabic names (transliterated in English)
+const getRandomArabicName = (): string => {
+  const arabicNames = [
+    "Ahmed", "Ali", "Mohammed", "Fatima", "Aisha", "Khadija", "Omar", "Othman", "Abdullah", "Abdulrahman",
+    "Yusuf", "Ibrahim", "Ismail", "Hassan", "Hussein", "Zainab", "Maryam", "Noor", "Sara", "Layla",
+    "Nora", "Rana", "Salma", "Dina", "Hind", "Noreen", "Reem", "Sara", "Fatima", "Aisha",
+    "Abdulaziz", "Abdulmalik", "Abdulrahim", "Abdulghani", "Abdulwahab", "Abdulsalam", "Abdulfattah", "Abdullatif"
+  ];
+  return arabicNames[Math.floor(Math.random() * arabicNames.length)];
+};
+
 // Helper function to get default exchanges when database is empty
 const getDefaultExchanges = (limit: number = 10): LatestExchange[] => {
   const defaultExchanges = [
     {
       id: "1",
-      student: "Anna",
-      mentor: "Carlos",
+      student: "Ahmed",
+      mentor: "Ali",
       skill: "Guitar",
       action: "learned",
       rating: 5,
@@ -124,8 +139,8 @@ const getDefaultExchanges = (limit: number = 10): LatestExchange[] => {
     },
     {
       id: "2",
-      student: "Ali",
-      mentor: "Sarah",
+      student: "Fatima",
+      mentor: "Mohammed",
       skill: "Photoshop",
       action: "mastered",
       rating: 5,
@@ -135,8 +150,8 @@ const getDefaultExchanges = (limit: number = 10): LatestExchange[] => {
     },
     {
       id: "3",
-      student: "Lucas",
-      mentor: "Maria",
+      student: "Omar",
+      mentor: "Aisha",
       skill: "Cooking",
       action: "learned",
       rating: 5,
@@ -146,8 +161,8 @@ const getDefaultExchanges = (limit: number = 10): LatestExchange[] => {
     },
     {
       id: "4",
-      student: "Mei",
-      mentor: "David",
+      student: "Khadija",
+      mentor: "Abdullah",
       skill: "JavaScript",
       action: "mastered",
       rating: 5,
@@ -157,8 +172,8 @@ const getDefaultExchanges = (limit: number = 10): LatestExchange[] => {
     },
     {
       id: "5",
-      student: "Alex",
-      mentor: "Luna",
+      student: "Yusuf",
+      mentor: "Abdulrahman",
       skill: "Photography",
       action: "learned",
       rating: 5,
@@ -168,8 +183,8 @@ const getDefaultExchanges = (limit: number = 10): LatestExchange[] => {
     },
     {
       id: "6",
-      student: "Emma",
-      mentor: "James",
+      student: "Ibrahim",
+      mentor: "Hassan",
       skill: "Python",
       action: "mastered",
       rating: 4,
@@ -179,8 +194,8 @@ const getDefaultExchanges = (limit: number = 10): LatestExchange[] => {
     },
     {
       id: "7",
-      student: "Sofia",
-      mentor: "Michael",
+      student: "Zainab",
+      mentor: "Hussein",
       skill: "Yoga",
       action: "learned",
       rating: 5,
@@ -190,8 +205,8 @@ const getDefaultExchanges = (limit: number = 10): LatestExchange[] => {
     },
     {
       id: "8",
-      student: "Tom",
-      mentor: "Lisa",
+      student: "Maryam",
+      mentor: "Noor",
       skill: "Spanish",
       action: "mastered",
       rating: 4,

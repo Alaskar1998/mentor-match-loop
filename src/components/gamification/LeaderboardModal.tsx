@@ -66,7 +66,7 @@ export const LeaderboardModal = ({ isOpen, onClose }: LeaderboardModalProps) => 
   //   },
   //   {
   //     id: '4',
-  //     name: 'David Kim',
+  //     name: 'Mohammad',
   //     profilePicture: '👨‍🔬',
   //     rating: 4.6,
   //     exchangeCount: 29,

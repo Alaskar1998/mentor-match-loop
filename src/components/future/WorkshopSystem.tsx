@@ -164,7 +164,7 @@ export const WorkshopDashboard = () => {
       description: 'Learn modern JavaScript patterns and best practices for building scalable applications.',
       instructor: {
         id: 'instructor1',
-        name: 'Sarah Chen',
+        name: 'Sarah Ahmad',
         profilePicture: '👩‍💻',
         mentorTier: '🏅 Gold Mentor'
       },

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Settings, Mail } from "lucide-react";
+import { Search, Settings, Mail, Coins } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { UserAvatar } from "@/components/auth/UserAvatar";
@@ -43,6 +43,10 @@ export const Header = () => {
     setShowAuthModal(false);
   };
 
+  const handleCoinClick = () => {
+    navigate('/gamification');
+  };
+
   return (
     <>
       {/* Navigation Header */}
@@ -50,16 +54,13 @@ export const Header = () => {
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between gap-4">
             <Link to="/" className="font-bold text-xl hover:text-primary transition-colors flex-shrink-0">
-              SkillExchange
+              Maharat Hub
             </Link>
 
             {/* Navigation Links - Left of Search Bar */}
             <div className="hidden lg:flex items-center gap-2">
               <Link to="/requests-feed">
                 <Button variant="ghost" size="sm">Requests Feed</Button>
-              </Link>
-              <Link to="/create-request">
-                <Button variant="ghost" size="sm">Create Request</Button>
               </Link>
               <Link to="/pricing">
                 <Button variant="ghost" size="sm">Pricing</Button>
@@ -94,6 +95,17 @@ export const Header = () => {
             <div className="flex items-center gap-2 md:gap-4">
               {isAuthenticated ? (
                 <div className="flex items-center gap-2">
+                  {/* Coin Display */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleCoinClick}
+                    className="flex items-center gap-2 text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50"
+                  >
+                    <Coins className="w-4 h-4" />
+                    <span className="font-semibold">Coins</span>
+                  </Button>
+                  
                   <Link to="/messages">
                     <Button variant="ghost" size="sm">Messages</Button>
                   </Link>
