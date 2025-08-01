@@ -5,59 +5,49 @@ import { Badge } from "@/components/ui/badge";
 import { Check, Crown, Star, Zap } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 const PricingPage = () => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
 
   const plans = [
     {
-      name: "Free",
-      description: "Perfect for getting started with skill exchange",
+      name: t('pricing.plans.free.name'),
+      description: t('pricing.plans.free.description'),
       monthlyPrice: 0,
       yearlyPrice: 0,
       icon: <Star className="w-6 h-6" />,
       popular: false,
-      features: [
-        "Limited invites",
-        "First 3 search results visible",
-        "Basic filters only",
-        "Country-only search",
-        "Ads visible"
-      ],
-      limitations: [
-        "Profiles beyond 3rd result are blurred",
-        "No map search",
-        "No mentor filter",
-        "No early event access"
-      ]
+      features: t('pricing.plans.free.features', { returnObjects: true }) as string[],
+      limitations: t('pricing.plans.free.limitations', { returnObjects: true }) as string[],
+      cta: t('pricing.plans.free.cta')
     },
     {
-      name: "Premium",
-      description: "Unlock unlimited learning opportunities",
+      name: t('pricing.plans.premium.name'),
+      description: t('pricing.plans.premium.description'),
       monthlyPrice: 4.99,
       yearlyPrice: 49.99,
       icon: <Crown className="w-6 h-6" />,
       popular: true,
-      features: [
-        "Unlimited invites",
-        "Worldwide search + map search",
-        "Full filters (including Mentor filter)",
-        "Up to 3 invite messages",
-        "No ads",
-        "Early event access"
-      ]
+      features: t('pricing.plans.premium.features', { returnObjects: true }) as string[],
+      cta: user ? t('pricing.plans.premium.cta') : t('pricing.plans.premium.ctaSignedOut')
     }
   ];
 
   const handleUpgrade = (planName: string, price: number) => {
     if (!user) {
-      toast.error("Please sign in to upgrade your plan");
+      toast.error(t('pricing.upgradeError'));
       return;
     }
     
     // TODO: Implement Stripe integration
-    toast.info(`${planName} plan upgrade coming soon! Price: $${price}/${billingCycle}`);
+    toast.info(t('pricing.comingSoon', { 
+      planName, 
+      price, 
+      cycle: billingCycle === "monthly" ? "mo" : "yr" 
+    }));
   };
 
   const getPrice = (plan: typeof plans[0]) => {
@@ -75,16 +65,15 @@ const PricingPage = () => {
       <div className="container mx-auto px-4 py-12">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">Choose Your Plan</h1>
+          <h1 className="text-4xl font-bold mb-4">{t('pricing.title')}</h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Unlock your learning potential with our flexible pricing plans. 
-            Start free and upgrade as you grow.
+            {t('pricing.subtitle')}
           </p>
           
           {/* Billing Toggle */}
           <div className="flex items-center justify-center gap-4 mb-8">
             <span className={`text-sm ${billingCycle === "monthly" ? "text-foreground" : "text-muted-foreground"}`}>
-              Monthly
+              {t('pricing.billing.monthly')}
             </span>
             <Button
               variant="outline"
@@ -97,10 +86,10 @@ const PricingPage = () => {
               }`} />
             </Button>
             <span className={`text-sm ${billingCycle === "yearly" ? "text-foreground" : "text-muted-foreground"}`}>
-              Yearly
+              {t('pricing.billing.yearly')}
             </span>
             {billingCycle === "yearly" && (
-              <Badge variant="secondary" className="ml-2">Save up to 20%</Badge>
+              <Badge variant="secondary" className="ml-2">{t('pricing.billing.saveUpTo')}</Badge>
             )}
           </div>
         </div>
@@ -117,7 +106,7 @@ const PricingPage = () => {
               {plan.popular && (
                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                   <Badge className="bg-primary text-primary-foreground px-4 py-1">
-                    Most Popular
+                    {t('pricing.popular')}
                   </Badge>
                 </div>
               )}
@@ -136,7 +125,7 @@ const PricingPage = () => {
                 <div className="text-center mb-6">
                   <div className="flex items-baseline justify-center gap-1">
                     <span className="text-4xl font-bold">
-                      {plan.monthlyPrice === 0 ? "Free" : `$${getPrice(plan)}`}
+                      {plan.monthlyPrice === 0 ? t('pricing.plans.free.price') : `$${getPrice(plan)}`}
                     </span>
                     {plan.monthlyPrice > 0 && (
                       <span className="text-muted-foreground">/{billingCycle === "monthly" ? "mo" : "yr"}</span>
@@ -144,14 +133,14 @@ const PricingPage = () => {
                   </div>
                   {billingCycle === "yearly" && plan.monthlyPrice > 0 && (
                     <p className="text-sm text-green-600 mt-1">
-                      Save {getSavings(plan)}% annually
+                      {t('pricing.saveAnnually', { percent: getSavings(plan) })}
                     </p>
                   )}
                 </div>
                 
                 {/* Features */}
                 <div className="mb-6">
-                  <h4 className="font-semibold text-sm mb-3 text-green-600">✅ What's Included:</h4>
+                  <h4 className="font-semibold text-sm mb-3 text-green-600">{t('pricing.whatsIncluded')}</h4>
                   <ul className="space-y-3 mb-4">
                     {plan.features.map((feature, featureIndex) => (
                       <li key={featureIndex} className="flex items-start gap-3">
@@ -164,7 +153,7 @@ const PricingPage = () => {
                   {/* Limitations for Free tier */}
                   {plan.limitations && (
                     <>
-                      <h4 className="font-semibold text-sm mb-3 text-orange-600">⚠️ Limitations:</h4>
+                      <h4 className="font-semibold text-sm mb-3 text-orange-600">{t('pricing.limitations')}</h4>
                       <ul className="space-y-3 mb-4">
                         {plan.limitations.map((limitation, limitationIndex) => (
                           <li key={limitationIndex} className="flex items-start gap-3">
@@ -182,7 +171,7 @@ const PricingPage = () => {
                   variant={plan.popular ? "default" : "outline"}
                   onClick={() => handleUpgrade(plan.name, getPrice(plan))}
                 >
-                  {plan.monthlyPrice === 0 ? "Get Started Free" : (user ? "Upgrade Now" : "Sign Up to Continue")}
+                  {plan.cta}
                 </Button>
               </CardContent>
             </Card>
@@ -191,24 +180,24 @@ const PricingPage = () => {
 
         {/* FAQ Section */}
         <div className="mt-16 max-w-3xl mx-auto">
-          <h2 className="text-2xl font-bold text-center mb-8">Frequently Asked Questions</h2>
+          <h2 className="text-2xl font-bold text-center mb-8">{t('pricing.faq.title')}</h2>
           <div className="space-y-6">
             <div>
-              <h3 className="font-semibold mb-2">Can I change my plan anytime?</h3>
+              <h3 className="font-semibold mb-2">{t('pricing.faq.questions.changePlan.question')}</h3>
               <p className="text-muted-foreground">
-                Yes! You can upgrade or downgrade your plan at any time. Changes will be reflected in your next billing cycle.
+                {t('pricing.faq.questions.changePlan.answer')}
               </p>
             </div>
             <div>
-              <h3 className="font-semibold mb-2">Is there a free trial?</h3>
+              <h3 className="font-semibold mb-2">{t('pricing.faq.questions.freeTrial.question')}</h3>
               <p className="text-muted-foreground">
-                You can start with limited free access. All paid plans come with a 14-day money-back guarantee.
+                {t('pricing.faq.questions.freeTrial.answer')}
               </p>
             </div>
             <div>
-              <h3 className="font-semibold mb-2">What payment methods do you accept?</h3>
+              <h3 className="font-semibold mb-2">{t('pricing.faq.questions.paymentMethods.question')}</h3>
               <p className="text-muted-foreground">
-                We accept all major credit cards, PayPal, and bank transfers for enterprise plans.
+                {t('pricing.faq.questions.paymentMethods.answer')}
               </p>
             </div>
           </div>

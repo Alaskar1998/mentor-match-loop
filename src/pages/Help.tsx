@@ -18,8 +18,10 @@ import {
   Phone,
   ExternalLink
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const Help = () => {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [contactForm, setContactForm] = useState({
     name: "",
@@ -191,7 +193,7 @@ const Help = () => {
               {filteredFAQ.length === 0 ? (
                 <Card>
                   <CardContent className="text-center py-8">
-                    <p className="text-muted-foreground">No articles found matching your search.</p>
+                    <p className="text-muted-foreground">{t('help.noArticlesFound')}</p>
                   </CardContent>
                 </Card>
               ) : (
@@ -230,24 +232,24 @@ const Help = () => {
             {/* Quick Links */}
             <Card>
               <CardHeader>
-                <CardTitle>Quick Links</CardTitle>
+                <CardTitle>{t('help.quickLinks.title')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <Button variant="outline" className="w-full justify-start gap-3">
                   <BookOpen className="w-4 h-4" />
-                  Getting Started Guide
+                  {t('help.quickLinks.gettingStartedGuide')}
                 </Button>
                 <Button variant="outline" className="w-full justify-start gap-3">
                   <Video className="w-4 h-4" />
-                  Video Tutorials
+                  {t('help.quickLinks.videoTutorials')}
                 </Button>
                 <Button variant="outline" className="w-full justify-start gap-3">
                   <Shield className="w-4 h-4" />
-                  Safety Guidelines
+                  {t('help.quickLinks.safetyGuidelines')}
                 </Button>
                 <Button variant="outline" className="w-full justify-start gap-3">
                   <Users className="w-4 h-4" />
-                  Community Guidelines
+                  {t('help.quickLinks.communityGuidelines')}
                 </Button>
               </CardContent>
             </Card>
@@ -255,13 +257,13 @@ const Help = () => {
             {/* Contact Support */}
             <Card>
               <CardHeader>
-                <CardTitle>Contact Support</CardTitle>
+                <CardTitle>{t('help.contact.title')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleContactSubmit} className="space-y-4">
                   <div className="space-y-2">
                     <Input
-                      placeholder="Your name"
+                      placeholder={t('help.contact.namePlaceholder')}
                       value={contactForm.name}
                       onChange={(e) => setContactForm(prev => ({ ...prev, name: e.target.value }))}
                       required
@@ -270,7 +272,7 @@ const Help = () => {
                   <div className="space-y-2">
                     <Input
                       type="email"
-                      placeholder="Your email"
+                      placeholder={t('help.contact.emailPlaceholder')}
                       value={contactForm.email}
                       onChange={(e) => setContactForm(prev => ({ ...prev, email: e.target.value }))}
                       required
@@ -278,7 +280,7 @@ const Help = () => {
                   </div>
                   <div className="space-y-2">
                     <Input
-                      placeholder="Subject"
+                      placeholder={t('help.contact.subjectPlaceholder')}
                       value={contactForm.subject}
                       onChange={(e) => setContactForm(prev => ({ ...prev, subject: e.target.value }))}
                       required
@@ -286,7 +288,7 @@ const Help = () => {
                   </div>
                   <div className="space-y-2">
                     <Textarea
-                      placeholder="Describe your issue..."
+                      placeholder={t('help.contact.messagePlaceholder')}
                       value={contactForm.message}
                       onChange={(e) => setContactForm(prev => ({ ...prev, message: e.target.value }))}
                       rows={4}
@@ -294,7 +296,7 @@ const Help = () => {
                     />
                   </div>
                   <Button type="submit" className="w-full">
-                    Send Message
+                    {t('help.contact.sendMessage')}
                   </Button>
                 </form>
               </CardContent>

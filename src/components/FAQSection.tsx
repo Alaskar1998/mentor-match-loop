@@ -5,35 +5,38 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-
-const faqs = [
-  {
-    question: "How does the skill exchange work?",
-    answer: "Our platform connects people who want to learn and teach skills. You can offer to teach something you're good at in exchange for learning something from someone else. It's a win-win system where everyone benefits from knowledge sharing."
-  },
-  {
-    question: "Is it really free to use?",
-    answer: "Yes! Our basic platform is completely free to use. You can create an account, find teachers, and start learning without paying anything. We also offer premium features for advanced users who want additional benefits."
-  },
-  {
-    question: "How do I find a teacher for the skill I want to learn?",
-    answer: "Use our search feature to find teachers by skill, location, or rating. You can filter results to find the perfect match for your learning goals. Once you find someone, you can send them an invitation to start an exchange."
-  },
-  {
-    question: "What if I don't have any skills to teach?",
-    answer: "Everyone has something valuable to share! Think about your hobbies, work experience, or even basic life skills. You might be surprised at what others want to learn. We also offer mentorship sessions where experienced teachers help beginners."
-  },
-  {
-    question: "How do I ensure a safe learning environment?",
-    answer: "We have several safety measures in place: verified profiles, user ratings and reviews, and community guidelines. We recommend meeting in public places for in-person exchanges and using video calls for online sessions. Always trust your instincts and report any concerns."
-  },
-  {
-    question: "Can I learn multiple skills at once?",
-    answer: "Absolutely! You can engage in multiple skill exchanges simultaneously. Many users learn several skills at once, which is a great way to maximize your learning potential and meet more people in our community."
-  }
-];
+import { useTranslation } from "react-i18next";
 
 export const FAQSection = React.memo(() => {
+  const { t } = useTranslation();
+
+  const faqs = [
+    {
+      question: t('faq.questions.howSkillExchangeWorks.question'),
+      answer: t('faq.questions.howSkillExchangeWorks.answer')
+    },
+    {
+      question: t('faq.questions.isItFree.question'),
+      answer: t('faq.questions.isItFree.answer')
+    },
+    {
+      question: t('faq.questions.howToFindTeacher.question'),
+      answer: t('faq.questions.howToFindTeacher.answer')
+    },
+    {
+      question: t('faq.questions.noSkillsToTeach.question'),
+      answer: t('faq.questions.noSkillsToTeach.answer')
+    },
+    {
+      question: t('faq.questions.safeLearningEnvironment.question'),
+      answer: t('faq.questions.safeLearningEnvironment.answer')
+    },
+    {
+      question: t('faq.questions.multipleSkills.question'),
+      answer: t('faq.questions.multipleSkills.answer')
+    }
+  ];
+
   return (
     <section className="py-20 bg-background">
       <div className="container mx-auto px-6">
@@ -41,10 +44,10 @@ export const FAQSection = React.memo(() => {
           {/* Header */}
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-              Frequently Asked Questions
+              {t('faq.title')}
             </h2>
             <p className="text-xl text-muted-foreground">
-              Everything you need to know about our skill exchange platform
+              {t('faq.subtitle')}
             </p>
           </div>
 
@@ -69,17 +72,17 @@ export const FAQSection = React.memo(() => {
           {/* Still have questions CTA */}
           <div className="text-center mt-12 p-8 bg-gradient-subtle rounded-lg border border-border">
             <h3 className="text-xl font-semibold text-foreground mb-4">
-              Still have questions?
+              {t('actions.stillHaveQuestions')}
             </h3>
             <p className="text-muted-foreground mb-6">
-              Can't find what you're looking for? Our support team is here to help.
+              {t('actions.cantFindLookingFor')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button className="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium">
-                Contact Support
+                {t('actions.contactSupport')}
               </button>
               <button className="px-6 py-3 border border-border text-foreground rounded-lg hover:bg-muted transition-colors font-medium">
-                View Help Center
+                {t('actions.viewHelpCenter')}
               </button>
             </div>
           </div>

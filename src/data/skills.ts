@@ -26,6 +26,319 @@ export interface Skill {
   category?: string;
 }
 
+// Arabic translations for skills
+export const SKILL_TRANSLATIONS: { [key: string]: string } = {
+  // Business & Professional
+  "Marketing": "التسويق",
+  "Public Speaking": "التحدث أمام الجمهور",
+  "Entrepreneurship": "ريادة الأعمال",
+  "Finance": "التمويل",
+  "Accounting": "المحاسبة",
+  "Project Management": "إدارة المشاريع",
+  "Sales": "المبيعات",
+  "Negotiation": "التفاوض",
+  "Leadership": "القيادة",
+  "Business Strategy": "الاستراتيجية التجارية",
+  "Digital Marketing": "التسويق الرقمي",
+  "SEO": "تحسين محركات البحث",
+  "Content Marketing": "تسويق المحتوى",
+  "Social Media Marketing": "تسويق وسائل التواصل الاجتماعي",
+  "Financial Planning": "التخطيط المالي",
+  "Investment": "الاستثمار",
+  "Stock Trading": "تداول الأسهم",
+  "Real Estate": "العقارات",
+  "Consulting": "الاستشارات",
+  "Human Resources": "الموارد البشرية",
+  "Operations Management": "إدارة العمليات",
+  "Supply Chain Management": "إدارة سلسلة التوريد",
+
+  // Crafts & DIY
+  "Knitting": "الحياكة",
+  "Sewing": "الخياطة",
+  "Woodworking": "النجارة",
+  "Pottery": "الفخار",
+  "Origami": "الأوريغامي",
+  "Jewelry Making": "صناعة المجوهرات",
+  "Scrapbooking": "ألبوم القصاصات",
+  "Candle Making": "صناعة الشموع",
+  "Soap Making": "صناعة الصابون",
+  "Gardening": "البستنة",
+  "Beekeeping": "تربية النحل",
+  "Carpentry": "النجارة",
+  "Metalworking": "تشغيل المعادن",
+  "Leather Crafting": "صناعة الجلود",
+  "Glass Blowing": "نفخ الزجاج",
+  "Weaving": "النسيج",
+  "Embroidery": "التطريز",
+  "Cross-stitch": "التطريز المتقاطع",
+  "Quilting": "خياطة اللحف",
+  "Macrame": "المكرامية",
+  "Paper Crafting": "الحرف الورقية",
+
+  // Culinary Arts
+  "Baking": "الخبز",
+  "Cooking": "الطبخ",
+  "Nutrition": "التغذية",
+  "Vegan Cooking": "الطبخ النباتي",
+  "Grilling": "الشواء",
+  "Pastry": "الحلويات",
+  "Meal Prep": "تحضير الوجبات",
+  "Food Photography": "تصوير الطعام",
+  "Wine Tasting": "تذوق النبيذ",
+  "Bartending": "البارتندينج",
+  "Coffee Making": "صناعة القهوة",
+  "Sushi Making": "صناعة السوشي",
+  "Bread Making": "صناعة الخبز",
+  "Cake Decorating": "تزيين الكيك",
+  "Chocolate Making": "صناعة الشوكولاتة",
+  "Fermentation": "التخمير",
+  "Canning": "التعليب",
+  "Food Safety": "سلامة الغذاء",
+  "Menu Planning": "تخطيط القوائم",
+  "Catering": "خدمة الطعام",
+
+  // Health & Wellness
+  "Yoga": "اليوغا",
+  "Fitness": "اللياقة البدنية",
+  "Swimming": "السباحة",
+  "Meditation": "التأمل",
+  "Pilates": "البيلاتس",
+  "Running": "الجري",
+  "Cycling": "ركوب الدراجات",
+  "Personal Training": "التدريب الشخصي",
+  "Weight Training": "تدريب الأوزان",
+  "Cardio": "التمارين القلبية",
+  "Stretching": "التمدد",
+  "Mindfulness": "اليقظة الذهنية",
+  "Stress Management": "إدارة التوتر",
+  "Mental Health": "الصحة النفسية",
+  "First Aid": "الإسعافات الأولية",
+  "CPR": "الإنعاش القلبي الرئوي",
+  "Physical Therapy": "العلاج الطبيعي",
+  "Massage Therapy": "العلاج بالتدليك",
+  "Acupuncture": "الوخز بالإبر",
+  "Herbal Medicine": "الطب العشبي",
+
+  // Languages
+  "English": "الإنجليزية",
+  "Spanish": "الإسبانية",
+  "French": "الفرنسية",
+  "German": "الألمانية",
+  "Mandarin": "الماندرين",
+  "Arabic": "العربية",
+  "Russian": "الروسية",
+  "Japanese": "اليابانية",
+  "Korean": "الكورية",
+  "Italian": "الإيطالية",
+  "Portuguese": "البرتغالية",
+  "Hindi": "الهندية",
+  "Turkish": "التركية",
+  "Dutch": "الهولندية",
+  "Swedish": "السويدية",
+  "Norwegian": "النرويجية",
+  "Danish": "الدنماركية",
+  "Finnish": "الفنلندية",
+  "Polish": "البولندية",
+  "Czech": "التشيكية",
+  "Hungarian": "المجرية",
+  "Greek": "اليونانية",
+  "Hebrew": "العبرية",
+  "Thai": "التايلاندية",
+  "Vietnamese": "الفيتنامية",
+  "Indonesian": "الإندونيسية",
+  "Malay": "الملايو",
+  "Filipino": "الفلبينية",
+
+  // Life Skills
+  "Time Management": "إدارة الوقت",
+  "Productivity": "الإنتاجية",
+  "Parenting": "الأبوة والأمومة",
+  "Self Defense": "الدفاع عن النفس",
+  "Budgeting": "إعداد الميزانية",
+  "Tax Preparation": "إعداد الضرائب",
+  "Home Maintenance": "صيانة المنزل",
+  "Car Maintenance": "صيانة السيارات",
+  "Cooking Basics": "أساسيات الطبخ",
+  "Cleaning": "التنظيف",
+  "Organization": "التنظيم",
+  "Planning": "التخطيط",
+  "Communication": "التواصل",
+  "Conflict Resolution": "حل النزاعات",
+  "Networking": "التواصل المهني",
+  "Writing": "الكتابة",
+  "Reading": "القراءة",
+  "Critical Thinking": "التفكير النقدي",
+  "Problem Solving": "حل المشكلات",
+
+  // Music & Arts
+  "Guitar": "الجيتار",
+  "Piano": "البيانو",
+  "Singing": "الغناء",
+  "Drums": "الطبول",
+  "Violin": "الكمان",
+  "Bass": "الباس",
+  "Saxophone": "الساكسفون",
+  "Trumpet": "البوق",
+  "Flute": "الناي",
+  "Clarinet": "الكلارينيت",
+  "Cello": "التشيلو",
+  "Ukulele": "اليوكيليلي",
+  "Harmonica": "الهارمونيكا",
+  "DJing": "الدي جي",
+  "Music Production": "إنتاج الموسيقى",
+  "Composition": "التأليف الموسيقي",
+  "Music Theory": "النظرية الموسيقية",
+  "Drawing": "الرسم",
+  "Painting": "الرسم الزيتي",
+  "Graphic Design": "التصميم الجرافيكي",
+  "Photography": "التصوير الفوتوغرافي",
+  "Illustration": "الرسم التوضيحي",
+  "Animation": "الرسوم المتحركة",
+  "3D Modeling": "النمذجة ثلاثية الأبعاد",
+  "Digital Art": "الفن الرقمي",
+  "Sculpture": "النحت",
+  "Fashion Design": "تصميم الأزياء",
+  "Interior Design": "التصميم الداخلي",
+
+  // Programming & Tech
+  "Python": "بايثون",
+  "JavaScript": "جافاسكريبت",
+  "Java": "جافا",
+  "C++": "سي بلس بلس",
+  "C#": "سي شارب",
+  "TypeScript": "تايب سكريبت",
+  "Go": "جو",
+  "Rust": "رست",
+  "PHP": "بي إتش بي",
+  "Ruby": "روبي",
+  "Swift": "سويفت",
+  "Kotlin": "كوتلين",
+  "SQL": "إس كيو إل",
+  "HTML": "إتش تي إم إل",
+  "CSS": "سي إس إس",
+  "React": "رياكت",
+  "Vue.js": "فيو جي إس",
+  "Angular": "أنجولار",
+  "Node.js": "نود جي إس",
+  "Django": "جانغو",
+  "Flask": "فلاسك",
+  "Spring": "سبرينج",
+  "Laravel": "لارافيل",
+  "Express.js": "إكسبريس جي إس",
+  "Web Development": "تطوير الويب",
+  "Mobile Development": "تطوير التطبيقات",
+  "DevOps": "ديف أوبس",
+  "Machine Learning": "التعلم الآلي",
+  "Artificial Intelligence": "الذكاء الاصطناعي",
+  "Data Science": "علم البيانات",
+  "Cloud Computing": "الحوسبة السحابية",
+  "Cybersecurity": "الأمن السيبراني",
+  "Blockchain": "البلوك تشين",
+  "UI/UX Design": "تصميم واجهة المستخدم",
+  "Game Development": "تطوير الألعاب",
+  "IoT": "إنترنت الأشياء",
+  "AR/VR": "الواقع المعزز والافتراضي",
+
+  // Science & Education
+  "Mathematics": "الرياضيات",
+  "Physics": "الفيزياء",
+  "Chemistry": "الكيمياء",
+  "Biology": "الأحياء",
+  "Statistics": "الإحصاء",
+  "Data Analysis": "تحليل البيانات",
+  "Robotics": "الروبوتات",
+  "Astronomy": "علم الفلك",
+  "Geology": "الجيولوجيا",
+  "Psychology": "علم النفس",
+  "Sociology": "علم الاجتماع",
+  "History": "التاريخ",
+  "Geography": "الجغرافيا",
+  "Economics": "الاقتصاد",
+  "Philosophy": "الفلسفة",
+  "Literature": "الأدب",
+  "Linguistics": "اللسانيات",
+  "Computer Science": "علوم الحاسوب",
+  "Engineering": "الهندسة",
+  "Architecture": "العمارة",
+  "Medicine": "الطب",
+  "Nursing": "التمريض",
+
+  // Sports & Recreation
+  "Soccer": "كرة القدم",
+  "Basketball": "كرة السلة",
+  "Tennis": "التنس",
+  "Martial Arts": "الرياضات القتالية",
+  "Golf": "الجولف",
+  "Baseball": "البيسبول",
+  "Table Tennis": "تنس الطاولة",
+  "Volleyball": "الكرة الطائرة",
+  "Chess": "الشطرنج",
+  "Rock Climbing": "تسلق الصخور",
+  "Hiking": "المشي لمسافات طويلة",
+  "Skiing": "التزلج",
+  "Snowboarding": "التزلج على الجليد",
+  "Surfing": "ركوب الأمواج",
+  "Skateboarding": "التزلج على اللوح",
+  "Dancing": "الرقص",
+  "Gymnastics": "الجمباز",
+  "Boxing": "الملاكمة",
+  "Wrestling": "المصارعة",
+  "Archery": "الرماية",
+  "Fishing": "الصيد",
+  "Hunting": "الصيد البري",
+  "Camping": "التخييم",
+
+  // Travel & Culture
+  "Travel Planning": "تخطيط السفر",
+  "Cultural Awareness": "الوعي الثقافي",
+  "World Cuisine": "المأكولات العالمية",
+  "Videography": "التصوير السينمائي",
+  "Language Learning": "تعلم اللغات",
+  "Cultural Exchange": "التبادل الثقافي",
+  "Tourism": "السياحة",
+  "Hospitality": "الضيافة",
+  "Event Planning": "تخطيط الفعاليات",
+  "International Relations": "العلاقات الدولية",
+  "Cultural Studies": "الدراسات الثقافية",
+  "Anthropology": "علم الإنسان",
+  "Archaeology": "علم الآثار",
+  "Museum Studies": "دراسات المتاحف",
+
+  // Writing & Communication
+  "Creative Writing": "الكتابة الإبداعية",
+  "Copywriting": "كتابة الإعلانات",
+  "Blogging": "التدوين",
+  "Editing": "التحرير",
+  "Storytelling": "سرد القصص",
+  "Resume Writing": "كتابة السيرة الذاتية",
+  "Speech Writing": "كتابة الخطب",
+  "Technical Writing": "الكتابة التقنية",
+  "Journalism": "الصحافة",
+  "Content Creation": "إنشاء المحتوى",
+  "Social Media": "وسائل التواصل الاجتماعي",
+  "Email Writing": "كتابة البريد الإلكتروني",
+  "Grant Writing": "كتابة المنح",
+  "Translation": "الترجمة",
+  "Interpretation": "التفسير",
+  "Public Relations": "العلاقات العامة",
+  "Advertising": "الإعلان",
+
+  // Categories
+  "Business & Professional": "الأعمال والمهن",
+  "Crafts & DIY": "الحرف والأعمال اليدوية",
+  "Culinary Arts": "الفنون الطهي",
+  "Health & Wellness": "الصحة والعافية",
+  "Languages": "اللغات",
+  "Life Skills": "مهارات الحياة",
+  "Music & Arts": "الموسيقى والفنون",
+  "Other": "أخرى",
+  "Programming & Tech": "البرمجة والتكنولوجيا",
+  "Science & Education": "العلوم والتعليم",
+  "Sports & Recreation": "الرياضة والترفيه",
+  "Travel & Culture": "السفر والثقافة",
+  "Writing & Communication": "الكتابة والتواصل"
+};
+
 // Master skills and categories data
 export const SKILL_CATEGORIES: SkillCategory[] = [
   {
@@ -204,6 +517,49 @@ export const getCategoryEmoji = (category: string): string => {
 export const getCategoryDescription = (category: string): string => {
   const foundCategory = SKILL_CATEGORIES.find(cat => cat.category === category);
   return foundCategory?.description || 'Custom category';
+};
+
+// Helper functions for bilingual search
+export const getSkillTranslation = (skillName: string): string => {
+  return SKILL_TRANSLATIONS[skillName] || skillName;
+};
+
+export const findSkillByTranslation = (arabicSkillName: string): string | null => {
+  const normalizedArabicName = arabicSkillName.toLowerCase().trim();
+  for (const [englishSkill, arabicTranslation] of Object.entries(SKILL_TRANSLATIONS)) {
+    if (arabicTranslation.toLowerCase() === normalizedArabicName) {
+      return englishSkill;
+    }
+  }
+  return null;
+};
+
+export const searchSkillsBilingual = (query: string): string[] => {
+  const normalizedQuery = query.toLowerCase().trim();
+  const results: string[] = [];
+  
+  console.log('searchSkillsBilingual: Searching for query:', query, 'normalized:', normalizedQuery);
+  
+  // Search in English skills
+  for (const skill of getAllSkills()) {
+    if (skill.toLowerCase().includes(normalizedQuery)) {
+      results.push(skill);
+      console.log('searchSkillsBilingual: Found English match:', skill);
+    }
+  }
+  
+  // Search in Arabic translations
+  for (const [englishSkill, arabicTranslation] of Object.entries(SKILL_TRANSLATIONS)) {
+    if (arabicTranslation.toLowerCase().includes(normalizedQuery)) {
+      if (!results.includes(englishSkill)) {
+        results.push(englishSkill);
+        console.log('searchSkillsBilingual: Found Arabic match:', arabicTranslation, '->', englishSkill);
+      }
+    }
+  }
+  
+  console.log('searchSkillsBilingual: Final results:', results);
+  return results;
 };
 
 // Popular skills for the homepage (subset of all skills)

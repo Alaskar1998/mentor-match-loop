@@ -21,121 +21,123 @@ import {
   Filter
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const Gamification = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const features = [
     {
       id: 'coin-system',
-      title: 'Coin System',
-      description: 'Earn coins through daily logins, completing exchanges, and achieving milestones.',
+      title: t('gamification.features.coinSystem.title'),
+      description: t('gamification.features.coinSystem.description'),
       icon: <Coins className="w-6 h-6 text-yellow-600" />,
-      status: 'Coming Soon',
+      status: t('status.comingSoon'),
       statusColor: 'bg-green-100 text-green-800 border-green-200'
     },
     {
       id: 'daily-rewards',
-      title: 'Daily Rewards',
-      description: 'Log in daily to earn coins and maintain your streak for bonus rewards.',
+      title: t('gamification.features.dailyRewards.title'),
+      description: t('gamification.features.dailyRewards.description'),
       icon: <Calendar className="w-6 h-6 text-blue-600" />,
-      status: 'Coming Soon',
+      status: t('status.comingSoon'),
       statusColor: 'bg-green-100 text-green-800 border-green-200'
     },
     {
       id: 'badge-system',
-      title: 'Badge System',
-      description: 'Unlock badges for achievements, mentoring, and special milestones.',
+      title: t('gamification.features.badgeSystem.title'),
+      description: t('gamification.features.badgeSystem.description'),
       icon: <Award className="w-6 h-6 text-purple-600" />,
-      status: 'Coming Soon',
+      status: t('status.comingSoon'),
       statusColor: 'bg-green-100 text-green-800 border-green-200'
     },
     {
       id: 'exchange-rewards',
-      title: 'Exchange Rewards',
-      description: 'Earn coins and experience points for completing successful skill exchanges.',
+      title: t('gamification.features.exchangeRewards.title'),
+      description: t('gamification.features.exchangeRewards.description'),
       icon: <Target className="w-6 h-6 text-green-600" />,
-      status: 'Coming Soon',
+      status: t('status.comingSoon'),
       statusColor: 'bg-green-100 text-green-800 border-green-200'
     },
     {
       id: 'leaderboard',
-      title: 'Leaderboard',
-      description: 'Compete with other users and climb the leaderboard rankings.',
+      title: t('gamification.features.leaderboard.title'),
+      description: t('gamification.features.leaderboard.description'),
       icon: <Trophy className="w-6 h-6 text-orange-600" />,
-      status: 'Coming Soon',
+      status: t('status.comingSoon'),
       statusColor: 'bg-green-100 text-green-800 border-green-200'
     },
     {
       id: 'coin-shop',
-      title: 'Coin Shop',
-      description: 'Spend your coins on premium features and exclusive items.',
+      title: t('gamification.features.coinShop.title'),
+      description: t('gamification.features.coinShop.description'),
       icon: <ShoppingCart className="w-6 h-6 text-pink-600" />,
-      status: 'Coming Soon',
+      status: t('status.comingSoon'),
       statusColor: 'bg-green-100 text-green-800 border-green-200'
     },
     {
       id: 'streak-bonuses',
-      title: 'Streak Bonuses',
-      description: 'Earn increasing rewards for maintaining daily login streaks.',
+      title: t('gamification.features.streakBonuses.title'),
+      description: t('gamification.features.streakBonuses.description'),
       icon: <TrendingUp className="w-6 h-6 text-red-600" />,
-      status: 'Coming Soon',
+      status: t('status.comingSoon'),
       statusColor: 'bg-green-100 text-green-800 border-green-200'
     },
     {
       id: 'achievement-tracking',
-      title: 'Achievement Tracking',
-      description: 'Track your progress and unlock achievements as you learn and teach.',
+      title: t('gamification.features.achievementTracking.title'),
+      description: t('gamification.features.achievementTracking.description'),
       icon: <Star className="w-6 h-6 text-yellow-600" />,
-      status: 'Coming Soon',
+      status: t('status.comingSoon'),
       statusColor: 'bg-green-100 text-green-800 border-green-200'
     },
     {
       id: 'community-challenges',
-      title: 'Community Challenges',
-      description: 'Participate in community-wide challenges and earn special rewards.',
+      title: t('gamification.features.communityChallenges.title'),
+      description: t('gamification.features.communityChallenges.description'),
       icon: <Users className="w-6 h-6 text-indigo-600" />,
-      status: 'Coming Soon',
+      status: t('status.comingSoon'),
       statusColor: 'bg-green-100 text-green-800 border-green-200'
     },
     {
       id: 'quick-actions',
-      title: 'Quick Actions',
-      description: 'One-click actions to claim daily rewards and complete tasks efficiently.',
+      title: t('gamification.features.quickActions.title'),
+      description: t('gamification.features.quickActions.description'),
       icon: <Zap className="w-6 h-6 text-blue-600" />,
-      status: 'Coming Soon',
+      status: t('status.comingSoon'),
       statusColor: 'bg-green-100 text-green-800 border-green-200'
     },
     {
       id: 'global-rankings',
-      title: 'Global Rankings',
-      description: 'Compare your progress with learners and teachers worldwide.',
+      title: t('gamification.features.globalRankings.title'),
+      description: t('gamification.features.globalRankings.description'),
       icon: <Globe className="w-6 h-6 text-green-600" />,
-      status: 'Coming Soon',
+      status: t('status.comingSoon'),
       statusColor: 'bg-green-100 text-green-800 border-green-200'
     },
     {
       id: 'mentor-bonuses',
-      title: 'Mentor Bonuses',
-      description: 'Help someone without asking for anything in return and earn extra mentor coins as a thank-you for your contribution.',
+      title: t('gamification.features.mentorBonuses.title'),
+      description: t('gamification.features.mentorBonuses.description'),
       icon: <Crown className="w-6 h-6 text-yellow-600" />,
-      status: 'In Development',
+      status: t('status.inDevelopment'),
       statusColor: 'bg-blue-100 text-blue-800 border-blue-200'
     },
     {
       id: 'challenges-streaks',
-      title: 'Challenges & Streaks',
-      description: 'Daily and weekly challenges to keep you motivated and reward you for consistency.',
+      title: t('gamification.features.challengesStreaks.title'),
+      description: t('gamification.features.challengesStreaks.description'),
       icon: <Target className="w-6 h-6 text-purple-600" />,
-      status: 'Planned',
+      status: t('status.planned'),
       statusColor: 'bg-gray-100 text-gray-800 border-gray-200'
     },
     {
       id: 'special-events',
-      title: 'Special Events & Giveaways',
-      description: 'Seasonal events and giveaways for top mentors and active learners.',
+      title: t('gamification.features.specialEvents.title'),
+      description: t('gamification.features.specialEvents.description'),
       icon: <Gift className="w-6 h-6 text-pink-600" />,
-      status: 'Coming Soon',
+      status: t('status.comingSoon'),
       statusColor: 'bg-blue-100 text-blue-800 border-blue-200'
     }
   ];
@@ -150,15 +152,15 @@ const Gamification = () => {
               <Coins className="w-12 h-12 text-white" />
             </div>
             <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
-              Gamification System
+              {t('gamification.title')}
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              We're building an exciting gamification system with coins, badges, and rewards to enhance your learning experience!
+              {t('gamification.subtitle')}
             </p>
             <div className="inline-flex items-center gap-2 bg-gradient-warm text-warm-foreground px-6 py-3 rounded-full shadow-elegant">
               <div className="w-3 h-3 bg-success rounded-full animate-pulse" />
               <span className="font-semibold text-lg">
-                Coming Soon - Stay Tuned!
+                {t('gamification.comingSoon')}
               </span>
             </div>
           </div>
@@ -191,11 +193,11 @@ const Gamification = () => {
               <CardContent className="p-8">
                 <Badge className="mb-4 bg-purple-100 text-purple-800 border-purple-200">
                   <Sparkles className="w-3 h-3 mr-1" />
-                  Be the First to Know!
+                  {t('actions.beFirstToKnow')}
                 </Badge>
-                <h2 className="text-2xl font-bold mb-4">Stay Tuned!</h2>
+                <h2 className="text-2xl font-bold mb-4">{t('gamification.stayTuned')}</h2>
                 <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-                  We're working hard to bring these exciting features to life. The gamification system will revolutionize how you learn, teach, and engage with the community!
+                  {t('gamification.description')}
                 </p>
                 <div className="flex gap-4 justify-center">
                   <Button 
@@ -203,7 +205,7 @@ const Gamification = () => {
                     variant="outline"
                   >
                     <Globe className="w-4 h-4 mr-2" />
-                    Back to Home
+                    {t('gamification.backToHome')}
                   </Button>
                 </div>
               </CardContent>

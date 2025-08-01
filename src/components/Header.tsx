@@ -7,12 +7,15 @@ import { useAuth } from "@/hooks/useAuth";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { UserAvatar } from "@/components/auth/UserAvatar";
 import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { isSearchDisabled } from "@/utils/userValidation";
 
 export const Header = () => {
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<'signup' | 'signin'>('signin');
   const [searchQuery, setSearchQuery] = useState("");
@@ -60,10 +63,10 @@ export const Header = () => {
             {/* Navigation Links - Left of Search Bar */}
             <div className="hidden lg:flex items-center gap-2">
               <Link to="/requests-feed">
-                <Button variant="ghost" size="sm">Requests Feed</Button>
+                <Button variant="ghost" size="sm">{t('nav.requestsFeed')}</Button>
               </Link>
               <Link to="/pricing">
-                <Button variant="ghost" size="sm">Pricing</Button>
+                <Button variant="ghost" size="sm">{t('nav.pricing')}</Button>
               </Link>
             </div>
 
@@ -73,7 +76,7 @@ export const Header = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input
                   type="text"
-                  placeholder={searchDisabled ? "Search disabled" : "Search for skills only..."}
+                  placeholder={searchDisabled ? "Search disabled" : t('hero.searchPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => !searchDisabled && setSearchQuery(e.target.value)}
                   onKeyDown={(e) => !searchDisabled && e.key === "Enter" && handleSearch()}
@@ -93,6 +96,9 @@ export const Header = () => {
             </div>
 
             <div className="flex items-center gap-2 md:gap-4">
+              {/* Language Switcher */}
+              <LanguageSwitcher />
+              
               {isAuthenticated ? (
                 <div className="flex items-center gap-2">
                   {/* Coin Display */}
@@ -103,14 +109,14 @@ export const Header = () => {
                     className="flex items-center gap-2 text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50"
                   >
                     <Coins className="w-4 h-4" />
-                    <span className="font-semibold">Coins</span>
+                    <span className="font-semibold">{t('nav.coins')}</span>
                   </Button>
                   
                   <Link to="/messages">
-                    <Button variant="ghost" size="sm">Messages</Button>
+                    <Button variant="ghost" size="sm">{t('nav.messages')}</Button>
                   </Link>
                   <Link to="/my-exchanges">
-                    <Button variant="ghost" size="sm">My Exchanges</Button>
+                    <Button variant="ghost" size="sm">{t('nav.myExchanges')}</Button>
                   </Link>
                   <NotificationDropdown type="general" />
                   <NotificationDropdown type="chat" />
@@ -119,13 +125,13 @@ export const Header = () => {
               ) : (
                 <div className="flex items-center gap-2">
                   <Link to="/help">
-                    <Button variant="ghost" size="sm">Help</Button>
+                    <Button variant="ghost" size="sm">{t('nav.help')}</Button>
                   </Link>
                   <Button onClick={() => handleAuthClick('signin')} size="sm">
-                    Sign In
+                    {t('nav.signIn')}
                   </Button>
                   <Button onClick={() => handleAuthClick('signup')} size="sm">
-                    Sign Up
+                    {t('nav.signUp')}
                   </Button>
                 </div>
               )}
@@ -138,7 +144,7 @@ export const Header = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
                 type="text"
-                placeholder={searchDisabled ? "Search disabled" : "Search for skills only..."}
+                placeholder={searchDisabled ? "Search disabled" : t('hero.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => !searchDisabled && setSearchQuery(e.target.value)}
                 onKeyDown={(e) => !searchDisabled && e.key === "Enter" && handleSearch()}

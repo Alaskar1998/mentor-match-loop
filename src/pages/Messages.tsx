@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 interface Chat {
   id: string;
@@ -27,6 +28,7 @@ export default function Messages() {
   const { user, isAuthenticated, isLoading: authLoading, isSessionRestoring } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { t } = useTranslation();
   const [chats, setChats] = useState<Chat[]>([]);
   const [filteredChats, setFilteredChats] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(true);
@@ -260,7 +262,7 @@ export default function Messages() {
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             <span className="ml-3 text-muted-foreground">
-              {isSessionRestoring ? "Loading session..." : authLoading ? "Loading..." : "Loading conversations..."}
+              {isSessionRestoring ? t('actions.loadingSession') : authLoading ? t('actions.loading') : t('actions.loadingConversations')}
             </span>
           </div>
         </div>
@@ -275,7 +277,7 @@ export default function Messages() {
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            <span className="ml-3 text-muted-foreground">Redirecting...</span>
+            <span className="ml-3 text-muted-foreground">{t('actions.redirecting')}</span>
           </div>
         </div>
       </div>
@@ -289,7 +291,7 @@ export default function Messages() {
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            <span className="ml-3 text-muted-foreground">Loading user data...</span>
+            <span className="ml-3 text-muted-foreground">{t('actions.loadingUserData')}</span>
           </div>
         </div>
       </div>
@@ -301,14 +303,14 @@ export default function Messages() {
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Messages</h1>
+            <h1 className="text-3xl font-bold text-foreground">{t('actions.messages')}</h1>
             <p className="text-muted-foreground mt-1">
-              Manage your skill exchange conversations
+              {t('actions.manageConversations')}
             </p>
           </div>
           <Button onClick={() => navigate("/search")} className="gap-2">
             <Users className="h-4 w-4" />
-            Find New Partners
+            {t('actions.findNewPartners')}
           </Button>
         </div>
 
@@ -316,7 +318,7 @@ export default function Messages() {
         <div className="relative mb-6">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
-            placeholder="Search conversations..."
+            placeholder={t('actions.searchConversations')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -329,17 +331,17 @@ export default function Messages() {
             <CardContent className="flex flex-col items-center justify-center py-12">
               <MessageCircle className="h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">
-                {searchQuery ? "No conversations found" : "No conversations yet"}
+                {searchQuery ? t('actions.noConversationsFound') : t('actions.noConversationsYet')}
               </h3>
               <p className="text-muted-foreground text-center mb-6">
                 {searchQuery
-                  ? "Try adjusting your search terms"
-                  : "Start connecting with skill exchange partners to begin conversations"}
+                  ? t('actions.tryAdjustingSearch')
+                  : t('actions.startConnectingPartners')}
               </p>
               {!searchQuery && (
                 <Button onClick={() => navigate("/search")} className="gap-2">
                   <Users className="h-4 w-4" />
-                  Find Partners
+                  {t('actions.findPartners')}
                 </Button>
               )}
             </CardContent>

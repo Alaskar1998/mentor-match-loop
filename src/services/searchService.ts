@@ -1,4 +1,4 @@
-import { getAllSkills } from "@/data/skills";
+import { getAllSkills, searchSkillsBilingual, findSkillByTranslation, getSkillTranslation } from "@/data/skills";
 
 export interface SearchResult {
   user: any;
@@ -115,8 +115,8 @@ class SearchService {
       await this.initialize(users);
     }
 
-    // Perform exact and partial matching (NO fuzzy)
-    const results = this.performExactAndPartialSearch(users, term);
+    // Perform bilingual search
+    const results = this.performBilingualSearch(users, term);
     
     // Generate suggestion ONLY if no results found
     const suggestion = results.length === 0 ? this.generateSuggestion(term) : undefined;
@@ -133,38 +133,56 @@ class SearchService {
     };
   }
 
-  // Perform exact and partial matching (NO fuzzy)
-  private performExactAndPartialSearch(users: any[], searchTerm: string): SearchResult[] {
+  // Perform bilingual search (English and Arabic)
+  private performBilingualSearch(users: any[], searchTerm: string): SearchResult[] {
     const results: SearchResult[] = [];
+
+    // First, try to find English skill names that match the search term
+    const matchingEnglishSkills = searchSkillsBilingual(searchTerm);
+    console.log('SearchService: Searching for term:', searchTerm);
+    console.log('SearchService: Bilingual search found skills:', matchingEnglishSkills);
+    console.log('SearchService: Total users to search:', users.length);
 
     users.forEach(user => {
       if (!Array.isArray(user.skills)) return;
 
       const matchedSkills: string[] = [];
       let matchType: SearchResult['matchType'] = 'partial';
+      
+      // Debug: Log user skills
+      if (user.skills.length > 0) {
+        console.log('SearchService: User', user.name, 'has skills:', user.skills);
+      }
 
       user.skills.forEach((skill: string) => {
         if (!skill || typeof skill !== 'string') return;
         
         const skillLower = skill.toLowerCase();
         
-        // Check for exact match
+        // Check for exact match in English
         if (skillLower === searchTerm) {
           matchedSkills.push(skill);
           matchType = 'exact';
         }
-        // Check for prefix match
+        // Check for prefix match in English
         else if (skillLower.startsWith(searchTerm)) {
           matchedSkills.push(skill);
           if (matchType !== 'exact') matchType = 'prefix';
         }
-        // Check for suffix match
+        // Check for suffix match in English
         else if (skillLower.endsWith(searchTerm)) {
           matchedSkills.push(skill);
           if (matchType !== 'exact') matchType = 'suffix';
         }
-        // Check for partial match (contains the term)
+        // Check for partial match in English
         else if (skillLower.includes(searchTerm)) {
+          matchedSkills.push(skill);
+          if (matchType !== 'exact' && matchType !== 'prefix' && matchType !== 'suffix') {
+            matchType = 'partial';
+          }
+        }
+        // Check if this skill matches any of the bilingual search results
+        else if (matchingEnglishSkills.includes(skill)) {
           matchedSkills.push(skill);
           if (matchType !== 'exact' && matchType !== 'prefix' && matchType !== 'suffix') {
             matchType = 'partial';
@@ -182,7 +200,7 @@ class SearchService {
       }
     });
 
-    console.log('SearchService: Found', results.length, 'results with exact/partial matching');
+    console.log('SearchService: Found', results.length, 'results with bilingual matching');
     
     // Sort results: exact matches first, then by match type priority
     return results.sort((a, b) => {

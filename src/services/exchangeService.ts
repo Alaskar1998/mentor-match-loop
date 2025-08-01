@@ -23,7 +23,7 @@ export interface LatestExchange {
   created_at: string;
 }
 
-export const getLatestExchanges = async (limit: number = 10): Promise<LatestExchange[]> => {
+export const getLatestExchanges = async (limit: number = 10, isArabic: boolean = false): Promise<LatestExchange[]> => {
   try {
     console.log('Fetching latest exchanges...');
     
@@ -51,14 +51,14 @@ export const getLatestExchanges = async (limit: number = 10): Promise<LatestExch
 
     if (error) {
       console.error('Error fetching exchanges:', error);
-      return getDefaultExchanges(limit);
+      return getDefaultExchanges(limit, isArabic);
     }
 
     console.log('Raw exchange data:', data);
 
     if (!data || data.length === 0) {
       console.log('No completed exchanges found, using default data');
-      return getDefaultExchanges(limit);
+      return getDefaultExchanges(limit, isArabic);
     }
 
     // Transform the data into the expected format
@@ -74,8 +74,8 @@ export const getLatestExchanges = async (limit: number = 10): Promise<LatestExch
       
       return {
         id: exchange.id,
-        student: getRandomArabicName(), // Use random Arabic names
-        mentor: getRandomArabicName(), // Use random Arabic names
+        student: getArabicNameForLanguage(isArabic), // Use language-appropriate names
+        mentor: getArabicNameForLanguage(isArabic), // Use language-appropriate names
         skill: skill,
         action: getRandomAction(),
         rating: getRandomRating(),
@@ -89,7 +89,7 @@ export const getLatestExchanges = async (limit: number = 10): Promise<LatestExch
     return exchanges;
   } catch (error) {
     console.error('Error in getLatestExchanges:', error);
-    return getDefaultExchanges(limit);
+    return getDefaultExchanges(limit, isArabic);
   }
 };
 
@@ -115,21 +115,36 @@ export const getExchangeCount = async (): Promise<number> => {
 // Helper function to get random Arabic names (transliterated in English)
 const getRandomArabicName = (): string => {
   const arabicNames = [
+    "أحمد", "علي", "محمد", "فاطمة", "عائشة", "خديجة", "عمر", "عثمان", "عبدالله", "عبدالرحمن",
+    "يوسف", "إبراهيم", "إسماعيل", "حسن", "حسين", "زينب", "مريم", "نور", "سارة", "ليلى",
+    "نورا", "رنا", "سلمى", "دينا", "هند", "نورين", "ريم", "سارة", "فاطمة", "عائشة",
+    "عبدالعزيز", "عبدالملك", "عبدالرحيم", "عبدالغني", "عبدالوهاب", "عبدالسلام", "عبدالفتاح", "عبداللطيف"
+  ];
+  return arabicNames[Math.floor(Math.random() * arabicNames.length)];
+};
+
+const getRandomEnglishArabicName = (): string => {
+  const englishArabicNames = [
     "Ahmed", "Ali", "Mohammed", "Fatima", "Aisha", "Khadija", "Omar", "Othman", "Abdullah", "Abdulrahman",
     "Yusuf", "Ibrahim", "Ismail", "Hassan", "Hussein", "Zainab", "Maryam", "Noor", "Sara", "Layla",
     "Nora", "Rana", "Salma", "Dina", "Hind", "Noreen", "Reem", "Sara", "Fatima", "Aisha",
     "Abdulaziz", "Abdulmalik", "Abdulrahim", "Abdulghani", "Abdulwahab", "Abdulsalam", "Abdulfattah", "Abdullatif"
   ];
-  return arabicNames[Math.floor(Math.random() * arabicNames.length)];
+  return englishArabicNames[Math.floor(Math.random() * englishArabicNames.length)];
+};
+
+// Helper function to get Arabic name based on current language
+const getArabicNameForLanguage = (isArabic: boolean = false): string => {
+  return isArabic ? getRandomArabicName() : getRandomEnglishArabicName();
 };
 
 // Helper function to get default exchanges when database is empty
-const getDefaultExchanges = (limit: number = 10): LatestExchange[] => {
+const getDefaultExchanges = (limit: number = 10, isArabic: boolean = false): LatestExchange[] => {
   const defaultExchanges = [
     {
       id: "1",
-      student: "Ahmed",
-      mentor: "Ali",
+      student: isArabic ? "أحمد" : "Ahmed",
+      mentor: isArabic ? "علي" : "Ali",
       skill: "Guitar",
       action: "learned",
       rating: 5,
@@ -139,8 +154,8 @@ const getDefaultExchanges = (limit: number = 10): LatestExchange[] => {
     },
     {
       id: "2",
-      student: "Fatima",
-      mentor: "Mohammed",
+      student: isArabic ? "فاطمة" : "Fatima",
+      mentor: isArabic ? "محمد" : "Mohammed",
       skill: "Photoshop",
       action: "mastered",
       rating: 5,
@@ -150,8 +165,8 @@ const getDefaultExchanges = (limit: number = 10): LatestExchange[] => {
     },
     {
       id: "3",
-      student: "Omar",
-      mentor: "Aisha",
+      student: isArabic ? "عمر" : "Omar",
+      mentor: isArabic ? "عائشة" : "Aisha",
       skill: "Cooking",
       action: "learned",
       rating: 5,
@@ -161,8 +176,8 @@ const getDefaultExchanges = (limit: number = 10): LatestExchange[] => {
     },
     {
       id: "4",
-      student: "Khadija",
-      mentor: "Abdullah",
+      student: isArabic ? "خديجة" : "Khadija",
+      mentor: isArabic ? "عبدالله" : "Abdullah",
       skill: "JavaScript",
       action: "mastered",
       rating: 5,
@@ -172,8 +187,8 @@ const getDefaultExchanges = (limit: number = 10): LatestExchange[] => {
     },
     {
       id: "5",
-      student: "Yusuf",
-      mentor: "Abdulrahman",
+      student: isArabic ? "يوسف" : "Yusuf",
+      mentor: isArabic ? "عبدالرحمن" : "Abdulrahman",
       skill: "Photography",
       action: "learned",
       rating: 5,
@@ -183,8 +198,8 @@ const getDefaultExchanges = (limit: number = 10): LatestExchange[] => {
     },
     {
       id: "6",
-      student: "Ibrahim",
-      mentor: "Hassan",
+      student: isArabic ? "إبراهيم" : "Ibrahim",
+      mentor: isArabic ? "حسن" : "Hassan",
       skill: "Python",
       action: "mastered",
       rating: 4,
@@ -194,8 +209,8 @@ const getDefaultExchanges = (limit: number = 10): LatestExchange[] => {
     },
     {
       id: "7",
-      student: "Zainab",
-      mentor: "Hussein",
+      student: isArabic ? "زينب" : "Zainab",
+      mentor: isArabic ? "حسين" : "Hussein",
       skill: "Yoga",
       action: "learned",
       rating: 5,
@@ -205,8 +220,8 @@ const getDefaultExchanges = (limit: number = 10): LatestExchange[] => {
     },
     {
       id: "8",
-      student: "Maryam",
-      mentor: "Noor",
+      student: isArabic ? "مريم" : "Maryam",
+      mentor: isArabic ? "نور" : "Noor",
       skill: "Spanish",
       action: "mastered",
       rating: 4,

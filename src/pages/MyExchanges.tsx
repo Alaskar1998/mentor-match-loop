@@ -27,14 +27,15 @@ import { ExchangeReviewModal } from '../components/review/ExchangeReviewModal';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { ResponseModal } from '../components/requests/ResponseModal';
 import { useOptimizedPolling } from '../hooks/useOptimizedPolling';
+import { useTranslation } from 'react-i18next';
 
 // Tab configuration - responses tab is disabled
 const tabs = [
-  { id: 'active', label: 'Active', icon: Clock },
+  { id: 'active', label: t('actions.active'), icon: Clock },
   // { id: 'responses', label: 'Responses', icon: MessageCircle }, // DISABLED
-  { id: 'request', label: 'Request', icon: MessageSquare },
-  { id: 'sent', label: 'Sent', icon: XCircle },
-  { id: 'completed', label: 'Completed', icon: CheckCircle }
+  { id: 'request', label: t('actions.request'), icon: MessageSquare },
+  { id: 'sent', label: t('actions.sent'), icon: XCircle },
+  { id: 'completed', label: t('actions.completed'), icon: CheckCircle }
 ];
 
 // Interface for exchange data
@@ -104,6 +105,7 @@ const mockExchanges: Record<string, Exchange[]> = {
 const MyExchanges = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('active');
   const [exchanges, setExchanges] = useState<Record<string, Exchange[]>>(mockExchanges);
@@ -960,7 +962,7 @@ const MyExchanges = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading your exchanges...</p>
+            <p className="text-muted-foreground">{t('actions.loadingExchanges')}</p>
           </div>
         </div>
       </div>
@@ -973,9 +975,9 @@ const MyExchanges = () => {
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold mb-2">My Exchanges</h1>
+            <h1 className="text-3xl font-bold mb-2">{t('actions.myExchanges')}</h1>
             <p className="text-muted-foreground">
-              Manage your skill exchanges and learning activities
+              {t('actions.manageExchanges')}
             </p>
           </div>
 
@@ -1006,10 +1008,10 @@ const MyExchanges = () => {
                 <Card>
                   <CardContent className="p-8 text-center">
                     <div className="text-muted-foreground mb-4">
-                      No active exchanges found.
+                      {t('actions.noActiveExchanges')}
                     </div>
                     <Button onClick={() => navigate('/search')} variant="outline">
-                      Find Exchange Opportunities
+                      {t('actions.findExchangeOpportunities')}
                     </Button>
                   </CardContent>
                 </Card>
@@ -1042,24 +1044,24 @@ const MyExchanges = () => {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => navigate(`/chat/${exchange.id}`)}
-                          >
-                            <MessageSquare className="w-4 h-4 mr-1" />
-                            Chat
-                          </Button>
-                          {exchange.status === 'completed' && (
-                            <Button 
+                                                      <Button 
                               variant="outline" 
                               size="sm"
-                              onClick={() => handleOpenReview(exchange)}
+                              onClick={() => navigate(`/chat/${exchange.id}`)}
                             >
-                              <Star className="w-4 h-4 mr-1" />
-                              Review
+                              <MessageSquare className="w-4 h-4 mr-1" />
+                              {t('actions.chat')}
                             </Button>
-                          )}
+                                                      {exchange.status === 'completed' && (
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleOpenReview(exchange)}
+                              >
+                                <Star className="w-4 h-4 mr-1" />
+                                {t('actions.review')}
+                              </Button>
+                            )}
                         </div>
                       </div>
                     </CardContent>
@@ -1074,7 +1076,7 @@ const MyExchanges = () => {
                 <Card>
                   <CardContent className="p-8 text-center">
                     <div className="text-muted-foreground mb-4">
-                      No received invitations found.
+                      {t('actions.noReceivedInvitations')}
                     </div>
                   </CardContent>
                 </Card>
@@ -1169,7 +1171,7 @@ const MyExchanges = () => {
                 <Card>
                   <CardContent className="p-8 text-center">
                     <div className="text-muted-foreground mb-4">
-                      No sent invitations found.
+                      {t('actions.noSentInvitations')}
                     </div>
                   </CardContent>
                 </Card>
@@ -1211,7 +1213,7 @@ const MyExchanges = () => {
                 <Card>
                   <CardContent className="p-8 text-center">
                     <div className="text-muted-foreground mb-4">
-                      No completed exchanges found.
+                      {t('actions.noCompletedExchanges')}
                     </div>
                   </CardContent>
                 </Card>

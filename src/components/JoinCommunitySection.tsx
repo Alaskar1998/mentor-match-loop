@@ -1,26 +1,29 @@
 import { ArrowRight, Users, BookOpen, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-
-const benefits = [
-  {
-    icon: Users,
-    title: "Connect with 15K+ learners",
-    description: "Join a vibrant community of passionate teachers and students"
-  },
-  {
-    icon: BookOpen,
-    title: "Learn anything for free",
-    description: "Access thousands of skills from cooking to coding, music to marketing"
-  },
-  {
-    icon: Heart,
-    title: "Make meaningful connections",
-    description: "Build lasting friendships while sharing knowledge and growing together"
-  }
-];
+import { useTranslation } from "react-i18next";
 
 export const JoinCommunitySection = () => {
+  const { t } = useTranslation();
+
+  const benefits = [
+    {
+      icon: Users,
+      title: t('actions.connectWithLearners'),
+      description: t('actions.joinVibrantCommunity')
+    },
+    {
+      icon: BookOpen,
+      title: t('actions.learnAnythingFree'),
+      description: t('actions.accessThousandsSkills')
+    },
+    {
+      icon: Heart,
+      title: t('actions.makeMeaningfulConnections'),
+      description: t('actions.buildLastingFriendships')
+    }
+  ];
+
   const handleSignUp = () => {
     console.log("Navigate to signup flow");
     // Navigation logic would go here
@@ -40,15 +43,10 @@ export const JoinCommunitySection = () => {
           {/* Main CTA */}
           <div className="mb-16 animate-fade-in">
             <h2 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
-              Ready to Start Your
-              <br />
-              <span className="bg-gradient-to-r from-accent to-warm bg-clip-text text-transparent">
-                Learning Journey?
-              </span>
+              {t('joinCommunity.title')}
             </h2>
             <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-2xl mx-auto leading-relaxed">
-              Join thousands of learners and teachers sharing knowledge every day. 
-              It's completely free to start!
+              {t('joinCommunity.subtitle')}
             </p>
             
             <Button 
@@ -57,7 +55,7 @@ export const JoinCommunitySection = () => {
               onClick={handleSignUp}
               className="bg-white text-primary hover:bg-white/90 text-xl px-12 py-6 rounded-full shadow-glow hover:shadow-elegant transition-all duration-300 hover:scale-105 font-semibold"
             >
-              Sign up and start learning for free
+              {t('joinCommunity.cta')}
               <ArrowRight className="w-6 h-6 ml-3" />
             </Button>
           </div>
@@ -89,19 +87,19 @@ export const JoinCommunitySection = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             <div className="animate-fade-in" style={{ animationDelay: '0.6s' }}>
               <div className="text-3xl md:text-4xl font-bold text-white mb-2">100%</div>
-              <div className="text-white/80 text-sm">Free to Use</div>
+              <div className="text-white/80 text-sm">{t('actions.freeToUse')}</div>
             </div>
             <div className="animate-fade-in" style={{ animationDelay: '0.8s' }}>
               <div className="text-3xl md:text-4xl font-bold text-white mb-2">24/7</div>
-              <div className="text-white/80 text-sm">Community Support</div>
+              <div className="text-white/80 text-sm">{t('actions.communitySupport')}</div>
             </div>
             <div className="animate-fade-in" style={{ animationDelay: '1s' }}>
               <div className="text-3xl md:text-4xl font-bold text-white mb-2">Safe</div>
-              <div className="text-white/80 text-sm">Verified Members</div>
+              <div className="text-white/80 text-sm">{t('actions.verifiedMembers')}</div>
             </div>
             <div className="animate-fade-in" style={{ animationDelay: '1.2s' }}>
               <div className="text-3xl md:text-4xl font-bold text-white mb-2">Global</div>
-              <div className="text-white/80 text-sm">Worldwide Access</div>
+              <div className="text-white/80 text-sm">{t('actions.worldwideAccess')}</div>
             </div>
           </div>
         </div>

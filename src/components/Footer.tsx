@@ -1,7 +1,10 @@
 import { Link } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
+import { useTranslation } from "react-i18next";
 
 export const Footer = () => {
+  const { t } = useTranslation();
+
   return (
     <footer className="bg-muted/30 border-t mt-auto">
       <div className="container mx-auto px-4 py-8">
@@ -10,7 +13,7 @@ export const Footer = () => {
           <div className="space-y-4">
             <h3 className="font-bold text-lg">Maharat Hub</h3>
             <p className="text-sm text-muted-foreground">
-              Connect, learn, and grow together. Exchange skills with people around the world.
+              {t('footer.description')}
             </p>
           </div>
 
@@ -25,10 +28,10 @@ export const Footer = () => {
                 Create Request
               </Link>
               <Link to="/pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Pricing
+                {t('nav.pricing')}
               </Link>
               <Link to="/my-exchanges" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                My Exchanges
+                {t('nav.myExchanges')}
               </Link>
             </nav>
           </div>
@@ -38,16 +41,16 @@ export const Footer = () => {
             <h4 className="font-semibold">Support</h4>
             <nav className="flex flex-col space-y-2">
               <Link to="/help" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Help Center
+                {t('nav.help')}
               </Link>
               <a href="mailto:support@Maharat Hub.com" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Contact Support
+                {t('footer.links.contact')}
               </a>
               <a href="mailto:feedback@Maharat Hub.com" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Send Feedback
               </a>
               <Link to="/settings" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Settings
+                {t('nav.settings')}
               </Link>
             </nav>
           </div>
@@ -57,10 +60,10 @@ export const Footer = () => {
             <h4 className="font-semibold">Legal</h4>
             <nav className="flex flex-col space-y-2">
               <Link to="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Terms of Use
+                {t('nav.terms')}
               </Link>
               <Link to="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Privacy Policy
+                {t('nav.privacy')}
               </Link>
               <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Cookie Policy
@@ -77,11 +80,11 @@ export const Footer = () => {
         {/* Bottom Footer */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Maharat Hub. All rights reserved.
+            {t('footer.copyright')}
           </div>
           <div className="flex items-center gap-4">
             <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Follow us
+              {t('footer.social')}
             </a>
             <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Twitter

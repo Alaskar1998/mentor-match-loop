@@ -12,6 +12,7 @@ import { searchService, SearchResponse } from "@/services/searchService";
 import { SearchSuggestionCard, NoResultsMessage } from "@/components/search/SearchSuggestion";
 import { isSearchDisabled } from "@/utils/userValidation";
 import { useOptimizedSearch } from "@/hooks/useOptimizedSearch";
+import { useTranslation } from "react-i18next";
 
 export interface UserProfile {
   id: string;
@@ -53,6 +54,7 @@ const SearchResultsPage = () => {
   const [showAd, setShowAd] = useState(true);
   const [isFilterSidebarOpen, setIsFilterSidebarOpen] = useState(false);
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   const searchQuery = searchParams.get("q") || "";
 
@@ -112,7 +114,7 @@ const SearchResultsPage = () => {
           ?.filter(profile => profile.id !== user?.id) // Filter out current user's profile
           .map(profile => ({
             id: profile.id,
-            name: profile.display_name || 'Anonymous User',
+            name: profile.display_name || t('actions.anonymousUser'),
             profilePicture: profile.avatar_url && profile.avatar_url.startsWith('http') ? profile.avatar_url : '👤',
             isMentor: profile.willing_to_teach_without_return || false, // Use this as mentor indicator
             rating: 4.5, // Default rating since it's not in the schema
@@ -129,7 +131,7 @@ const SearchResultsPage = () => {
                   return String(skill);
                 })
               : [],
-            country: profile.country || 'Unknown',
+            country: profile.country || t('actions.unknown'),
             gender: (profile.gender === 'Female' ? 'Female' : 'Male') as 'Male' | 'Female',
             willingToTeachWithoutReturn: profile.willing_to_teach_without_return || false
           })) || [];

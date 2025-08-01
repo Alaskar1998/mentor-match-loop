@@ -19,123 +19,126 @@ import {
   MessageSquare,
   BookOpen
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const CreateRequest = () => {
+  const { t } = useTranslation();
+
   const futureFeatures = [
     {
       icon: <Plus className="w-8 h-8 text-blue-500" />,
-      title: "Create Learning Request",
-      description: "Post detailed learning requests with your goals, preferences, and timeline to find the perfect teacher.",
-      status: "Coming Soon",
+      title: t('createRequest.features.createLearningRequest.title'),
+      description: t('createRequest.features.createLearningRequest.description'),
+      status: t('status.comingSoon'),
       color: "bg-blue-50 border-blue-200"
     },
     {
       icon: <Target className="w-8 h-8 text-green-500" />,
-      title: "Smart Request Templates",
-      description: "Pre-built templates for common learning requests to make posting faster and more effective.",
-      status: "In Development",
+      title: t('createRequest.features.smartRequestTemplates.title'),
+      description: t('createRequest.features.smartRequestTemplates.description'),
+      status: t('status.inDevelopment'),
       color: "bg-green-50 border-green-200"
     },
     {
       icon: <Clock className="w-8 h-8 text-orange-500" />,
-      title: "Urgency Settings",
-      description: "Set urgency levels to help teachers prioritize and get faster responses when needed.",
-      status: "Coming Soon",
+      title: t('createRequest.features.urgencySettings.title'),
+      description: t('createRequest.features.urgencySettings.description'),
+      status: t('status.comingSoon'),
       color: "bg-orange-50 border-orange-200"
     },
     {
       icon: <MapPin className="w-8 h-8 text-purple-500" />,
-      title: "Location-Based Matching",
-      description: "Specify your location to find local teachers or connect with teachers in specific regions.",
-      status: "In Development",
+      title: t('createRequest.features.locationBasedMatching.title'),
+      description: t('createRequest.features.locationBasedMatching.description'),
+      status: t('status.inDevelopment'),
       color: "bg-purple-50 border-purple-200"
     },
     {
       icon: <Star className="w-8 h-8 text-yellow-500" />,
-      title: "Teacher Preferences",
-      description: "Specify preferred teaching styles, experience levels, and availability to find your ideal match.",
-      status: "Coming Soon",
+      title: t('createRequest.features.teacherPreferences.title'),
+      description: t('createRequest.features.teacherPreferences.description'),
+      status: t('status.comingSoon'),
       color: "bg-yellow-50 border-yellow-200"
     },
     {
       icon: <Sparkles className="w-8 h-8 text-cyan-500" />,
-      title: "AI-Powered Matching",
-      description: "Advanced algorithms that match you with the best teachers based on your specific requirements.",
-      status: "Planned",
+      title: t('createRequest.features.aiPoweredMatching.title'),
+      description: t('createRequest.features.aiPoweredMatching.description'),
+      status: t('status.planned'),
       color: "bg-cyan-50 border-cyan-200"
     },
     {
       icon: <Users className="w-8 h-8 text-indigo-500" />,
-      title: "Multiple Teacher Responses",
-      description: "Get responses from multiple teachers so you can choose the best fit for your learning style.",
-      status: "Coming Soon",
+      title: t('createRequest.features.multipleTeacherResponses.title'),
+      description: t('createRequest.features.multipleTeacherResponses.description'),
+      status: t('status.comingSoon'),
       color: "bg-indigo-50 border-indigo-200"
     },
     {
       icon: <TrendingUp className="w-8 h-8 text-emerald-500" />,
-      title: "Request Analytics",
-      description: "Track your request performance, response rates, and success metrics to improve future requests.",
-      status: "In Development",
+      title: t('createRequest.features.requestAnalytics.title'),
+      description: t('createRequest.features.requestAnalytics.description'),
+      status: t('status.inDevelopment'),
       color: "bg-emerald-50 border-emerald-200"
     },
     {
       icon: <Heart className="w-8 h-8 text-pink-500" />,
-      title: "Favorite Teachers",
-      description: "Save and favorite teachers you've worked with for future learning requests.",
-      status: "Planned",
+      title: t('createRequest.features.favoriteTeachers.title'),
+      description: t('createRequest.features.favoriteTeachers.description'),
+      status: t('status.planned'),
       color: "bg-pink-50 border-pink-200"
     },
     {
       icon: <Award className="w-8 h-8 text-amber-500" />,
-      title: "Request Rewards",
-      description: "Earn points and recognition for creating quality requests that help the community.",
-      status: "Coming Soon",
+      title: t('createRequest.features.requestRewards.title'),
+      description: t('createRequest.features.requestRewards.description'),
+      status: t('status.comingSoon'),
       color: "bg-amber-50 border-amber-200"
     },
     {
       icon: <Zap className="w-8 h-8 text-lime-500" />,
-      title: "Quick Request Builder",
-      description: "One-click request creation with smart defaults and auto-completion for faster posting.",
-      status: "Planned",
+      title: t('createRequest.features.quickRequestBuilder.title'),
+      description: t('createRequest.features.quickRequestBuilder.description'),
+      status: t('status.planned'),
       color: "bg-lime-50 border-lime-200"
     },
     {
       icon: <Globe className="w-8 h-8 text-teal-500" />,
-      title: "Global Learning Network",
-      description: "Connect with teachers from around the world, breaking down geographical barriers.",
-      status: "In Development",
+      title: t('createRequest.features.globalLearningNetwork.title'),
+      description: t('createRequest.features.globalLearningNetwork.description'),
+      status: t('status.inDevelopment'),
       color: "bg-teal-50 border-teal-200"
     },
     {
       icon: <Filter className="w-8 h-8 text-violet-500" />,
-      title: "Advanced Filtering",
-      description: "Filter and sort teachers by skills, ratings, availability, and more to find perfect matches.",
-      status: "Coming Soon",
+      title: t('createRequest.features.advancedFiltering.title'),
+      description: t('createRequest.features.advancedFiltering.description'),
+      status: t('status.comingSoon'),
       color: "bg-violet-50 border-violet-200"
     },
     {
       icon: <MessageSquare className="w-8 h-8 text-red-500" />,
-      title: "Direct Communication",
-      description: "Chat directly with teachers before making a decision to ensure the right fit.",
-      status: "Planned",
+      title: t('createRequest.features.directCommunication.title'),
+      description: t('createRequest.features.directCommunication.description'),
+      status: t('status.planned'),
       color: "bg-red-50 border-red-200"
     },
     {
       icon: <BookOpen className="w-8 h-8 text-rose-500" />,
-      title: "Learning Paths",
-      description: "Create structured learning paths with multiple teachers for comprehensive skill development.",
-      status: "Coming Soon",
+      title: t('createRequest.features.learningPaths.title'),
+      description: t('createRequest.features.learningPaths.description'),
+      status: t('status.comingSoon'),
       color: "bg-rose-50 border-rose-200"
     }
   ];
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Coming Soon":
+      case t('status.comingSoon'):
         return "bg-green-100 text-green-800 border-green-200";
-      case "In Development":
+      case t('status.inDevelopment'):
         return "bg-blue-100 text-blue-800 border-blue-200";
-      case "Planned":
+      case t('status.planned'):
         return "bg-gray-100 text-gray-800 border-gray-200";
       default:
         return "bg-gray-100 text-gray-800 border-gray-200";
@@ -151,15 +154,15 @@ const CreateRequest = () => {
             <Plus className="w-10 h-10 text-white" />
           </div>
           <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
-            📝 Create Learning Request
+            {t('createRequest.title')}
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-            We're building an amazing system to help you create perfect learning requests and find the best teachers!
+            {t('createRequest.subtitle')}
           </p>
           <div className="inline-flex items-center gap-2 bg-gradient-warm text-warm-foreground px-6 py-3 rounded-full shadow-elegant">
             <div className="w-3 h-3 bg-success rounded-full animate-pulse" />
             <span className="font-semibold text-lg">
-              Coming Soon - Stay Tuned!
+              {t('createRequest.comingSoon')}
             </span>
           </div>
         </div>
@@ -201,11 +204,10 @@ const CreateRequest = () => {
           <Card className="max-w-2xl mx-auto bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20">
             <CardContent className="p-8">
               <h3 className="text-2xl font-bold text-foreground mb-4">
-                🚀 Be the First to Know!
+                {t('createRequest.beFirstToKnow')}
               </h3>
               <p className="text-muted-foreground mb-6">
-                We're working hard to bring these exciting features to life. 
-                The learning request creation system will make finding teachers easier than ever!
+                {t('createRequest.description')}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button 
@@ -214,7 +216,7 @@ const CreateRequest = () => {
                   onClick={() => window.location.href = '/'}
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  Back to Home
+                  {t('createRequest.backToHome')}
                 </Button>
               </div>
             </CardContent>

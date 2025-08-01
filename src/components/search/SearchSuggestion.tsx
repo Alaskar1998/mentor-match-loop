@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { SearchSuggestion } from "@/services/searchService";
 import { Search } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface SearchSuggestionProps {
   suggestion: SearchSuggestion;
@@ -13,6 +14,7 @@ export const SearchSuggestionCard = ({
   onSuggestionClick, 
   onDismiss 
 }: SearchSuggestionProps) => {
+  const { t } = useTranslation();
   const confidencePercentage = Math.round(suggestion.confidence * 100);
   
   return (
@@ -24,7 +26,7 @@ export const SearchSuggestionCard = ({
           </div>
           <div>
             <p className="text-sm text-blue-800">
-              Did you mean: <button 
+              {t('actions.didYouMean')} <button 
                 onClick={() => onSuggestionClick(suggestion.suggestedTerm)}
                 className="font-medium text-blue-900 hover:text-blue-700 underline cursor-pointer"
               >
@@ -32,7 +34,7 @@ export const SearchSuggestionCard = ({
               </button>?
             </p>
             <p className="text-xs text-blue-600 mt-1">
-              {confidencePercentage}% confidence
+              {confidencePercentage}% {t('actions.confidence')}
             </p>
           </div>
         </div>
@@ -60,13 +62,15 @@ export const NoResultsMessage = ({
   suggestion, 
   onSuggestionClick 
 }: NoResultsMessageProps) => {
+  const { t } = useTranslation();
+  
   return (
     <div className="text-center py-12">
       <div className="max-w-md mx-auto">
         <div className="text-6xl mb-4">🔍</div>
-        <h2 className="text-2xl font-bold mb-2">No results found</h2>
+        <h2 className="text-2xl font-bold mb-2">{t('actions.noResultsFound')}</h2>
         <p className="text-muted-foreground mb-6">
-          We couldn't find any teachers for <span className="font-medium">"{searchTerm}"</span>
+          {t('actions.couldntFindTeachers')} <span className="font-medium">"{searchTerm}"</span>
         </p>
         
         {suggestion && (
@@ -79,10 +83,10 @@ export const NoResultsMessage = ({
         )}
         
         <div className="space-y-2 text-sm text-muted-foreground">
-          <p>• Try using different keywords</p>
-          <p>• Check your spelling</p>
-          <p>• Remove some filters</p>
-          <p>• Browse all available skills</p>
+          <p>• {t('actions.tryDifferentKeywords')}</p>
+          <p>• {t('actions.checkSpelling')}</p>
+          <p>• {t('actions.removeFilters')}</p>
+          <p>• {t('actions.browseAllSkills')}</p>
         </div>
       </div>
     </div>

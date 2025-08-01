@@ -1,36 +1,39 @@
 import { Search, Users, BookOpen } from "lucide-react";
-
-const steps = [
-  {
-    icon: Search,
-    title: "Search for a skill",
-    description: "Browse thousands of skills or search for exactly what you want to learn",
-    color: "text-primary"
-  },
-  {
-    icon: Users,
-    title: "Connect with a teacher",
-    description: "Find passionate teachers in your area or online who love sharing knowledge",
-    color: "text-accent"
-  },
-  {
-    icon: BookOpen,
-    title: "Exchange knowledge for free",
-    description: "Learn something new while teaching others what you know best",
-    color: "text-success"
-  }
-];
+import { useTranslation } from "react-i18next";
 
 export const HowItWorksSection = () => {
+  const { t } = useTranslation();
+
+  const steps = [
+    {
+      icon: Search,
+      title: t('howItWorks.steps.step1.title'),
+      description: t('howItWorks.steps.step1.description'),
+      color: "text-primary"
+    },
+    {
+      icon: Users,
+      title: t('howItWorks.steps.step2.title'),
+      description: t('howItWorks.steps.step2.description'),
+      color: "text-accent"
+    },
+    {
+      icon: BookOpen,
+      title: t('howItWorks.steps.step3.title'),
+      description: t('howItWorks.steps.step3.description'),
+      color: "text-success"
+    }
+  ];
+
   return (
     <section className="py-20 bg-gradient-subtle">
       <div className="container mx-auto px-6">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-            How It Works
+            {t('howItWorks.title')}
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Getting started is simple. Join thousands of learners and teachers in our community.
+            {t('howItWorks.subtitle')}
           </p>
         </div>
 

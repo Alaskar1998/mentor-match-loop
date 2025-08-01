@@ -4,11 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import heroImage from "@/assets/hero-image.jpg";
-import { POPULAR_SKILLS } from "@/data/skills";
+import { POPULAR_SKILLS, getSkillTranslation } from "@/data/skills";
 import { isSearchDisabled } from "@/utils/userValidation";
 import { getPopularSkillsFromDatabase, getCategoryEmoji, DatabaseSkill } from "@/services/skillService";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export const HeroSection = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -16,6 +18,8 @@ export const HeroSection = () => {
   const [isLoadingSkills, setIsLoadingSkills] = useState(true);
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useTranslation();
+  const { language } = useLanguage();
 
   // Use centralized validation
   const searchDisabled = isSearchDisabled(user?.name);
@@ -71,15 +75,15 @@ export const HeroSection = () => {
         <div className="max-w-4xl mx-auto animate-fade-in">
           {/* Main Heading */}
           <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
-            Exchange Skills,
+            {t('hero.title').split(',')[0]},
             <br />
             <span className="bg-gradient-to-r from-accent to-warm bg-clip-text text-transparent">
-              Build Community
+              {t('hero.title').split(',')[1]}
             </span>
           </h1>
 
           <p className="text-xl md:text-2xl text-white/90 mb-12 max-w-2xl mx-auto leading-relaxed">
-            Connect with passionate learners and teachers worldwide. Share knowledge for free and grow together.
+            {t('hero.subtitle')}
           </p>
 
           {/* Search Bar */}
@@ -89,7 +93,7 @@ export const HeroSection = () => {
               <div className="relative flex items-center bg-white rounded-full p-2 shadow-elegant">
                 <Input
                   type="text"
-                  placeholder={searchDisabled ? "Search disabled for your account" : "What skill do you want to learn?"}
+                  placeholder={searchDisabled ? "Search disabled for your account" : t('hero.searchPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => !searchDisabled && setSearchQuery(e.target.value)}
                   className="flex-1 border-0 focus-visible:ring-0 text-lg px-6 py-4 bg-transparent"
@@ -113,7 +117,7 @@ export const HeroSection = () => {
           {/* Popular Skills */}
           <div className="mb-12">
             <p className="text-white/80 mb-4 text-lg">
-              {isLoadingSkills ? "Loading popular skills..." : "Popular skills:"}
+              {isLoadingSkills ? t('actions.loading') : t('actions.popularSkills')}
             </p>
             <div className="flex flex-wrap justify-center gap-3">
               {isLoadingSkills ? (
@@ -141,7 +145,7 @@ export const HeroSection = () => {
                     title={`${skill.count} people teach this skill`}
                   >
                     <span className="mr-2">{getCategoryEmoji(skill.category || 'Other')}</span>
-                    {skill.name}
+                    {language === 'ar' ? getSkillTranslation(skill.name) : skill.name}
                     <span className="ml-2 text-xs opacity-75">({skill.count})</span>
                   </button>
                 ))
@@ -153,15 +157,15 @@ export const HeroSection = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-3xl mx-auto">
             <div className="text-center">
               <div className="text-3xl md:text-4xl font-bold text-white mb-2">10K+</div>
-              <div className="text-white/80">Active Learners</div>
+              <div className="text-white/80">{t('hero.stats.learners')}</div>
             </div>
             <div className="text-center">
               <div className="text-3xl md:text-4xl font-bold text-white mb-2">5K+</div>
-              <div className="text-white/80">Expert Teachers</div>
+              <div className="text-white/80">{t('hero.stats.teachers')}</div>
             </div>
             <div className="text-center">
               <div className="text-3xl md:text-4xl font-bold text-white mb-2">25K+</div>
-              <div className="text-white/80">Skills Exchanged</div>
+              <div className="text-white/80">{t('hero.stats.exchanges')}</div>
             </div>
           </div>
         </div>

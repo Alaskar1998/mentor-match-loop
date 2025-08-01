@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useOptimizedPolling } from "@/hooks/useOptimizedPolling";
 import { getLatestExchanges, getExchangeCount, LatestExchange } from "@/services/exchangeService";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export const LatestExchangesSection = React.memo(() => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -12,6 +14,8 @@ export const LatestExchangesSection = React.memo(() => {
   const [exchanges, setExchanges] = useState<LatestExchange[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const sectionRef = useRef<HTMLElement>(null);
+  const { t } = useTranslation();
+  const { language } = useLanguage();
 
   // Fetch real exchange data
   useEffect(() => {
@@ -19,7 +23,7 @@ export const LatestExchangesSection = React.memo(() => {
       try {
         setIsLoading(true);
         const [exchangeData, countData] = await Promise.all([
-          getLatestExchanges(10),
+          getLatestExchanges(10, language === 'ar'),
           getExchangeCount()
         ]);
         
@@ -34,7 +38,7 @@ export const LatestExchangesSection = React.memo(() => {
     };
 
     fetchData();
-  }, []);
+  }, [language]);
 
   // Visibility detection to pause animations when not visible
   useEffect(() => {
@@ -102,18 +106,18 @@ export const LatestExchangesSection = React.memo(() => {
           {/* Header */}
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-              🔥 Latest Exchanges
+              🔥 {t('latestExchanges.title')}
             </h2>
             <p className="text-xl text-muted-foreground mb-8">
-              See what our community has been learning and teaching
+              {t('latestExchanges.subtitle')}
             </p>
             
             {/* Loading Counter */}
             <div className="inline-flex items-center gap-2 bg-gradient-warm text-warm-foreground px-6 py-3 rounded-full shadow-elegant animate-pulse">
               <div className="w-3 h-3 bg-success rounded-full animate-pulse" />
-              <span className="font-semibold text-lg">
-                Loading exchanges...
-              </span>
+                          <span className="font-semibold text-lg">
+              {t('actions.loadingExchanges')}
+            </span>
             </div>
           </div>
 
@@ -159,17 +163,17 @@ export const LatestExchangesSection = React.memo(() => {
         {/* Header */}
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-            🔥 Latest Exchanges
+            🔥 {t('latestExchanges.title')}
           </h2>
           <p className="text-xl text-muted-foreground mb-8">
-            See what our community has been learning and teaching
+            {t('latestExchanges.subtitle')}
           </p>
           
           {/* Live Counter */}
           <div className="inline-flex items-center gap-2 bg-gradient-warm text-warm-foreground px-6 py-3 rounded-full shadow-elegant animate-scale-in">
             <div className={`w-3 h-3 bg-success rounded-full ${isVisible ? 'animate-pulse' : ''}`} />
             <span className="font-semibold text-lg">
-              {counter.toLocaleString()} skill exchanges this month!
+              {counter.toLocaleString()} {t('actions.skillExchanges')}
             </span>
           </div>
         </div>
@@ -195,13 +199,13 @@ export const LatestExchangesSection = React.memo(() => {
                       <div className="mb-4">
                         <div className="flex items-center justify-center gap-2 mb-2">
                           <span className="font-semibold text-foreground">{exchange.student}</span>
-                          <span className="text-muted-foreground">{exchange.action}</span>
+                          <span className="text-muted-foreground">{t(`latestExchanges.cardContent.${exchange.action}`)}</span>
                           <span className="font-semibold text-primary">{exchange.skill}</span>
                         </div>
                         <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground">
-                          <span>with</span>
+                          <span>{t('latestExchanges.with')}</span>
                           <span className="font-medium">{exchange.mentor}</span>
-                          <span className="text-accent">{exchange.mentorBadge} Mentor</span>
+                          <span className="text-accent">{exchange.mentorBadge}</span>
                         </div>
                       </div>
 
@@ -254,10 +258,10 @@ export const LatestExchangesSection = React.memo(() => {
             <div className="text-center py-12">
               <div className="text-6xl mb-4">🤝</div>
               <h3 className="text-2xl font-semibold text-foreground mb-2">
-                No exchanges yet
+                {t('actions.noExchangesYet')}
               </h3>
               <p className="text-muted-foreground">
-                Be the first to start an exchange and see it featured here!
+                {t('actions.beFirstToExchange')}
               </p>
             </div>
           )}
