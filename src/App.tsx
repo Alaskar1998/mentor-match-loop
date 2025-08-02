@@ -18,7 +18,7 @@ import Help from "./pages/Help";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 import SearchResults from "./pages/SearchResults";
-import CreateRequest from "./pages/CreateRequest";
+
 import RequestsFeed from "./pages/RequestsFeed";
 import Chat from "./pages/Chat";
 import Profile from "./pages/Profile";
@@ -64,7 +64,6 @@ const App = () => (
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/help" element={<Help />} />
                   <Route path="/search" element={<SearchResults />} />
-                  <Route path="/create-request" element={<CreateRequest />} />
                   <Route path="/requests-feed" element={<RequestsFeed />} />
                   <Route path="/chat/:chatId" element={<Chat />} />
                   <Route path="/messages" element={<Messages />} />

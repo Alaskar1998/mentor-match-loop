@@ -13,6 +13,83 @@ import { Notification } from "@/types/notifications";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/hooks/useLanguage";
+import { translateDate, translateName, transliterateName } from "@/utils/translationUtils";
+
+// Function to translate notification messages
+const translateNotificationMessage = (notification: Notification, language: string): string => {
+  if (language !== 'ar') {
+    return notification.message;
+  }
+
+  // Extract the actual name from the message if senderName is "Someone"
+  let senderName = transliterateName(notification.senderName || 'Someone', 'en');
+  
+  // If senderName is "Someone", try to extract the real name from the message
+  if (senderName === 'Someone') {
+    // Try different patterns to extract the real name
+    const nameMatch = notification.message.match(/([A-Za-z]+):/);
+    if (nameMatch) {
+      senderName = transliterateName(nameMatch[1], 'en');
+    } else {
+      // Try to extract from "Your exchange with Ahmad is now active"
+      const exchangeMatch = notification.message.match(/Your exchange with ([A-Za-z]+) is now active/);
+      if (exchangeMatch) {
+        senderName = transliterateName(exchangeMatch[1], 'en');
+      } else {
+        // Try to extract from "Ahmad wants to start the exchange"
+        const wantsMatch = notification.message.match(/([A-Za-z]+) wants to start the exchange/);
+        if (wantsMatch) {
+          senderName = transliterateName(wantsMatch[1], 'en');
+        } else {
+          // Try to extract from "Ahmad has agreed to the exchange contract"
+          const agreedMatch = notification.message.match(/([A-Za-z]+) has agreed to the exchange contract/);
+          if (agreedMatch) {
+            senderName = transliterateName(agreedMatch[1], 'en');
+          } else {
+            // Try to extract from "Ahmad has reviewed your exchange"
+            const reviewedMatch = notification.message.match(/([A-Za-z]+) has reviewed your exchange/);
+            if (reviewedMatch) {
+              senderName = transliterateName(reviewedMatch[1], 'en');
+            } else {
+              // Try to extract from "Ahmad marked the exchange as finished"
+              const finishedMatch = notification.message.match(/([A-Za-z]+) marked the exchange as finished/);
+              if (finishedMatch) {
+                senderName = transliterateName(finishedMatch[1], 'en');
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  switch (notification.type) {
+    case 'exchange_completed':
+      return `${senderName} قام بتقييم التبادل. يمكنك الآن ترك تقييمك أيضاً.`;
+    case 'exchange_finished':
+      return `${senderName} حدد التبادل كمكتمل. يرجى إنهاء تبادلك أيضاً!`;
+    case 'exchange_active':
+      return `تبادلك مع ${senderName} نشط الآن. ابدأ التعلم!`;
+    case 'learning_match':
+      if (notification.message.includes('wants to start the exchange')) {
+        return `${senderName} يريد بدء التبادل. اختر ما ستقوم بتدريسه.`;
+      } else if (notification.message.includes('has agreed to the exchange contract')) {
+        return `${senderName} وافق على عقد التبادل. يرجى المراجعة والموافقة لبدء التبادل.`;
+      } else if (notification.message.includes('has reviewed your exchange')) {
+        return `${senderName} قام بتقييم التبادل. يمكنك الآن ترك تقييمك أيضاً.`;
+      } else if (notification.message.includes('Your exchange with') && notification.message.includes('is now active')) {
+        // Extract name from "Your exchange with Ahmad is now active"
+        const nameMatch = notification.message.match(/Your exchange with ([A-Za-z]+) is now active/);
+        const extractedName = nameMatch ? transliterateName(nameMatch[1], 'en') : senderName;
+        return `تبادلك مع ${extractedName} نشط الآن. ابدأ التعلم!`;
+      }
+      return notification.message;
+    default:
+      return notification.message;
+  }
+};
 
 interface NotificationDropdownProps {
   type: 'general' | 'chat';
@@ -20,6 +97,8 @@ interface NotificationDropdownProps {
 
 export const NotificationDropdown = ({ type }: NotificationDropdownProps) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
+  const { language } = useLanguage();
   const {
     generalNotifications,
     chatNotifications,
@@ -112,7 +191,7 @@ export const NotificationDropdown = ({ type }: NotificationDropdownProps) => {
       <DropdownMenuContent className="w-80 bg-background border shadow-lg" align="end">
         <div className="flex items-center justify-between p-3">
           <h3 className="font-semibold">
-            {type === 'general' ? 'Notifications' : 'Messages'}
+            {type === 'general' ? t('actions.notifications') : t('actions.messages')}
           </h3>
           <div className="flex items-center gap-1">
             {unreadCount > 0 && (
@@ -123,7 +202,7 @@ export const NotificationDropdown = ({ type }: NotificationDropdownProps) => {
                 className="h-6 px-2 text-xs"
               >
                 <Check className="h-3 w-3 mr-1" />
-                Mark all read
+                {t('actions.markAllRead')}
               </Button>
             )}
             {notifications.length > 0 && (
@@ -141,7 +220,7 @@ export const NotificationDropdown = ({ type }: NotificationDropdownProps) => {
                     className="w-full justify-start text-destructive hover:text-destructive"
                   >
                     <Trash2 className="h-3 w-3 mr-2" />
-                    Clear all
+                    {t('actions.clearAll')}
                   </Button>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -159,7 +238,7 @@ export const NotificationDropdown = ({ type }: NotificationDropdownProps) => {
               ) : (
                 <Mail className="h-8 w-8 mb-2 opacity-50" />
               )}
-              <p className="text-sm">No {type === 'general' ? 'notifications' : 'messages'} yet</p>
+              <p className="text-sm">{type === 'general' ? t('actions.noNotificationsYet') : t('actions.noMessagesYet')}</p>
             </div>
           ) : (
             notifications.map((notification) => (
@@ -183,7 +262,13 @@ export const NotificationDropdown = ({ type }: NotificationDropdownProps) => {
                       <h4 className={`text-sm font-medium leading-tight ${
                         !notification.isRead ? 'text-foreground' : 'text-muted-foreground'
                       }`}>
-                        {notification.title}
+                        {notification.type === 'new_message' ? t('actions.newMessage') :
+                         notification.type === 'exchange_request' || notification.type === 'learning_match' ? t('actions.exchangeRequest') :
+                         notification.type === 'exchange_active' ? t('actions.exchangeActive') :
+                         notification.type === 'exchange_completed' ? t('actions.exchangeCompleted') :
+                         notification.type === 'exchange_finished' ? t('actions.exchangeFinished') :
+                         notification.type === 'contract_ready_for_review' ? t('actions.contractReadyForReview') :
+                         notification.title}
                       </h4>
                       
                       <div className="flex items-center gap-1">
@@ -202,11 +287,14 @@ export const NotificationDropdown = ({ type }: NotificationDropdownProps) => {
                     </div>
                     
                     <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                      {notification.message}
+                      {notification.type === 'new_message' && notification.senderName 
+                        ? `${transliterateName(notification.senderName, 'en')}: ${notification.message.replace(/^[^:]+: /, '')}`
+                        : translateNotificationMessage(notification, language)
+                      }
                     </p>
                     
                     <p className="text-xs text-muted-foreground mt-1">
-                      {formatDistanceToNow(notification.createdAt, { addSuffix: true })}
+                      {translateDate(notification.createdAt, language)}
                     </p>
                   </div>
                 </div>
@@ -228,7 +316,7 @@ export const NotificationDropdown = ({ type }: NotificationDropdownProps) => {
                   setIsOpen(false);
                 }}
               >
-                View all {type === 'general' ? 'notifications' : 'messages'}
+                {type === 'general' ? t('actions.viewAllNotifications') : t('actions.viewAllMessages')}
               </Button>
             </div>
           </>

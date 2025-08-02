@@ -53,6 +53,33 @@
   font-family: 'Cairo', sans-serif;
 }
 
+/* RTL Switch Fixes */
+[dir="rtl"] [data-state="checked"] {
+  transform: translateX(1.25rem) !important;
+}
+
+[dir="rtl"] [data-state="unchecked"] {
+  transform: translateX(0) !important;
+}
+
+/* Ensure proper alignment and containment */
+[dir="rtl"] .peer[data-state="checked"] {
+  justify-content: flex-end;
+}
+
+[dir="rtl"] .peer[data-state="unchecked"] {
+  justify-content: flex-start;
+}
+
+/* Additional RTL switch refinements */
+[dir="rtl"] .peer {
+  direction: ltr; /* Keep switch direction consistent */
+}
+
+[dir="rtl"] .peer > * {
+  transform-origin: center;
+}
+
 /* Custom Animations */
 @keyframes fade-in {
   from {

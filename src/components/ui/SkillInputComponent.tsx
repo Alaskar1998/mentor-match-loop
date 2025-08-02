@@ -17,6 +17,9 @@ import {
   type Skill 
 } from '@/data/skills';
 import { skillService } from '@/services/skillService';
+import { useTranslation } from 'react-i18next';
+import { useLanguage } from '@/hooks/useLanguage';
+import { translateSkillCategory, translateSkillLevel, translateSkill } from '@/utils/translationUtils';
 
 interface SkillInputComponentProps {
   onAddSkill: (skill: Skill) => void;
@@ -44,6 +47,8 @@ export const SkillInputComponent: React.FC<SkillInputComponentProps> = ({
   skipDatabase = false
 }) => {
   const { toast } = useToast();
+  const { t } = useTranslation();
+  const { language } = useLanguage();
   const [skill, setSkill] = useState<Partial<Skill>>({
     name: "",
     level: "",
@@ -71,8 +76,8 @@ export const SkillInputComponent: React.FC<SkillInputComponentProps> = ({
   const handleAddSkill = async () => {
     if (!skill.name || !skill.level) {
       toast({
-        title: "Validation Error",
-        description: "Please fill in skill name and level",
+        title: t('actions.validationError'),
+        description: t('pages.profile.fillSkillNameAndLevel'),
         variant: "destructive"
       });
       return;
@@ -93,8 +98,8 @@ export const SkillInputComponent: React.FC<SkillInputComponentProps> = ({
         setSkill({ name: "", level: "", description: "", category: "" });
         setCustomSkillMode(false);
         toast({
-          title: "Success",
-          description: "Skill added successfully!"
+          title: t('actions.success'),
+          description: t('pages.profile.skillAddedSuccessfully')
         });
         return;
       }
@@ -178,19 +183,19 @@ export const SkillInputComponent: React.FC<SkillInputComponentProps> = ({
               {skill.category ? (
                 <span className="flex items-center gap-1 min-w-0">
                   <span className="text-sm flex-shrink-0">{getCategoryEmoji(skill.category)}</span>
-                  <span className="truncate text-sm">{skill.category}</span>
+                                          <span className="truncate text-sm">{translateSkillCategory(skill.category, language)}</span>
                 </span>
               ) : (
-                <span className="text-sm text-muted-foreground">Category</span>
+                <span className="text-sm text-muted-foreground">{t('pages.profile.category')}</span>
               )}
               <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-64 p-0">
             <Command>
-              <CommandInput placeholder="Search category..." className="h-9 text-sm" />
-              <CommandList>
-                <CommandEmpty>No category found.</CommandEmpty>
+                             <CommandInput placeholder={t('pages.profile.searchCategory')} className="h-9 text-sm" />
+               <CommandList>
+                 <CommandEmpty>{t('pages.profile.noCategoryFound')}</CommandEmpty>
                 <CommandGroup>
                   {SKILL_CATEGORIES
                     .sort((a, b) => a.category.localeCompare(b.category))
@@ -204,10 +209,10 @@ export const SkillInputComponent: React.FC<SkillInputComponentProps> = ({
                       }}
                       className="text-sm"
                     >
-                      <span className="flex items-center gap-2">
-                        <span>{cat.emoji}</span>
-                        <span>{cat.category}</span>
-                      </span>
+                                             <span className="flex items-center gap-2">
+                         <span>{cat.emoji}</span>
+                         <span>{translateSkillCategory(cat.category, language)}</span>
+                       </span>
                     </CommandItem>
                   ))}
                 </CommandGroup>
@@ -228,18 +233,18 @@ export const SkillInputComponent: React.FC<SkillInputComponentProps> = ({
                 disabled={disabled}
               >
                 {skill.name ? (
-                  <span className="truncate text-sm">{skill.name}</span>
+                                           <span className="truncate text-sm">{translateSkill(skill.name, language)}</span>
                 ) : (
-                  <span className="text-sm text-muted-foreground">Skill</span>
+                  <span className="text-sm text-muted-foreground">{t('pages.profile.skill')}</span>
                 )}
                 <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-64 p-0">
               <Command>
-                <CommandInput placeholder="Search skill..." className="h-9 text-sm" />
+                <CommandInput placeholder={t('pages.profile.searchSkill')} className="h-9 text-sm" />
                 <CommandList>
-                  <CommandEmpty>No skill found.</CommandEmpty>
+                  <CommandEmpty>{t('pages.profile.noSkillFound')}</CommandEmpty>
                   <CommandGroup>
                     {skill.category ? (
                       // Show skills from selected category
@@ -254,9 +259,9 @@ export const SkillInputComponent: React.FC<SkillInputComponentProps> = ({
                             setSkillOpen(false);
                           }}
                           className="text-sm"
-                        >
-                          {s}
-                        </CommandItem>
+                                                 >
+                           {translateSkill(s, language)}
+                         </CommandItem>
                       ))
                     ) : (
                       // Show all skills from all categories
@@ -281,12 +286,12 @@ export const SkillInputComponent: React.FC<SkillInputComponentProps> = ({
                           }}
                           className="text-sm"
                         >
-                          <div className="flex items-center justify-between w-full">
-                            <span>{s}</span>
-                            <Badge variant="secondary" className="text-xs ml-2">
-                              {cat}
-                            </Badge>
-                          </div>
+                                                     <div className="flex items-center justify-between w-full">
+                             <span>{translateSkill(s, language)}</span>
+                             <Badge variant="secondary" className="text-xs ml-2">
+                               {translateSkillCategory(cat, language)}
+                             </Badge>
+                           </div>
                         </CommandItem>
                       ))
                     )}
@@ -299,7 +304,7 @@ export const SkillInputComponent: React.FC<SkillInputComponentProps> = ({
                         }}
                         className="text-sm"
                       >
-                        + Type custom skill name
+                        + {t('pages.profile.typeCustomSkillName')}
                       </CommandItem>
                     )}
                   </CommandGroup>
@@ -310,7 +315,7 @@ export const SkillInputComponent: React.FC<SkillInputComponentProps> = ({
         ) : (
           <div className="flex gap-2">
             <Input
-              placeholder="Type skill name..."
+              placeholder={t('pages.profile.typeSkillName')}
               value={skill.name}
               onChange={(e) => handleCustomSkillInput(e.target.value)}
               className="flex-1 h-10 text-sm"
@@ -338,12 +343,12 @@ export const SkillInputComponent: React.FC<SkillInputComponentProps> = ({
           disabled={disabled}
         >
           <SelectTrigger className="h-10 text-sm">
-            <SelectValue placeholder="Level" />
+            <SelectValue placeholder={t('pages.profile.level')} />
           </SelectTrigger>
           <SelectContent>
-            {SKILL_LEVELS.map(level => (
-              <SelectItem key={level} value={level} className="text-sm">{level}</SelectItem>
-            ))}
+                         {SKILL_LEVELS.map(level => (
+               <SelectItem key={level} value={level} className="text-sm">{translateSkillLevel(level, language)}</SelectItem>
+             ))}
           </SelectContent>
         </Select>
 
@@ -354,7 +359,7 @@ export const SkillInputComponent: React.FC<SkillInputComponentProps> = ({
           className="h-10 text-sm flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
-          {loading || validating ? 'Adding...' : 'Add'}
+          {loading || validating ? t('actions.adding') : t('actions.add')}
         </Button>
       </div>
 
@@ -362,10 +367,10 @@ export const SkillInputComponent: React.FC<SkillInputComponentProps> = ({
       <div className="space-y-2">
         <Label className="flex items-center gap-2 text-sm font-medium">
           <Sparkles className="w-4 h-4" />
-          Write a short summary of your experience with this skill
+          {t('pages.profile.writeExperienceSummary')}
         </Label>
         <Textarea
-          placeholder="(e.g., years of practice, projects, achievements)"
+                      placeholder={t('pages.profile.experiencePlaceholder')}
           value={skill.description}
           onChange={(e) => setSkill({...skill, description: e.target.value})}
           className="resize-none text-sm"
@@ -377,9 +382,9 @@ export const SkillInputComponent: React.FC<SkillInputComponentProps> = ({
       {/* Cancel Button (if provided) */}
       {onCancel && (
         <div className="flex justify-end">
-          <Button variant="outline" onClick={onCancel} disabled={disabled} className="text-xs">
-            Cancel
-          </Button>
+                      <Button variant="outline" onClick={onCancel} disabled={disabled} className="text-xs">
+              {t('actions.cancel')}
+            </Button>
         </div>
       )}
     </div>

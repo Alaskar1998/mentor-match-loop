@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SkillInputComponent } from "@/components/ui/SkillInputComponent";
 import { type Skill } from "@/data/skills";
+import { useTranslation } from "react-i18next";
 
 interface SignupModalProps {
   isOpen: boolean;
@@ -74,6 +75,7 @@ export const SignupModal = ({ isOpen, onClose, onSignupComplete }: SignupModalPr
   
   const { signup, signInWithGoogle, signInWithFacebook, signInWithApple } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const handleNext = async () => {
     if (currentStep < 4) {
@@ -85,14 +87,14 @@ export const SignupModal = ({ isOpen, onClose, onSignupComplete }: SignupModalPr
       
       if (result.error) {
         toast({
-          title: "Signup failed",
+          title: t('actions.signupFailed'),
           description: result.error,
           variant: "destructive"
         });
       } else {
         toast({
-          title: "Account created!",
-          description: "Please check your email to verify your account.",
+          title: t('actions.accountCreated'),
+          description: t('actions.checkEmailVerify'),
         });
         onSignupComplete(formData as SignupData);
         onClose();
@@ -120,7 +122,7 @@ export const SignupModal = ({ isOpen, onClose, onSignupComplete }: SignupModalPr
     
     if (result.error) {
       toast({
-        title: "Authentication failed",
+        title: t('actions.authenticationFailed'),
         description: result.error,
         variant: "destructive"
       });
@@ -220,17 +222,17 @@ export const SignupModal = ({ isOpen, onClose, onSignupComplete }: SignupModalPr
         return (
           <div className="space-y-6">
             <div className="text-center mb-6">
-              <h3 className="text-xl font-semibold mb-2">Join our learning community</h3>
-              <p className="text-muted-foreground">Create your account to start exchanging skills</p>
+              <h3 className="text-xl font-semibold mb-2">{t('actions.joinLearningCommunity')}</h3>
+              <p className="text-muted-foreground">{t('actions.createAccountDescription')}</p>
             </div>
 
             <div className="space-y-4">
               <div>
-                <Label htmlFor="email">Email address</Label>
+                <Label htmlFor="email">{t('actions.emailAddress')}</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder={t('actions.enterEmail')}
                   value={formData.email || ""}
                   onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                   className="mt-1"
@@ -238,11 +240,11 @@ export const SignupModal = ({ isOpen, onClose, onSignupComplete }: SignupModalPr
               </div>
 
               <div>
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t('actions.createPassword')}</Label>
                 <Input
                   id="password"
                   type="password"
-                  placeholder="Create a password"
+                  placeholder={t('actions.createPassword')}
                   value={formData.password || ""}
                   onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                   className="mt-1"
@@ -253,7 +255,7 @@ export const SignupModal = ({ isOpen, onClose, onSignupComplete }: SignupModalPr
             <Separator />
 
             <div className="space-y-3">
-              <p className="text-sm text-center text-muted-foreground">Or continue with</p>
+              <p className="text-sm text-center text-muted-foreground">{t('actions.orContinueWith')}</p>
               <div className="grid grid-cols-3 gap-3">
                 <Button 
                   variant="outline" 
@@ -301,16 +303,16 @@ export const SignupModal = ({ isOpen, onClose, onSignupComplete }: SignupModalPr
         return (
           <div className="space-y-6">
             <div className="text-center mb-6">
-              <h3 className="text-xl font-semibold mb-2">Tell us about yourself</h3>
-              <p className="text-muted-foreground">Help others get to know you better</p>
+              <h3 className="text-xl font-semibold mb-2">{t('actions.tellUsAboutYourself')}</h3>
+              <p className="text-muted-foreground">{t('actions.helpOthersKnowYou')}</p>
             </div>
 
             <div className="space-y-4">
               <div>
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="name">{t('actions.fullName')}</Label>
                 <Input
                   id="name"
-                  placeholder="Enter your full name"
+                  placeholder={t('actions.enterFullName')}
                   value={formData.name || ""}
                   onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                   className="mt-1"
@@ -318,7 +320,7 @@ export const SignupModal = ({ isOpen, onClose, onSignupComplete }: SignupModalPr
               </div>
 
               <div>
-                <Label htmlFor="photo">Profile Photo</Label>
+                <Label htmlFor="photo">{t('actions.profilePhoto')}</Label>
                 <div className="mt-1 flex items-center gap-3">
                   <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center overflow-hidden">
                     {formData.profilePicture ? (
@@ -343,16 +345,16 @@ export const SignupModal = ({ isOpen, onClose, onSignupComplete }: SignupModalPr
                     onClick={() => document.getElementById('avatar-upload')?.click()}
                     disabled={uploadingAvatar}
                   >
-                    {uploadingAvatar ? "Uploading..." : "Upload Photo"}
+                    {uploadingAvatar ? t('actions.uploading') : t('actions.uploadPhoto')}
                   </Button>
                 </div>
               </div>
 
               <div>
-                <Label htmlFor="bio">Bio</Label>
+                <Label htmlFor="bio">{t('actions.bio')}</Label>
                 <Textarea
                   id="bio"
-                  placeholder="Tell us a bit about yourself..."
+                  placeholder={t('actions.tellUsAboutYou')}
                   value={formData.bio || ""}
                   onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
                   className="mt-1"
@@ -362,10 +364,10 @@ export const SignupModal = ({ isOpen, onClose, onSignupComplete }: SignupModalPr
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="gender">Gender</Label>
+                  <Label htmlFor="gender">{t('actions.gender')}</Label>
                   <Select onValueChange={(value) => setFormData(prev => ({ ...prev, gender: value }))}>
                     <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Select gender" />
+                      <SelectValue placeholder={t('actions.selectGender')} />
                     </SelectTrigger>
                     <SelectContent>
                       {GENDERS.map(gender => (
@@ -376,11 +378,11 @@ export const SignupModal = ({ isOpen, onClose, onSignupComplete }: SignupModalPr
                 </div>
 
                 <div>
-                  <Label htmlFor="age">Age</Label>
+                  <Label htmlFor="age">{t('actions.age')}</Label>
                   <Input
                     id="age"
                     type="number"
-                    placeholder="Age"
+                    placeholder={t('actions.age')}
                     value={formData.age || ""}
                     onChange={(e) => setFormData(prev => ({ ...prev, age: parseInt(e.target.value) }))}
                     className="mt-1"
@@ -389,7 +391,7 @@ export const SignupModal = ({ isOpen, onClose, onSignupComplete }: SignupModalPr
               </div>
 
               <div>
-                <Label htmlFor="country">Country</Label>
+                <Label htmlFor="country">{t('actions.country')}</Label>
                 <Popover open={countryOpen} onOpenChange={setCountryOpen}>
                   <PopoverTrigger asChild>
                     <Button
@@ -398,15 +400,15 @@ export const SignupModal = ({ isOpen, onClose, onSignupComplete }: SignupModalPr
                       aria-expanded={countryOpen}
                       className="mt-1 w-full justify-between"
                     >
-                      {formData.country || "Select your country..."}
+                      {formData.country || t('actions.selectCountry')}
                       <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-full p-0">
                     <Command>
-                      <CommandInput placeholder="Search countries..." />
+                      <CommandInput placeholder={t('actions.searchCountries')} />
                       <CommandList>
-                        <CommandEmpty>No country found.</CommandEmpty>
+                        <CommandEmpty>{t('actions.noCountryFound')}</CommandEmpty>
                         <CommandGroup>
                           {COUNTRIES.map((country) => (
                             <CommandItem
@@ -433,15 +435,15 @@ export const SignupModal = ({ isOpen, onClose, onSignupComplete }: SignupModalPr
         return (
           <div className="space-y-6">
             <div className="text-center mb-6">
-              <h3 className="text-xl font-semibold mb-2">Skills you can teach</h3>
-              <p className="text-muted-foreground">Share your knowledge with others</p>
+              <h3 className="text-xl font-semibold mb-2">{t('actions.skillsYouCanTeach')}</h3>
+              <p className="text-muted-foreground">{t('actions.shareKnowledge')}</p>
             </div>
 
             <Card>
               <CardContent className="p-4 space-y-4">
                 <SkillInputComponent
                   onAddSkill={handleAddSkill}
-                  title="Add Skill to Teach"
+                  title={t('actions.addSkillToTeach')}
                   compact={true}
                 />
               </CardContent>
@@ -449,7 +451,7 @@ export const SignupModal = ({ isOpen, onClose, onSignupComplete }: SignupModalPr
 
             {formData.skillsToTeach && formData.skillsToTeach.length > 0 &&
               <div className="space-y-3">
-                <h4 className="font-medium">Your Skills</h4>
+                <h4 className="font-medium">{t('actions.yourSkills')}</h4>
                 {formData.skillsToTeach.map((skill, index) => (
                   <Card key={index}>
                     <CardContent className="p-3 flex items-start justify-between">
@@ -479,7 +481,7 @@ export const SignupModal = ({ isOpen, onClose, onSignupComplete }: SignupModalPr
                 Back
               </Button>
               <Button onClick={handleNext} disabled={isLoading} className="flex-1">
-                {isLoading ? "Creating account..." : "Continue"}
+                {isLoading ? t('actions.creatingAccount') : "Continue"}
               </Button>
             </div>
 
@@ -512,23 +514,22 @@ export const SignupModal = ({ isOpen, onClose, onSignupComplete }: SignupModalPr
         return (
           <div className="space-y-6">
             <div className="text-center mb-6">
-              <h3 className="text-xl font-semibold mb-2">Mentorship</h3>
-              <p className="text-muted-foreground">Help shape our learning community</p>
+              <h3 className="text-xl font-semibold mb-2">{t('actions.mentorshipTitle')}</h3>
+              <p className="text-muted-foreground">{t('actions.shapeLearningCommunity')}</p>
             </div>
 
             <Card className="border-2 border-dashed border-accent/20 bg-accent/5">
               <CardContent className="p-6 text-center space-y-4">
                 <div className="text-4xl">🌟</div>
                 <div>
-                  <h4 className="font-semibold text-lg mb-2">Become a Mentor</h4>
+                  <h4 className="font-semibold text-lg mb-2">{t('actions.becomeMentor')}</h4>
                   <p className="text-muted-foreground mb-4">
-                    Mentors are community heroes who teach without expecting anything in return. 
-                    They get a special 🌟 Mentor Badge and help make learning accessible to everyone.
+                    {t('actions.mentorDescription')}
                   </p>
                   
                   <div className="flex items-center justify-center gap-3">
                     <Label htmlFor="mentorship-toggle" className="text-base">
-                      I am willing to teach without expecting something in return
+                      {t('actions.willingToTeachWithoutReturn')}
                     </Label>
                     <Switch
                       id="mentorship-toggle"
@@ -546,10 +547,9 @@ export const SignupModal = ({ isOpen, onClose, onSignupComplete }: SignupModalPr
               <div className="flex items-start gap-3">
                 <Phone className="w-5 h-5 text-muted-foreground mt-0.5" />
                 <div className="flex-1">
-                  <h4 className="font-medium mb-1">Phone Verification (Optional)</h4>
+                  <h4 className="font-medium mb-1">{t('actions.phoneVerification')}</h4>
                   <p className="text-sm text-muted-foreground mb-3">
-                    Phone verification will be required when you send your first invitation or start your first exchange.
-                    Verified users earn bonus App Coins!
+                    {t('actions.phoneVerificationDesc')}
                   </p>
                   <Input 
                     placeholder="+1 (555) 123-4567"
@@ -564,7 +564,7 @@ export const SignupModal = ({ isOpen, onClose, onSignupComplete }: SignupModalPr
               <div className="text-center p-4 bg-accent/10 rounded-lg border border-accent/20">
                 <div className="text-2xl mb-2">🎉</div>
                 <p className="text-sm text-accent font-medium">
-                  Congratulations! You'll receive the 🌟 Mentor Badge upon signup completion.
+                  {t('actions.congratulations')} {t('actions.mentorBadgeMessage')}
                 </p>
               </div>
             )}
@@ -581,10 +581,10 @@ export const SignupModal = ({ isOpen, onClose, onSignupComplete }: SignupModalPr
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
-            <span>Step {currentStep} of 4: {STEP_TITLES[currentStep - 1]}</span>
+            <span>{t('actions.step')} {currentStep} {t('actions.of')} 4: {STEP_TITLES[currentStep - 1]}</span>
           </DialogTitle>
           <DialogDescription>
-            Complete your profile setup to join the skill exchange community.
+            {t('actions.completeProfileSetup')}
           </DialogDescription>
         </DialogHeader>
 
@@ -611,7 +611,7 @@ export const SignupModal = ({ isOpen, onClose, onSignupComplete }: SignupModalPr
             onClick={handleNext}
             className="min-w-[100px]"
           >
-            {currentStep === 4 ? "Complete" : "Next"}
+            {currentStep === 4 ? t('actions.complete') : "Next"}
           </Button>
         </div>
       </DialogContent>

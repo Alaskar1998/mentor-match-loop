@@ -10,10 +10,12 @@ import { User, Settings, HelpCircle, Shield, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export const UserAvatar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   if (!user) return null;
@@ -63,19 +65,19 @@ export const UserAvatar = () => {
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleProfileClick} className="cursor-pointer">
           <User className="mr-2 h-4 w-4" />
-          Profile
+          {t('actions.profile')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleSettingsClick} className="cursor-pointer">
           <Settings className="mr-2 h-4 w-4" />
-          Settings
+          {t('actions.settings')}
         </DropdownMenuItem>
         <DropdownMenuItem className="cursor-pointer">
           <HelpCircle className="mr-2 h-4 w-4" />
-          Help
+          {t('actions.help')}
         </DropdownMenuItem>
         <DropdownMenuItem className="cursor-pointer">
           <Shield className="mr-2 h-4 w-4" />
-          Privacy
+          {t('actions.privacy')}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem 
@@ -84,7 +86,7 @@ export const UserAvatar = () => {
           disabled={isLoggingOut}
         >
           <LogOut className="mr-2 h-4 w-4" />
-          {isLoggingOut ? "Signing out..." : "Sign Out"}
+          {isLoggingOut ? t('actions.signingOut') : t('actions.signOut')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

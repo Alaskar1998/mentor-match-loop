@@ -14,6 +14,9 @@ import { ExchangeModal } from '@/components/chat/ExchangeModal';
 import { FinishExchangeModal } from '@/components/chat/FinishExchangeModal';
 import { ExchangeReviewModal } from '@/components/review/ExchangeReviewModal';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
+import { useLanguage } from '@/hooks/useLanguage';
+import { transliterateName } from '@/utils/translationUtils';
 import { 
   Send, 
   ArrowLeft, 
@@ -131,6 +134,8 @@ const Chat = React.memo(() => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { createNotification } = useNotifications();
+  const { t } = useTranslation();
+  const { language } = useLanguage();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -686,19 +691,21 @@ const Chat = React.memo(() => {
         .single();
 
       const senderName = senderProfile?.display_name || 'Someone';
+      // Use English transliteration for Arabic names as per user preference
+      const displayName = language === 'ar' ? transliterateName(senderName, 'en') : senderName;
 
       // Create notification for the other user about new message
       try {
         await createNotification({
           userId: otherUser.id,
-          title: 'New Message',
-          message: `${senderName}: ${message.trim().substring(0, 50)}${message.trim().length > 50 ? '...' : ''}`,
+          title: t('actions.newMessage'),
+          message: `${displayName}: ${message.trim().substring(0, 50)}${message.trim().length > 50 ? '...' : ''}`,
           isRead: false,
           type: 'new_message',
           actionUrl: `/chat/${chatId}`,
           metadata: { 
             senderId: user.id,
-            senderName: senderName,
+            senderName: displayName,
             chatId: chatId
           }
         });
@@ -790,16 +797,17 @@ const Chat = React.memo(() => {
         // Send notification to other user
         try {
           const senderName = user.name || user.email || 'Someone';
+          const displayName = language === 'ar' ? transliterateName(senderName, 'en') : senderName;
           await createNotification({
             userId: otherUser.id,
-            title: 'Exchange Request',
-            message: `${senderName} wants to start the exchange. Choose what you will teach.`,
+            title: t('actions.exchangeRequest'),
+            message: `${displayName} wants to start the exchange. Choose what you will teach.`,
             isRead: false,
             type: 'learning_match',
             actionUrl: `/chat/${chatId}`,
             metadata: { 
               senderId: user.id,
-              senderName: senderName,
+              senderName: displayName,
               chatId: chatId,
               skill: data.userSkill,
               exchangeState: 'draft_contract',
@@ -968,16 +976,17 @@ const Chat = React.memo(() => {
         // Send notification to other user
         try {
           const senderName = user.name || user.email || 'Someone';
+          const displayName = language === 'ar' ? transliterateName(senderName, 'en') : senderName;
           await createNotification({
             userId: otherUser.id,
-            title: 'Exchange Active!',
-            message: `Your exchange with ${senderName} is now active. Start learning!`,
+            title: t('actions.exchangeActive'),
+            message: `Your exchange with ${displayName} is now active. Start learning!`,
             isRead: false,
             type: 'learning_match',
             actionUrl: `/chat/${chatId}`,
             metadata: { 
               senderId: user.id,
-              senderName: senderName,
+              senderName: displayName,
               chatId: chatId
             }
           });
@@ -990,16 +999,17 @@ const Chat = React.memo(() => {
         // Send notification to other user to review the contract
         try {
           const senderName = user.name || user.email || 'Someone';
+          const displayName = language === 'ar' ? transliterateName(senderName, 'en') : senderName;
           await createNotification({
             userId: otherUser.id,
-            title: 'Contract Ready for Review',
-            message: `${senderName} has agreed to the exchange contract. Please review and agree to start the exchange.`,
+            title: t('actions.contractReadyForReview'),
+            message: `${displayName} has agreed to the exchange contract. Please review and agree to start the exchange.`,
             isRead: false,
             type: 'learning_match',
             actionUrl: `/chat/${chatId}`,
             metadata: { 
               senderId: user.id,
-              senderName: senderName,
+              senderName: displayName,
               chatId: chatId,
               shouldOpenModal: true
             }
@@ -1194,16 +1204,17 @@ const Chat = React.memo(() => {
         // Send notification to other user
         try {
           const senderName = user.name || user.email || 'Someone';
+          const displayName = language === 'ar' ? transliterateName(senderName, 'en') : senderName;
           await createNotification({
             userId: otherUser.id,
-            title: 'Exchange Completed!',
-            message: `Your exchange with ${senderName} has been completed. Please leave a review!`,
+            title: t('actions.exchangeCompleted'),
+            message: `Your exchange with ${displayName} has been completed. Please leave a review!`,
             isRead: false,
             type: 'exchange_completed',
             actionUrl: `/chat/${chatId}`,
             metadata: { 
               senderId: user.id,
-              senderName: senderName,
+              senderName: displayName,
               chatId: chatId
             }
           });
@@ -1244,16 +1255,17 @@ const Chat = React.memo(() => {
         // Send notification to other user
         try {
           const senderName = user.name || user.email || 'Someone';
+          const displayName = language === 'ar' ? transliterateName(senderName, 'en') : senderName;
           await createNotification({
             userId: otherUser.id,
-            title: 'Exchange Finished',
-            message: `${senderName} marked the exchange as finished. Please finish yours too!`,
+            title: t('actions.exchangeFinished'),
+            message: `${displayName} marked the exchange as finished. Please finish yours too!`,
             isRead: false,
             type: 'exchange_finished',
             actionUrl: `/chat/${chatId}`,
             metadata: { 
               senderId: user.id,
-              senderName: senderName,
+              senderName: displayName,
               chatId: chatId
             }
           });
@@ -1348,7 +1360,7 @@ const Chat = React.memo(() => {
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-2">Chat not found</h2>
           <p className="text-muted-foreground mb-4">The conversation you're looking for doesn't exist.</p>
-          <Button onClick={() => navigate('/messages')}>Back to Messages</Button>
+          <Button onClick={() => navigate('/messages')}>{t('actions.backToMessages')}</Button>
         </div>
       </div>
     );
@@ -1380,7 +1392,7 @@ const Chat = React.memo(() => {
                 className="gap-2"
               >
                 <ArrowLeft className="h-4 w-4" />
-                Back to Messages
+                {t('actions.backToMessages')}
               </Button>
               <div className="flex items-center gap-3">
                 <Avatar className="w-10 h-10">

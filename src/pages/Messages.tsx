@@ -11,6 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/hooks/useLanguage";
+import { translateSkill, translateName, translateStatus, translateDate } from "@/utils/translationUtils";
 
 interface Chat {
   id: string;
@@ -29,6 +31,7 @@ export default function Messages() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { t } = useTranslation();
+  const { language } = useLanguage();
   const [chats, setChats] = useState<Chat[]>([]);
   const [filteredChats, setFilteredChats] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(true);
@@ -133,7 +136,7 @@ export default function Messages() {
 
       if (error) {
         console.error("Error fetching chats:", error);
-        toast.error("Failed to load conversations");
+        toast.error(t('actions.failedToLoadConversations'));
         setLoading(false);
         return;
       }
@@ -171,11 +174,11 @@ export default function Messages() {
           return {
             id: chat.id,
             recipientId,
-            recipientName: profileData?.display_name || "Unknown User",
+            recipientName: translateName(profileData?.display_name || t('search.unknownUser'), language),
             recipientAvatar: profileData?.avatar_url,
-            skill: chat.skill,
+            skill: translateSkill(chat.skill, language),
             status: chat.status,
-            lastMessage: lastMessageData?.[0]?.message || "No messages yet",
+            lastMessage: lastMessageData?.[0]?.message || t('actions.noMessagesYet'),
             timestamp: new Date(lastMessageData?.[0]?.created_at || chat.updated_at),
             unreadCount: unreadCount || 0,
           };
@@ -186,7 +189,7 @@ export default function Messages() {
       console.log("✅ Chats loaded successfully:", chatsWithDetails.length);
     } catch (error) {
       console.error("Error fetching chats:", error);
-      toast.error("Failed to load conversations");
+      toast.error(t('actions.failedToLoadConversations'));
     } finally {
       setLoading(false);
     }
@@ -376,22 +379,19 @@ export default function Messages() {
                               {chat.unreadCount}
                             </Badge>
                           )}
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <Clock className="h-3 w-3" />
-                            {formatDistanceToNow(chat.timestamp, { addSuffix: true })}
-                          </div>
+                                                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                             <Clock className="h-3 w-3" />
+                             {translateDate(chat.timestamp, language)}
+                           </div>
                         </div>
                       </div>
 
                       <div className="flex items-center gap-2 mb-2">
-                        <Badge variant="outline" className="text-xs">
-                          {chat.skill}
-                        </Badge>
                         <div className="flex items-center gap-1">
                           <div className={`w-2 h-2 rounded-full ${getStatusColor(chat.status)}`} />
-                          <span className="text-xs text-muted-foreground capitalize">
-                            {chat.status}
-                          </span>
+                                                     <span className="text-xs text-muted-foreground capitalize">
+                             {translateStatus(chat.status, language)}
+                           </span>
                         </div>
                       </div>
 

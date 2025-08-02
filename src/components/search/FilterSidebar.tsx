@@ -8,6 +8,8 @@ import { Switch } from '@/components/ui/switch';
 
 import { X, Filter } from 'lucide-react';
 import { SearchFilters } from '@/pages/SearchResults';
+import { useLanguage } from '@/hooks/useLanguage';
+import { translateCountry } from '@/utils/translationUtils';
 
 interface FilterSidebarProps {
   filters: SearchFilters;
@@ -47,6 +49,7 @@ const genderOptions = ["Male", "Female"];
 
 
 export const FilterSidebar = ({ filters, onFiltersChange, isPremium, isOpen, onClose }: FilterSidebarProps) => {
+  const { language } = useLanguage();
   // All filters are now available for free
   const updateFilters = (key: keyof SearchFilters, value: any) => {
     onFiltersChange({ ...filters, [key]: value });
@@ -149,7 +152,7 @@ export const FilterSidebar = ({ filters, onFiltersChange, isPremium, isOpen, onC
               >
                 <option value="">All Countries</option>
                 {countries.map(country => (
-                  <option key={country} value={country}>{country}</option>
+                  <option key={country} value={country}>{translateCountry(country, language)}</option>
                 ))}
               </select>
             </div>
@@ -243,7 +246,7 @@ export const FilterSidebar = ({ filters, onFiltersChange, isPremium, isOpen, onC
                 <div className="space-y-1">
                   {filters.country && (
                     <Badge variant="secondary" className="text-xs">
-                      Country: {filters.country}
+                      Country: {translateCountry(filters.country, language)}
                     </Badge>
                   )}
                   {filters.skillLevel && (

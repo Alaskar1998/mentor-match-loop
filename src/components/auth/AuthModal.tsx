@@ -26,6 +26,7 @@ import {
 } from "@/data/skills";
 // Only import Json from the correct location
 import { Json } from "@/integrations/supabase/types";
+import { useTranslation } from "react-i18next";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -62,28 +63,28 @@ interface ValidationErrors {
 }
 
 // Validation functions
-const validateEmail = (email: string): string | undefined => {
-  if (!email) return "Email is required";
-  if (!email.includes('@')) return "Email must contain @";
+const validateEmail = (email: string, t: any): string | undefined => {
+  if (!email) return t('actions.email') + " " + t('actions.required');
+  if (!email.includes('@')) return t('actions.email') + " " + t('actions.mustContainAt');
   if (!email.includes('.') || email.split('@')[1]?.split('.')[0]?.length === 0) {
-    return "Please enter a valid email address";
+    return t('actions.pleaseEnterValidEmail');
   }
   return undefined;
 };
 
-const validatePassword = (password: string): string | undefined => {
-  if (!password) return "Password is required";
-  if (password.length < 6) return "Password must be at least 6 characters";
+const validatePassword = (password: string, t: any): string | undefined => {
+  if (!password) return t('actions.password') + " " + t('actions.required');
+  if (password.length < 6) return t('actions.passwordMustBeAtLeast6');
   return undefined;
 };
 
-const validateRequired = (value: string, fieldName: string): string | undefined => {
-  if (!value || value.trim() === '') return `${fieldName} is required`;
+const validateRequired = (value: string, fieldName: string, t: any): string | undefined => {
+  if (!value || value.trim() === '') return `${fieldName} ` + t('actions.required');
   return undefined;
 };
 
-const validateAge = (age: string): string | undefined => {
-  if (!age || age.trim() === '') return "Age range is required";
+const validateAge = (age: string, t: any): string | undefined => {
+  if (!age || age.trim() === '') return t('actions.ageRangeRequired');
   return undefined;
 };
 
@@ -133,6 +134,7 @@ export const AuthModal = ({ isOpen, onClose, onAuthComplete, defaultMode = 'sign
   
   const { signup, login, signInWithGoogle, signInWithFacebook, signInWithApple, updateUser } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   // Update mode when defaultMode prop changes
   useEffect(() => {
@@ -160,10 +162,10 @@ export const AuthModal = ({ isOpen, onClose, onAuthComplete, defaultMode = 'sign
     const errors: ValidationErrors = {};
     
     if (signinData.email) {
-      errors.email = validateEmail(signinData.email);
+      errors.email = validateEmail(signinData.email, t);
     }
     if (signinData.password) {
-      errors.password = validatePassword(signinData.password);
+      errors.password = validatePassword(signinData.password, t);
     }
     
     setValidationErrors(errors);
@@ -175,25 +177,25 @@ export const AuthModal = ({ isOpen, onClose, onAuthComplete, defaultMode = 'sign
     const errors: ValidationErrors = {};
     
     if (formData.email) {
-      errors.email = validateEmail(formData.email);
+      errors.email = validateEmail(formData.email, t);
     }
     if (formData.password) {
-      errors.password = validatePassword(formData.password);
+      errors.password = validatePassword(formData.password, t);
     }
     if (formData.name) {
-      errors.name = validateRequired(formData.name, 'Name');
+      errors.name = validateRequired(formData.name, 'Name', t);
     }
     if (formData.bio) {
-      errors.bio = validateRequired(formData.bio, 'Bio');
+      errors.bio = validateRequired(formData.bio, 'Bio', t);
     }
     if (formData.gender) {
-      errors.gender = validateRequired(formData.gender, 'Gender');
+      errors.gender = validateRequired(formData.gender, 'Gender', t);
     }
     if (formData.country) {
-      errors.country = validateRequired(formData.country, 'Country');
+      errors.country = validateRequired(formData.country, 'Country', t);
     }
     if (formData.age) {
-      errors.age = validateAge(formData.age);
+      errors.age = validateAge(formData.age, t);
     }
     
     setValidationErrors(errors);
@@ -536,17 +538,17 @@ export const AuthModal = ({ isOpen, onClose, onAuthComplete, defaultMode = 'sign
   const renderSignInForm = () => (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="signin-email">Email</Label>
+        <Label htmlFor="signin-email">{t('actions.email')}</Label>
         <Input
           id="signin-email"
           type="email"
-          placeholder="Enter your email"
+          placeholder={t('actions.enterEmail')}
           value={signinData.email}
           onChange={(e) => {
             setSigninData(prev => ({ ...prev, email: e.target.value }));
             // Real-time validation
             if (e.target.value) {
-              const emailError = validateEmail(e.target.value);
+              const emailError = validateEmail(e.target.value, t);
               setValidationErrors(prev => ({ ...prev, email: emailError }));
             } else {
               setValidationErrors(prev => ({ ...prev, email: undefined }));
@@ -560,18 +562,18 @@ export const AuthModal = ({ isOpen, onClose, onAuthComplete, defaultMode = 'sign
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="signin-password">Password</Label>
+        <Label htmlFor="signin-password">{t('actions.password')}</Label>
         <div className="relative">
           <Input
             id="signin-password"
             type={showPassword ? "text" : "password"}
-            placeholder="Enter your password"
+            placeholder={t('actions.enterPassword')}
             value={signinData.password}
             onChange={(e) => {
               setSigninData(prev => ({ ...prev, password: e.target.value }));
               // Real-time validation
               if (e.target.value) {
-                const passwordError = validatePassword(e.target.value);
+                const passwordError = validatePassword(e.target.value, t);
                 setValidationErrors(prev => ({ ...prev, password: passwordError }));
               } else {
                 setValidationErrors(prev => ({ ...prev, password: undefined }));
@@ -599,7 +601,7 @@ export const AuthModal = ({ isOpen, onClose, onAuthComplete, defaultMode = 'sign
         disabled={isLoading || !isSignInValid()}
         className="w-full"
       >
-        {isLoading ? "Signing in..." : "Sign In"}
+        {isLoading ? t('actions.signingIn') : t('actions.signIn')}
       </Button>
 
       <div className="relative">
@@ -607,7 +609,7 @@ export const AuthModal = ({ isOpen, onClose, onAuthComplete, defaultMode = 'sign
           <span className="w-full border-t" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+          <span className="bg-background px-2 text-muted-foreground">{t('actions.orContinueWith')}</span>
         </div>
       </div>
 
@@ -1037,14 +1039,14 @@ export const AuthModal = ({ isOpen, onClose, onAuthComplete, defaultMode = 'sign
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="text-center">
-            {mode === 'signin' ? 'Welcome Back' : 'Create Your Account'}
+            {mode === 'signin' ? t('actions.welcomeBack') : t('actions.joinLearningCommunity')}
           </DialogTitle>
         </DialogHeader>
 
         <Tabs value={mode} onValueChange={(value) => setMode(value as 'signup' | 'signin')}>
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
-            <TabsTrigger value="signin">Sign In</TabsTrigger>
+            <TabsTrigger value="signup">{t('actions.signUp')}</TabsTrigger>
+            <TabsTrigger value="signin">{t('actions.signIn')}</TabsTrigger>
           </TabsList>
           
           <TabsContent value="signin" className="mt-4">
@@ -1055,7 +1057,7 @@ export const AuthModal = ({ isOpen, onClose, onAuthComplete, defaultMode = 'sign
             {currentStep > 1 && (
               <div className="mb-4">
                 <div className="flex items-center justify-between text-sm">
-                  <span>Step {currentStep} of 4</span>
+                  <span>{t('actions.step')} {currentStep} {t('actions.of')} 4</span>
                   <span className="text-muted-foreground">{STEP_TITLES[currentStep - 1]}</span>
                 </div>
                 <div className="mt-2 h-2 bg-muted rounded-full">

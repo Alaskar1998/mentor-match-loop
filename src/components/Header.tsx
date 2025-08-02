@@ -9,6 +9,7 @@ import { UserAvatar } from "@/components/auth/UserAvatar";
 import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/hooks/useLanguage";
 import { toast } from "sonner";
 import { isSearchDisabled } from "@/utils/userValidation";
 
@@ -16,6 +17,7 @@ export const Header = () => {
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { isRTL } = useLanguage();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<'signup' | 'signin'>('signin');
   const [searchQuery, setSearchQuery] = useState("");
@@ -56,12 +58,13 @@ export const Header = () => {
       <nav className="bg-background/80 backdrop-blur-sm border-b sticky top-0 z-50">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between gap-4">
-            <Link to="/" className="font-bold text-xl hover:text-primary transition-colors flex-shrink-0">
-              Maharat Hub
+            {/* Logo */}
+            <Link to="/" className={`font-bold text-xl hover:text-primary transition-colors flex-shrink-0 ${isRTL ? 'order-10' : 'order-1'}`}>
+              {t('nav.maharatHub')}
             </Link>
 
-            {/* Navigation Links - Left of Search Bar */}
-            <div className="hidden lg:flex items-center gap-2">
+            {/* Navigation Links */}
+            <div className={`hidden lg:flex items-center gap-2 ${isRTL ? 'order-8' : 'order-2'}`}>
               <Link to="/requests-feed">
                 <Button variant="ghost" size="sm">{t('nav.requestsFeed')}</Button>
               </Link>
@@ -71,7 +74,7 @@ export const Header = () => {
             </div>
 
             {/* Search Bar - Center */}
-            <div className="hidden md:flex flex-1 max-w-md mx-4">
+            <div className={`hidden md:flex flex-1 max-w-md mx-4 ${isRTL ? 'order-5' : 'order-3'}`}>
               <div className={`relative w-full ${searchDisabled ? 'opacity-50' : ''}`}>
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input
@@ -95,21 +98,21 @@ export const Header = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 md:gap-4">
+            {/* Right side elements */}
+            <div className={`flex items-center gap-2 md:gap-4 ${isRTL ? 'order-1' : 'order-4'}`}>
               {/* Language Switcher */}
               <LanguageSwitcher />
               
               {isAuthenticated ? (
                 <div className="flex items-center gap-2">
-                  {/* Coin Display */}
+                  {/* Coin Display - Icon only */}
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={handleCoinClick}
-                    className="flex items-center gap-2 text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50"
+                    className="flex items-center text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50"
                   >
                     <Coins className="w-4 h-4" />
-                    <span className="font-semibold">{t('nav.coins')}</span>
                   </Button>
                   
                   <Link to="/messages">

@@ -165,9 +165,9 @@ const Help = () => {
       <div className="container mx-auto px-4 py-12 max-w-6xl">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">Help Center</h1>
+          <h1 className="text-4xl font-bold mb-4">{t('pages.help.title')}</h1>
           <p className="text-xl text-muted-foreground mb-8">
-            Find answers to common questions and get support
+            {t('actions.findAnswersAndSupport')}
           </p>
           
           {/* Search */}
@@ -175,7 +175,7 @@ const Help = () => {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
-                placeholder="Search help articles..."
+                placeholder={t('pages.help.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -188,7 +188,7 @@ const Help = () => {
           {/* FAQ Section */}
           <div className="lg:col-span-2">
             <div className="mb-8">
-              <h2 className="text-2xl font-bold mb-6">Frequently Asked Questions</h2>
+              <h2 className="text-2xl font-bold mb-6">{t('pages.help.faq')}</h2>
               
               {filteredFAQ.length === 0 ? (
                 <Card>

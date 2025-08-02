@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { SearchFilters } from "@/pages/SearchResults";
 import { Crown, Lock } from "lucide-react";
+import { useLanguage } from "@/hooks/useLanguage";
+import { translateCountry } from "@/utils/translationUtils";
 
 interface FilterBarProps {
   filters: SearchFilters;
@@ -31,6 +33,7 @@ const ratingOptions = [
 const genderOptions = ["Male", "Female"];
 
 export const FilterBar = ({ filters, onFiltersChange, isPremium }: FilterBarProps) => {
+  const { language } = useLanguage();
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
   const [countrySearch, setCountrySearch] = useState("");
 
@@ -126,7 +129,7 @@ export const FilterBar = ({ filters, onFiltersChange, isPremium }: FilterBarProp
           >
             <option value="">All Countries</option>
             {countries.map(country => (
-              <option key={country} value={country}>{country}</option>
+              <option key={country} value={country}>{translateCountry(country, language)}</option>
             ))}
           </select>
         </div>

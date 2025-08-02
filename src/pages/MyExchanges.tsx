@@ -28,15 +28,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { ResponseModal } from '../components/requests/ResponseModal';
 import { useOptimizedPolling } from '../hooks/useOptimizedPolling';
 import { useTranslation } from 'react-i18next';
-
-// Tab configuration - responses tab is disabled
-const tabs = [
-  { id: 'active', label: t('actions.active'), icon: Clock },
-  // { id: 'responses', label: 'Responses', icon: MessageCircle }, // DISABLED
-  { id: 'request', label: t('actions.request'), icon: MessageSquare },
-  { id: 'sent', label: t('actions.sent'), icon: XCircle },
-  { id: 'completed', label: t('actions.completed'), icon: CheckCircle }
-];
+import { useLanguage } from '../hooks/useLanguage';
+import { translateSkill, translateName, translateDescription } from '../utils/translationUtils';
 
 // Interface for exchange data
 interface Exchange {
@@ -106,6 +99,17 @@ const MyExchanges = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { language, isRTL } = useLanguage();
+  
+  // Tab configuration - responses tab is disabled
+  const tabs = [
+    { id: 'active', label: t('actions.active'), icon: Clock },
+    // { id: 'responses', label: 'Responses', icon: MessageCircle }, // DISABLED
+    { id: 'request', label: t('actions.request'), icon: MessageSquare },
+    { id: 'sent', label: t('actions.sent'), icon: XCircle },
+    { id: 'completed', label: t('actions.completed'), icon: CheckCircle }
+  ];
+  
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('active');
   const [exchanges, setExchanges] = useState<Record<string, Exchange[]>>(mockExchanges);
@@ -289,16 +293,20 @@ const MyExchanges = () => {
         const isMentee = currentUserSkill === "Nothing";
         const otherIsMentee = otherUserSkill === "Nothing";
         
+        // Translate skills for Arabic
+        const translatedTeachingSkill = translateSkill(teachingSkill, language);
+        const translatedLearningSkill = translateSkill(learningSkill, language);
+        
         let skillDisplay, description;
         if (isMentee) {
-          skillDisplay = `Mentee ↔ ${learningSkill}`;
-          description = `You are mentee | You learn: ${learningSkill}`;
+          skillDisplay = `${t('actions.mentee')} ↔ ${translatedLearningSkill}`;
+          description = `${t('actions.youAreMentee')} | ${t('actions.youLearn')}: ${translatedLearningSkill}`;
         } else if (otherIsMentee) {
-          skillDisplay = `${teachingSkill} ↔ Mentee`;
-          description = `You teach: ${teachingSkill} | You are mentee`;
+          skillDisplay = `${translatedTeachingSkill} ↔ ${t('actions.mentee')}`;
+          description = `${t('actions.youTeach')}: ${translatedTeachingSkill} | ${t('actions.youAreMentee')}`;
         } else {
-          skillDisplay = `${teachingSkill} ↔ ${learningSkill}`;
-          description = `You teach: ${teachingSkill} | You learn: ${learningSkill}`;
+          skillDisplay = `${translatedTeachingSkill} ↔ ${translatedLearningSkill}`;
+          description = `${t('actions.youTeach')}: ${translatedTeachingSkill} | ${t('actions.youLearn')}: ${translatedLearningSkill}`;
         }
         
         return {
@@ -307,12 +315,12 @@ const MyExchanges = () => {
           status: 'active',
           otherUser: {
             id: otherUserId,
-            name: otherUser?.display_name || 'Unknown User',
+            name: translateName(otherUser?.display_name || t('search.unknownUser'), language),
             avatar: otherUser?.avatar_url || null
           },
           skill: skillDisplay,
           date: contract.created_at,
-          location: 'Online',
+          location: t('actions.locationOnline'),
           description: description,
           rating: undefined
         };
@@ -426,19 +434,23 @@ const MyExchanges = () => {
         const teachingSkill = currentUserSkill;
         const learningSkill = otherUserSkill;
         
+        // Translate skills for Arabic
+        const translatedTeachingSkill = translateSkill(teachingSkill, language);
+        const translatedLearningSkill = translateSkill(learningSkill, language);
+        
         return {
           id: contract.chat_id, // Use chat_id for navigation
           type: 'exchange', // Both users were teaching and learning
           status: 'completed',
           otherUser: {
             id: otherUserId,
-            name: otherUser?.display_name || 'Unknown User',
+            name: translateName(otherUser?.display_name || t('search.unknownUser'), language),
             avatar: otherUser?.avatar_url || null
           },
-          skill: `${teachingSkill} ↔ ${learningSkill}`,
+          skill: `${translatedTeachingSkill} ↔ ${translatedLearningSkill}`,
           date: contract.finished_at || contract.updated_at,
-          location: 'Online',
-          description: `You taught: ${teachingSkill} | You learned: ${learningSkill}`,
+          location: t('actions.locationOnline'),
+          description: `${t('actions.youTeach')}: ${translatedTeachingSkill} | ${t('actions.youLearn')}: ${translatedLearningSkill}`,
           rating: undefined,
           hasReviewed: reviewedChatIds.has(contract.chat_id)
         };
@@ -570,12 +582,12 @@ const MyExchanges = () => {
             status: invite.status,
             otherUser: {
               id: invite.recipient_id,
-              name: otherUser?.display_name || 'Unknown User',
+              name: translateName(otherUser?.display_name || t('search.unknownUser'), language),
               avatar: otherUser?.avatar_url || null
             },
-            skill: invite.skill,
+            skill: translateSkill(invite.skill, language),
             date: invite.created_at,
-            location: 'Online',
+            location: t('actions.locationOnline'),
             description: invite.message || 'No message',
             rating: undefined
           };
@@ -665,12 +677,12 @@ const MyExchanges = () => {
             status: invite.status,
             otherUser: {
               id: invite.sender_id,
-              name: otherUser?.display_name || 'Unknown User',
+              name: translateName(otherUser?.display_name || t('search.unknownUser'), language),
               avatar: otherUser?.avatar_url || null
             },
-            skill: invite.skill,
+            skill: translateSkill(invite.skill, language),
             date: invite.created_at,
-            location: 'Online',
+            location: t('actions.locationOnline'),
             description: invite.message || 'No message',
             rating: undefined
           };
@@ -687,7 +699,7 @@ const MyExchanges = () => {
   const handleTabChange = (tabId: string) => {
     // Prevent switching to responses tab (disabled)
     if (tabId === 'responses') {
-      toast.error('Responses tab is temporarily disabled');
+      toast.error(t('actions.responsesTabDisabled'));
       return;
     }
     
@@ -715,13 +727,13 @@ const MyExchanges = () => {
   const getStatusConfig = (status: string, type: string) => {
     switch (status) {
       case 'active':
-        return { color: 'bg-green-100 text-green-800 border-green-200', label: 'Active' };
+        return { color: 'bg-green-100 text-green-800 border-green-200', label: t('actions.active') };
       case 'pending':
-        return { color: 'bg-yellow-100 text-yellow-800 border-yellow-200', label: 'Pending' };
+        return { color: 'bg-yellow-100 text-yellow-800 border-yellow-200', label: t('actions.pending') };
       case 'completed':
-        return { color: 'bg-blue-100 text-blue-800 border-blue-200', label: 'Completed' };
+        return { color: 'bg-blue-100 text-blue-800 border-blue-200', label: t('actions.completed') };
       case 'declined':
-        return { color: 'bg-red-100 text-red-800 border-red-200', label: 'Declined' };
+        return { color: 'bg-red-100 text-red-800 border-red-200', label: t('actions.declined') };
       default:
         return { color: 'bg-gray-100 text-gray-800 border-gray-200', label: status };
     }
@@ -730,11 +742,11 @@ const MyExchanges = () => {
   const getTypeBadge = (type: string) => {
     switch (type) {
       case 'learning':
-        return { color: 'bg-blue-100 text-blue-800 border-blue-200', label: 'Learning' };
+        return { color: 'bg-blue-100 text-blue-800 border-blue-200', label: t('actions.learning') };
       case 'teaching':
-        return { color: 'bg-purple-100 text-purple-800 border-purple-200', label: 'Teaching' };
+        return { color: 'bg-purple-100 text-purple-800 border-purple-200', label: t('actions.teaching') };
       case 'invitation':
-        return { color: 'bg-orange-100 text-orange-800 border-orange-200', label: 'Invitation' };
+        return { color: 'bg-orange-100 text-orange-800 border-orange-200', label: t('actions.invitation') };
       default:
         return { color: 'bg-gray-100 text-gray-800 border-gray-200', label: type };
     }
@@ -743,8 +755,8 @@ const MyExchanges = () => {
   const handleOpenReview = (exchange: Exchange) => {
     if (exchange.hasReviewed) {
       toast({
-        title: "Already Reviewed",
-        description: "You have already reviewed this exchange.",
+        title: t('actions.alreadyReviewed'),
+        description: t('actions.alreadyReviewedDescription'),
         variant: "destructive"
       });
       return;
@@ -776,7 +788,7 @@ const MyExchanges = () => {
       // Validate invitation data
       if (!invite.sender_id || !invite.recipient_id) {
         console.error('Invalid invitation data:', invite);
-        toast.error('Invalid invitation data');
+        toast.error(t('actions.invalidInvitationData'));
         return;
       }
 
@@ -788,7 +800,7 @@ const MyExchanges = () => {
 
       if (updateError) {
         console.error('Error accepting invitation:', updateError);
-        toast.error('Failed to accept invitation');
+        toast.error(t('actions.failedToAcceptInvitation'));
         return;
       }
 
@@ -822,7 +834,7 @@ const MyExchanges = () => {
 
         if (chatError) {
           console.error('Error creating chat:', chatError);
-          toast.error('Failed to create chat');
+          toast.error(t('actions.failedToCreateChat'));
           return;
         }
         chatData = newChatData;
@@ -860,7 +872,7 @@ const MyExchanges = () => {
         console.error('Failed to create acceptance notification:', notificationError);
       }
 
-      toast.success('Invitation accepted! The other user has been notified.');
+      toast.success(t('actions.invitationAccepted'));
       
       // Track this invitation as accepted
       setAcceptedInvitations(prev => new Set([...prev, invite.id]));
@@ -869,7 +881,7 @@ const MyExchanges = () => {
       await fetchData(true); // Pass isPolling = true to avoid loading state
     } catch (error) {
       console.error('Error accepting invitation:', error);
-      toast.error('Failed to accept invitation');
+      toast.error(t('actions.failedToAcceptInvitation'));
     }
   };
 
@@ -887,7 +899,7 @@ const MyExchanges = () => {
 
       if (chatQueryError) {
         console.error('Error querying for existing chat:', chatQueryError);
-        toast.error('Failed to find chat');
+        toast.error(t('actions.failedToFindChat'));
         return;
       }
 
@@ -912,7 +924,7 @@ const MyExchanges = () => {
 
         if (chatError) {
           console.error('Error creating chat:', chatError);
-          toast.error('Failed to create chat');
+          toast.error(t('actions.failedToCreateChat'));
           return;
         }
 
@@ -921,7 +933,7 @@ const MyExchanges = () => {
       }
     } catch (error) {
       console.error('Error sending message:', error);
-      toast.error('Failed to open chat');
+      toast.error(t('actions.failedToOpenChat'));
     }
   };
 
@@ -932,7 +944,7 @@ const MyExchanges = () => {
       // Validate invitation data
       if (!invite.id) {
         console.error('Invalid invitation data:', invite);
-        toast.error('Invalid invitation data');
+        toast.error(t('actions.invalidInvitationData'));
         return;
       }
 
@@ -943,16 +955,16 @@ const MyExchanges = () => {
 
       if (error) {
         console.error('Error declining invitation:', error);
-        toast.error('Failed to decline invitation');
+        toast.error(t('actions.failedToDeclineInvitation'));
         return;
       }
 
-      toast.success('Invitation declined');
+      toast.success(t('actions.invitationDeclined'));
       // Refresh data without showing loading state
       await fetchData(true); // Pass isPolling = true to avoid loading state
     } catch (error) {
       console.error('Error declining invitation:', error);
-      toast.error('Failed to decline invitation');
+      toast.error(t('actions.failedToDeclineInvitation'));
     }
   };
 
@@ -962,7 +974,7 @@ const MyExchanges = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">{t('actions.loadingExchanges')}</p>
+                            <p className="text-muted-foreground">{t('actions.loadingMyExchanges')}</p>
           </div>
         </div>
       </div>
@@ -975,7 +987,7 @@ const MyExchanges = () => {
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold mb-2">{t('actions.myExchanges')}</h1>
+            <h1 className="text-3xl font-bold mb-2">{t('actions.dashboard')}</h1>
             <p className="text-muted-foreground">
               {t('actions.manageExchanges')}
             </p>
@@ -983,18 +995,18 @@ const MyExchanges = () => {
 
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-            <TabsList className="grid w-full grid-cols-4 mb-8">
+            <TabsList className={`flex w-full mb-8 ${isRTL ? 'flex-row-reverse' : ''}`}>
               {tabs.map((tab) => (
                 <TabsTrigger 
                   key={tab.id} 
                   value={tab.id}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 flex-1"
                   disabled={tab.id === 'responses'} // Disable responses tab
                 >
                   <tab.icon className="w-4 h-4" />
                   {tab.label}
                   {getTabCount(tab.id) > 0 && (
-                    <Badge variant="secondary" className="ml-1">
+                    <Badge variant="secondary" className={isRTL ? 'mr-1' : 'ml-1'}>
                       {getTabCount(tab.id)}
                     </Badge>
                   )}
@@ -1028,15 +1040,12 @@ const MyExchanges = () => {
                           <div>
                             <div className="flex items-center gap-2 mb-1">
                               <h3 className="font-semibold">{exchange.otherUser.name}</h3>
-                              <Badge className={getTypeBadge(exchange.type).color}>
-                                {getTypeBadge(exchange.type).label}
-                              </Badge>
                               <Badge className={getStatusConfig(exchange.status, exchange.type).color}>
                                 {getStatusConfig(exchange.status, exchange.type).label}
                               </Badge>
                             </div>
                             <p className="text-sm text-muted-foreground mb-2">
-                              {exchange.skill} • {exchange.location}
+                              {exchange.skill}
                             </p>
                             <p className="text-sm text-muted-foreground">
                               {exchange.description}
@@ -1049,7 +1058,7 @@ const MyExchanges = () => {
                               size="sm"
                               onClick={() => navigate(`/chat/${exchange.id}`)}
                             >
-                              <MessageSquare className="w-4 h-4 mr-1" />
+                              <MessageSquare className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                               {t('actions.chat')}
                             </Button>
                                                       {exchange.status === 'completed' && (
@@ -1058,7 +1067,7 @@ const MyExchanges = () => {
                                 size="sm"
                                 onClick={() => handleOpenReview(exchange)}
                               >
-                                <Star className="w-4 h-4 mr-1" />
+                                <Star className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                 {t('actions.review')}
                               </Button>
                             )}
@@ -1098,7 +1107,7 @@ const MyExchanges = () => {
                               </Badge>
                             </div>
                             <p className="text-sm text-muted-foreground mb-2">
-                              {invite.skill} • {invite.location}
+                              {invite.skill}
                             </p>
                             <p className="text-sm text-muted-foreground">
                               {invite.description}
@@ -1116,12 +1125,12 @@ const MyExchanges = () => {
                                   if (originalInvite) {
                                     handleAcceptInvitation(originalInvite);
                                   } else {
-                                    toast.error('Failed to find invitation data');
+                                    toast.error(t('actions.failedToFindInvitationData'));
                                   }
                                 }}
                               >
-                                <Check className="w-4 h-4 mr-1" />
-                                Accept
+                                <Check className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                {t('actions.accept')}
                               </Button>
                               <Button 
                                 variant="outline" 
@@ -1131,12 +1140,12 @@ const MyExchanges = () => {
                                   if (originalInvite) {
                                     handleDeclineInvitation(originalInvite);
                                   } else {
-                                    toast.error('Failed to find invitation data');
+                                    toast.error(t('actions.failedToFindInvitationData'));
                                   }
                                 }}
                               >
-                                <X className="w-4 h-4 mr-1" />
-                                Decline
+                                <X className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                {t('actions.decline')}
                               </Button>
                             </>
                           )}
@@ -1149,12 +1158,12 @@ const MyExchanges = () => {
                                 if (originalInvite) {
                                   handleSendMessage(originalInvite);
                                 } else {
-                                  toast.error('Failed to find invitation data');
+                                  toast.error(t('actions.failedToFindInvitationData'));
                                 }
                               }}
                             >
-                              <Send className="w-4 h-4 mr-1" />
-                              Send Message
+                              <Send className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                              {t('actions.sendMessage')}
                             </Button>
                           )}
                         </div>
@@ -1193,7 +1202,7 @@ const MyExchanges = () => {
                               </Badge>
                             </div>
                             <p className="text-sm text-muted-foreground mb-2">
-                              {invite.skill} • {invite.location}
+                              {invite.skill}
                             </p>
                             <p className="text-sm text-muted-foreground">
                               {invite.description}
@@ -1230,15 +1239,12 @@ const MyExchanges = () => {
                           <div>
                             <div className="flex items-center gap-2 mb-1">
                               <h3 className="font-semibold">{exchange.otherUser.name}</h3>
-                              <Badge className={getTypeBadge(exchange.type).color}>
-                                {getTypeBadge(exchange.type).label}
-                              </Badge>
                               <Badge className={getStatusConfig(exchange.status, exchange.type).color}>
                                 {getStatusConfig(exchange.status, exchange.type).label}
                               </Badge>
                             </div>
                             <p className="text-sm text-muted-foreground mb-2">
-                              {exchange.skill} • {exchange.location}
+                              {exchange.skill}
                             </p>
                             <p className="text-sm text-muted-foreground">
                               {exchange.description}
@@ -1248,8 +1254,8 @@ const MyExchanges = () => {
                         <div className="flex items-center gap-2">
                           {exchange.hasReviewed ? (
                             <Badge variant="secondary" className="text-xs">
-                              <Star className="w-3 h-3 mr-1" />
-                              Reviewed
+                              <Star className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                              {t('actions.reviewed')}
                             </Badge>
                           ) : (
                             <Button 
@@ -1257,8 +1263,8 @@ const MyExchanges = () => {
                               size="sm"
                               onClick={() => handleOpenReview(exchange)}
                             >
-                              <Star className="w-4 h-4 mr-1" />
-                              Review
+                              <Star className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                              {t('actions.review')}
                             </Button>
                           )}
                         </div>

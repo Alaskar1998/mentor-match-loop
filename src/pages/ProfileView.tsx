@@ -11,6 +11,8 @@ import { AuthModal } from '@/components/auth/AuthModal';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { notificationService } from '@/services/notificationService';
+import { useLanguage } from '@/hooks/useLanguage';
+import { translateCountry } from '@/utils/translationUtils';
 
 interface UserProfile {
   id: string;
@@ -41,6 +43,7 @@ export default function ProfileView() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { isAuthenticated, user: currentUser } = useAuth();
+  const { language } = useLanguage();
   const [showSignupModal, setShowSignupModal] = useState(false);
   const [showInvitationModal, setShowInvitationModal] = useState(false);
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -309,7 +312,7 @@ export default function ProfileView() {
                     {user.country && (
                       <div className="flex items-center gap-2">
                         <MapPin className="w-5 h-5 text-blue-500" />
-                        <span className="font-medium">{user.country}</span>
+                        <span className="font-medium">{translateCountry(user.country, language)}</span>
                       </div>
                     )}
                     {user.age && (

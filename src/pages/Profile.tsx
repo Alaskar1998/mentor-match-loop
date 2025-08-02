@@ -19,6 +19,9 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
+import { useLanguage } from '@/hooks/useLanguage';
+import { translateSkill, translateName, translateDescription, translateStatus, translateDate, translateSkillCategory, translateSkillLevel, translateCountry } from '@/utils/translationUtils';
 
 // Age ranges constant
 const AGE_RANGES = [
@@ -44,6 +47,8 @@ const COUNTRIES = [
 export default function Profile() {
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
+  const { language } = useLanguage();
   const [isEditing, setIsEditing] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -364,8 +369,8 @@ export default function Profile() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-2">Please sign in</h2>
-          <p className="text-muted-foreground mb-4">You need to be signed in to view your profile.</p>
+          <h2 className="text-2xl font-bold mb-2">{t('actions.pleaseSignIn')}</h2>
+          <p className="text-muted-foreground mb-4">{t('actions.signInToViewProfile')}</p>
         </div>
       </div>
     );
@@ -377,20 +382,20 @@ export default function Profile() {
         <div className="max-w-4xl mx-auto space-y-8">
           {/* Header */}
           <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold">Profile</h1>
+            <h1 className="text-3xl font-bold">{t('pages.profile.title')}</h1>
             <div className="flex gap-2">
               {isEditing ? (
                 <>
                   <Button variant="outline" onClick={handleCancel}>
-                    Cancel
+                    {t('pages.profile.cancel')}
                   </Button>
                   <Button onClick={handleSave} disabled={debouncedLoading}>
-                    {debouncedLoading ? 'Saving...' : 'Save Changes'}
+                    {debouncedLoading ? t('actions.saving') : t('pages.profile.saveChanges')}
                   </Button>
                 </>
               ) : (
                 <Button onClick={() => setIsEditing(true)}>
-                  Edit Profile
+                  {t('pages.profile.editProfile')}
                 </Button>
               )}
             </div>
@@ -402,7 +407,7 @@ export default function Profile() {
               {/* Avatar Section */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Profile Picture</CardTitle>
+                  <CardTitle>{t('pages.profile.avatar')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center gap-4">
@@ -423,7 +428,7 @@ export default function Profile() {
                         <label htmlFor="avatar-upload">
                           <Button variant="outline" disabled={uploadingAvatar} asChild>
                             <span>
-                              {uploadingAvatar ? 'Uploading...' : 'Upload Photo'}
+                              {uploadingAvatar ? t('actions.uploading') : t('pages.profile.uploadAvatar')}
                             </span>
                           </Button>
                         </label>
@@ -436,11 +441,11 @@ export default function Profile() {
               {/* Basic Information */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Basic Information</CardTitle>
+                  <CardTitle>{t('pages.profile.personalInfo')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <Label htmlFor="name">Name</Label>
+                    <Label htmlFor="name">{t('pages.profile.name')}</Label>
                     <Input
                       id="name"
                       value={formData.name}
@@ -451,7 +456,7 @@ export default function Profile() {
                   </div>
 
                   <div>
-                    <Label htmlFor="bio">Bio</Label>
+                    <Label htmlFor="bio">{t('pages.profile.bio')}</Label>
                     <Textarea
                       id="bio"
                       value={formData.bio}
@@ -464,14 +469,14 @@ export default function Profile() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="age">Age Range</Label>
+                      <Label htmlFor="age">{t('pages.profile.ageRange')}</Label>
                       <Select
                         value={formData.age}
                         onValueChange={(value) => setFormData({...formData, age: value})}
                         disabled={!isEditing}
                       >
                         <SelectTrigger className="mt-1">
-                          <SelectValue placeholder="Select age range" />
+                          <SelectValue placeholder={t('actions.selectAgeRange')} />
                         </SelectTrigger>
                         <SelectContent>
                           {AGE_RANGES.map((range) => (
@@ -484,25 +489,25 @@ export default function Profile() {
                     </div>
 
                     <div>
-                      <Label htmlFor="gender">Gender</Label>
+                      <Label htmlFor="gender">{t('pages.profile.gender')}</Label>
                       <Select
                         value={formData.gender}
                         onValueChange={(value) => setFormData({...formData, gender: value})}
                         disabled={!isEditing}
                       >
                         <SelectTrigger className="mt-1">
-                          <SelectValue placeholder="Select gender" />
+                          <SelectValue placeholder={t('actions.selectGender')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Male">Male</SelectItem>
-                          <SelectItem value="Female">Female</SelectItem>
+                          <SelectItem value="Male">{t('actions.male')}</SelectItem>
+                          <SelectItem value="Female">{t('actions.female')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
 
                   <div>
-                    <Label htmlFor="country">Country</Label>
+                    <Label htmlFor="country">{t('pages.profile.country')}</Label>
                     <Popover open={countryOpen} onOpenChange={setCountryOpen}>
                       <PopoverTrigger asChild>
                         <Button
@@ -512,15 +517,15 @@ export default function Profile() {
                           className="w-full justify-between mt-1"
                           disabled={!isEditing}
                         >
-                          {formData.country || "Select country..."}
+                          {formData.country ? translateCountry(formData.country, language) : t('pages.profile.selectCountry')}
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-full p-0">
                         <Command>
-                          <CommandInput placeholder="Search countries..." />
+                          <CommandInput placeholder={t('pages.profile.searchCountries')} />
                           <CommandList>
-                            <CommandEmpty>No country found.</CommandEmpty>
+                            <CommandEmpty>{t('pages.profile.noCountryFound')}</CommandEmpty>
                             <CommandGroup>
                               {COUNTRIES.map((country) => (
                                 <CommandItem
@@ -537,7 +542,7 @@ export default function Profile() {
                                       formData.country === country ? "opacity-100" : "opacity-0"
                                     )}
                                   />
-                                  {country}
+                                  {translateCountry(country, language)}
                                 </CommandItem>
                               ))}
                             </CommandGroup>
@@ -548,7 +553,7 @@ export default function Profile() {
                   </div>
 
                   <div>
-                    <Label htmlFor="phone">Phone</Label>
+                    <Label htmlFor="phone">{t('pages.profile.phone')}</Label>
                     <Input
                       id="phone"
                       value={formData.phone}
@@ -563,7 +568,7 @@ export default function Profile() {
               {/* Mentorship Preferences */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Mentorship Preferences</CardTitle>
+                  <CardTitle>{t('pages.profile.mentorshipPreferences')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center space-x-2">
@@ -574,7 +579,7 @@ export default function Profile() {
                       disabled={!isEditing}
                     />
                     <Label htmlFor="willingToTeachWithoutReturn" className="text-sm">
-                      I am willing to teach without expecting a return mentorship.
+                      {t('pages.profile.willingToTeachWithoutReturn')}
                     </Label>
                   </div>
                 </CardContent>
@@ -586,8 +591,8 @@ export default function Profile() {
               {/* Skills I Can Teach */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Skills I Can Teach</CardTitle>
-                  <p className="text-muted-foreground">Share your expertise with others</p>
+                  <CardTitle>{t('pages.profile.skillsToTeach')}</CardTitle>
+                  <p className="text-muted-foreground">{t('pages.profile.shareExpertise')}</p>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {/* Current skills */}
@@ -595,12 +600,12 @@ export default function Profile() {
                     {user?.skillsToTeach?.map((skill, index) => (
                       <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                         <div>
-                          <h3 className="font-medium">{skill.name}</h3>
+                          <h3 className="font-medium">{translateSkill(skill.name, language)}</h3>
                           <div className="flex items-center gap-2 mt-1">
                             <Badge variant="secondary" className="text-xs">
-                              {skill.category || 'Other'}
+                              {translateSkillCategory(skill.category || 'Other', language)}
                             </Badge>
-                            <span className="text-sm text-muted-foreground">Level: {skill.level}</span>
+                            <span className="text-sm text-muted-foreground">{t('pages.profile.level')}: {translateSkillLevel(skill.level, language)}</span>
                           </div>
                           {skill.description && (
                             <p className="text-sm text-muted-foreground mt-1">{skill.description}</p>
@@ -615,7 +620,7 @@ export default function Profile() {
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
-                    )) || <p className="text-muted-foreground">No skills to teach added yet.</p>}
+                    )) || <p className="text-muted-foreground">{t('pages.profile.noSkillsToTeach')}</p>}
                   </div>
 
                   {/* Add new skill using unified component */}
@@ -623,7 +628,7 @@ export default function Profile() {
                     onAddSkill={addSkillToTeach}
                     disabled={skillLoading}
                     loading={skillLoading}
-                    title="Add New Skill"
+                    title={t('pages.profile.addSkill')}
                     skipDatabase={true}
                   />
                 </CardContent>

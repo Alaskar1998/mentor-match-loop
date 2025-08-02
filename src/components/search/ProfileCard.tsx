@@ -11,6 +11,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { InvitationFlow } from "@/components/auth/InvitationFlow";
 import { AuthModal } from "@/components/auth/AuthModal";
+import { useLanguage } from "@/hooks/useLanguage";
+import { translateCountry } from "@/utils/translationUtils";
 
 interface ProfileCardProps {
   user: UserProfile;
@@ -21,6 +23,7 @@ interface ProfileCardProps {
 export const ProfileCard = React.memo(({ user, isBlurred = false, searchResult }: ProfileCardProps) => {
   const navigate = useNavigate();
   const { isAuthenticated, user: currentUser, signup } = useAuth();
+  const { language } = useLanguage();
   const [showSignupModal, setShowSignupModal] = useState(false);
   const [showInvitationModal, setShowInvitationModal] = useState(false);
 
@@ -165,7 +168,7 @@ export const ProfileCard = React.memo(({ user, isBlurred = false, searchResult }
             <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
               <div className="flex items-center gap-1">
                 <MapPin className="w-3 h-3" />
-                {user.country}
+                {translateCountry(user.country, language)}
               </div>
               <div className="flex items-center gap-1">
                 <Award className="w-3 h-3" />

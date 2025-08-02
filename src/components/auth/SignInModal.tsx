@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 interface SignInModalProps {
   isOpen: boolean;
@@ -19,13 +20,14 @@ export const SignInModal = ({ isOpen, onClose, onSwitchToSignup }: SignInModalPr
   const [isLoading, setIsLoading] = useState(false);
   const { login, signInWithGoogle, signInWithFacebook, signInWithApple } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!email || !password) {
       toast({
-        title: "Please fill in all fields",
+        title: t('actions.fillAllFields'),
         variant: "destructive"
       });
       return;
@@ -38,14 +40,14 @@ export const SignInModal = ({ isOpen, onClose, onSwitchToSignup }: SignInModalPr
     
     if (result.error) {
       toast({
-        title: "Sign in failed",
+        title: t('actions.signInFailed'),
         description: result.error,
         variant: "destructive"
       });
     } else {
       toast({
-        title: "Welcome back!",
-        description: "You have successfully signed in."
+        title: t('actions.welcomeBackSuccess'),
+        description: t('actions.signInSuccess')
       });
       onClose();
     }
@@ -71,7 +73,7 @@ export const SignInModal = ({ isOpen, onClose, onSwitchToSignup }: SignInModalPr
     
     if (result.error) {
       toast({
-        title: "Authentication failed",
+        title: t('actions.authenticationFailed'),
         description: result.error,
         variant: "destructive"
       });
@@ -83,20 +85,20 @@ export const SignInModal = ({ isOpen, onClose, onSwitchToSignup }: SignInModalPr
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-center text-2xl font-bold">
-            Welcome Back
+            {t('actions.welcomeBack')}
           </DialogTitle>
           <DialogDescription className="text-center">
-            Sign in to your account to continue with skill exchanges.
+            {t('actions.signInDescription')}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSignIn} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t('actions.email')}</Label>
             <Input
               id="email"
               type="email"
-              placeholder="Enter your email"
+              placeholder={t('actions.enterEmail')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -104,11 +106,11 @@ export const SignInModal = ({ isOpen, onClose, onSwitchToSignup }: SignInModalPr
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">{t('actions.password')}</Label>
             <Input
               id="password"
               type="password"
-              placeholder="Enter your password"
+              placeholder={t('actions.enterPassword')}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -116,14 +118,14 @@ export const SignInModal = ({ isOpen, onClose, onSwitchToSignup }: SignInModalPr
           </div>
 
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Signing In..." : "Sign In"}
+            {isLoading ? t('actions.signingIn') : t('actions.signIn')}
           </Button>
         </form>
 
         <Separator />
 
         <div className="space-y-3">
-          <p className="text-sm text-center text-muted-foreground">Or continue with</p>
+          <p className="text-sm text-center text-muted-foreground">{t('actions.orContinueWith')}</p>
           <div className="grid grid-cols-3 gap-3">
             <Button 
               variant="outline" 
@@ -169,12 +171,12 @@ export const SignInModal = ({ isOpen, onClose, onSwitchToSignup }: SignInModalPr
 
         <div className="text-center">
           <p className="text-sm text-muted-foreground">
-            Don't have an account?{" "}
+            {t('actions.dontHaveAccount')}{" "}
             <button
               onClick={onSwitchToSignup}
               className="text-primary hover:underline font-medium"
             >
-              Sign up
+              {t('actions.signUp')}
             </button>
           </p>
         </div>

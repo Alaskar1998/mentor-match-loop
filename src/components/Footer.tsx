@@ -11,7 +11,7 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Company Info */}
           <div className="space-y-4">
-            <h3 className="font-bold text-lg">Maharat Hub</h3>
+            <h3 className="font-bold text-lg">{t('nav.maharatHub')}</h3>
             <p className="text-sm text-muted-foreground">
               {t('footer.description')}
             </p>
@@ -19,13 +19,10 @@ export const Footer = () => {
 
           {/* Quick Links */}
           <div className="space-y-4">
-            <h4 className="font-semibold">Platform</h4>
+            <h4 className="font-semibold">{t('footer.sections.platform')}</h4>
             <nav className="flex flex-col space-y-2">
               <Link to="/requests-feed" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Browse Requests
-              </Link>
-              <Link to="/create-request" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Create Request
+                {t('footer.links.browseRequests')}
               </Link>
               <Link to="/pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 {t('nav.pricing')}
@@ -38,16 +35,13 @@ export const Footer = () => {
 
           {/* Support */}
           <div className="space-y-4">
-            <h4 className="font-semibold">Support</h4>
+            <h4 className="font-semibold">{t('footer.sections.support')}</h4>
             <nav className="flex flex-col space-y-2">
               <Link to="/help" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 {t('nav.help')}
               </Link>
               <a href="mailto:support@Maharat Hub.com" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 {t('footer.links.contact')}
-              </a>
-              <a href="mailto:feedback@Maharat Hub.com" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Send Feedback
               </a>
               <Link to="/settings" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 {t('nav.settings')}
@@ -57,7 +51,7 @@ export const Footer = () => {
 
           {/* Legal */}
           <div className="space-y-4">
-            <h4 className="font-semibold">Legal</h4>
+            <h4 className="font-semibold">{t('footer.sections.legal')}</h4>
             <nav className="flex flex-col space-y-2">
               <Link to="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 {t('nav.terms')}
@@ -65,12 +59,6 @@ export const Footer = () => {
               <Link to="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 {t('nav.privacy')}
               </Link>
-              <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Cookie Policy
-              </a>
-              <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                DMCA
-              </a>
             </nav>
           </div>
         </div>
