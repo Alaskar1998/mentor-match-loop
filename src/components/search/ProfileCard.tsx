@@ -46,7 +46,7 @@ export const ProfileCard = React.memo(({ user, isBlurred = false, searchResult }
     setShowInvitationModal(true);
   };
 
-  const handleSignupComplete = async (userData: any) => {
+  const handleSignupComplete = async (userData: unknown) => {
     // After successful signup, show the invitation modal
     setShowSignupModal(false);
     if (userData) {
@@ -54,7 +54,7 @@ export const ProfileCard = React.memo(({ user, isBlurred = false, searchResult }
     }
   };
 
-  const handleAuthComplete = async (userData?: any) => {
+  const handleAuthComplete = async (userData?: unknown) => {
     // After successful authentication, show the invitation modal
     setShowSignupModal(false);
     if (userData) {
@@ -66,7 +66,7 @@ export const ProfileCard = React.memo(({ user, isBlurred = false, searchResult }
     return Array.from({ length: 5 }, (_, i) => (
       <Star
         key={i}
-        className={`w-4 h-4 ${
+        className={`w-3 h-3 sm:w-4 sm:h-4 ${
           i < Math.floor(rating)
             ? "fill-accent text-accent"
             : "text-muted-foreground/30"
@@ -98,7 +98,7 @@ export const ProfileCard = React.memo(({ user, isBlurred = false, searchResult }
     
     if (isMatched) {
       return (
-        <span className="bg-yellow-200 text-yellow-800 px-1 rounded font-medium">
+        <span className="bg-accent/20 text-accent font-medium">
           {skill}
         </span>
       );
@@ -107,65 +107,58 @@ export const ProfileCard = React.memo(({ user, isBlurred = false, searchResult }
     return skill;
   };
 
-  // Get match type badge
   const getMatchTypeBadge = () => {
     if (!searchResult) return null;
     
-    const badgeConfig = {
-      exact: { label: 'Exact Match', className: 'bg-green-100 text-green-800 border-green-200' },
-      prefix: { label: 'Prefix Match', className: 'bg-purple-100 text-purple-800 border-purple-200' },
-      suffix: { label: 'Suffix Match', className: 'bg-orange-100 text-orange-800 border-orange-200' },
-      partial: { label: 'Partial Match', className: 'bg-gray-100 text-gray-800 border-gray-200' }
-    };
+    if (searchResult.matchType === 'exact') {
+      return (
+        <Badge variant="secondary" className="text-xs bg-success/10 text-success border-success/20">
+          Exact Match
+        </Badge>
+      );
+    } else if (searchResult.matchType === 'partial') {
+      return (
+        <Badge variant="secondary" className="text-xs bg-accent/10 text-accent border-accent/20">
+          Partial Match
+        </Badge>
+      );
+    }
     
-    const config = badgeConfig[searchResult.matchType];
-    if (!config) return null;
-    
-    return (
-      <Badge variant="outline" className={`text-xs ${config.className}`}>
-        {config.label}
-      </Badge>
-    );
+    return null;
   };
 
   return (
-    <Card className="group shadow-card hover:shadow-elegant transition-all duration-300 hover:scale-[1.02] border-0 bg-gradient-to-br from-card to-muted overflow-hidden relative">
-      <CardContent className="p-6">
+    <Card className={`shadow-card hover:shadow-elegant transition-all duration-300 ${isBlurred ? 'blur-sm' : ''}`}>
+      <CardContent className="p-4 sm:p-6">
         {/* Header */}
-        <div className="flex items-start gap-4 mb-4">
-          {/* Profile Picture */}
-          <div className="relative">
-            <Avatar className="w-16 h-16 shadow-elegant group-hover:shadow-glow transition-all duration-300">
-              <AvatarImage 
-                src={user.profilePicture.startsWith('http') ? user.profilePicture : undefined} 
-                alt={user.name} 
-              />
-              <AvatarFallback className="bg-gradient-primary text-2xl">
-                {user.profilePicture.startsWith('http') ? user.name.charAt(0) : user.profilePicture}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 mb-4">
+          {/* Avatar */}
+          <div className="flex-shrink-0">
+            <Avatar className="w-12 h-12 sm:w-16 sm:h-16">
+              <AvatarImage src={user.profilePicture} alt={user.name} />
+              <AvatarFallback className="bg-gradient-primary text-white text-lg sm:text-xl">
+                {user.name.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
-            {user.isMentor && (
-              <div className="absolute -top-1 -right-1 w-6 h-6 bg-accent rounded-full flex items-center justify-center text-sm">
-                🌟
-              </div>
-            )}
           </div>
 
           {/* Name & Info */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-lg font-semibold text-foreground truncate">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
+              <h3 className="text-base sm:text-lg font-semibold text-foreground truncate">
                 {user.name}
               </h3>
-              {(user.isMentor || user.willingToTeachWithoutReturn) && (
-                <Badge variant="secondary" className="text-xs bg-accent/10 text-accent border-accent/20">
-                  🌟 Mentor
-                </Badge>
-              )}
-              {getMatchTypeBadge()}
+              <div className="flex items-center gap-1 sm:gap-2">
+                {(user.isMentor || user.willingToTeachWithoutReturn) && (
+                  <Badge variant="secondary" className="text-xs bg-accent/10 text-accent border-accent/20">
+                    🌟 Mentor
+                  </Badge>
+                )}
+                {getMatchTypeBadge()}
+              </div>
             </div>
             
-            <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground mb-2">
               <div className="flex items-center gap-1">
                 <MapPin className="w-3 h-3" />
                 {translateCountry(user.country, language)}
@@ -181,7 +174,7 @@ export const ProfileCard = React.memo(({ user, isBlurred = false, searchResult }
               <div className="flex items-center gap-1">
                 {renderStars(user.rating)}
               </div>
-              <span className="text-sm font-medium text-foreground">
+              <span className="text-xs sm:text-sm font-medium text-foreground">
                 {user.rating.toFixed(1)}
               </span>
             </div>
@@ -190,19 +183,19 @@ export const ProfileCard = React.memo(({ user, isBlurred = false, searchResult }
           {/* Skill Level Badge */}
           <Badge 
             variant="outline" 
-            className={`${getSkillLevelColor(user.skillLevel)} border`}
+            className={`${getSkillLevelColor(user.skillLevel)} border text-xs`}
           >
             {user.skillLevel}
           </Badge>
         </div>
 
         {/* Bio */}
-        <p className="text-sm text-muted-foreground mb-4 line-clamp-2 leading-relaxed">
+        <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4 line-clamp-2 leading-relaxed">
           {user.bio}
         </p>
 
         {/* Skills */}
-        <div className="mb-4">
+        <div className="mb-3 sm:mb-4">
           <div className="flex flex-wrap gap-1">
             {user.skills.slice(0, 3).map((skill) => (
               <span
@@ -221,14 +214,14 @@ export const ProfileCard = React.memo(({ user, isBlurred = false, searchResult }
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <Button 
             variant="outline" 
             size="sm" 
             onClick={handleViewProfile}
-            className="flex-1 hover:bg-muted"
+            className="flex-1 hover:bg-muted text-xs sm:text-sm"
           >
-            <Eye className="w-4 h-4 mr-2" />
+            <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
             View Profile
           </Button>
           {((isAuthenticated && currentUser && user.id !== currentUser.id) || !isAuthenticated) && (
@@ -236,9 +229,9 @@ export const ProfileCard = React.memo(({ user, isBlurred = false, searchResult }
               variant="default" 
               size="sm" 
               onClick={handleSendInvitation}
-              className="flex-1"
+              className="flex-1 text-xs sm:text-sm"
             >
-              <MessageCircle className="w-4 h-4 mr-2" />
+              <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
               Send Invitation
             </Button>
           )}

@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import {
   Accordion,
   AccordionContent,
@@ -38,31 +39,31 @@ export const FAQSection = React.memo(() => {
   ];
 
   return (
-    <section className="py-20 bg-background">
-      <div className="container mx-auto px-6">
+    <section className="py-12 sm:py-16 md:py-20 bg-background">
+      <div className="container mx-auto px-4 sm:px-6">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4 sm:mb-6 px-2">
               {t('faq.title')}
             </h2>
-            <p className="text-xl text-muted-foreground">
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground px-4">
               {t('faq.subtitle')}
             </p>
           </div>
 
           {/* FAQ Accordion */}
-          <Accordion type="single" collapsible className="space-y-4">
+          <Accordion type="single" collapsible className="space-y-3 sm:space-y-4">
             {faqs.map((faq, index) => (
               <AccordionItem 
                 key={index} 
                 value={`item-${index}`}
-                className="border border-border rounded-lg px-6 shadow-card hover:shadow-elegant transition-all duration-300 bg-card"
+                className="border border-border rounded-lg px-4 sm:px-6 shadow-card hover:shadow-elegant transition-all duration-300 bg-card"
               >
-                <AccordionTrigger className="text-left hover:no-underline py-6 text-lg font-semibold text-foreground hover:text-primary transition-colors">
+                <AccordionTrigger className="text-left hover:no-underline py-4 sm:py-6 text-base sm:text-lg font-semibold text-foreground hover:text-primary transition-colors">
                   {faq.question}
                 </AccordionTrigger>
-                <AccordionContent className="pb-6 text-muted-foreground leading-relaxed">
+                <AccordionContent className="pb-4 sm:pb-6 text-sm sm:text-base text-muted-foreground leading-relaxed">
                   {faq.answer}
                 </AccordionContent>
               </AccordionItem>
@@ -70,20 +71,20 @@ export const FAQSection = React.memo(() => {
           </Accordion>
 
           {/* Still have questions CTA */}
-          <div className="text-center mt-12 p-8 bg-gradient-subtle rounded-lg border border-border">
-            <h3 className="text-xl font-semibold text-foreground mb-4">
+          <div className="text-center mt-8 sm:mt-12 p-6 sm:p-8 bg-gradient-subtle rounded-lg border border-border">
+            <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-3 sm:mb-4 px-2">
               {t('actions.stillHaveQuestions')}
             </h3>
-            <p className="text-muted-foreground mb-6">
+            <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6 px-4">
               {t('actions.cantFindLookingFor')}
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+              <Link to="/contact" className="px-4 sm:px-6 py-2 sm:py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium text-sm sm:text-base">
                 {t('actions.contactSupport')}
-              </button>
-              <button className="px-6 py-3 border border-border text-foreground rounded-lg hover:bg-muted transition-colors font-medium">
+              </Link>
+              <Link to="/help" className="px-4 sm:px-6 py-2 sm:py-3 border border-border text-foreground rounded-lg hover:bg-muted transition-colors font-medium text-sm sm:text-base">
                 {t('actions.viewHelpCenter')}
-              </button>
+              </Link>
             </div>
           </div>
         </div>

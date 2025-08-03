@@ -51,42 +51,42 @@ export const TopContributorsSection = () => {
   ];
 
   return (
-    <section className="py-20 bg-gradient-subtle">
-      <div className="container mx-auto px-6">
+    <section className="py-12 sm:py-16 md:py-20 bg-gradient-subtle">
+      <div className="container mx-auto px-4 sm:px-6">
         {/* Header */}
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+        <div className="text-center mb-12 sm:mb-16">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4 sm:mb-6 px-2">
             {t('communityHeroes.title')}
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto px-4">
             {t('communityHeroes.subtitle')}
           </p>
         </div>
 
         {/* Contributors Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 max-w-7xl mx-auto">
           {contributors.map((contributor, index) => (
             <Card
               key={contributor.id}
               className="group hover:shadow-elegant transition-all duration-300 hover:scale-105 animate-fade-in border-0 bg-gradient-to-br from-card to-muted"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
-              <CardContent className="p-6 text-center">
+              <CardContent className="p-4 sm:p-6 text-center">
                 {/* Avatar */}
-                <div className="w-20 h-20 mx-auto mb-4 bg-gradient-primary rounded-full flex items-center justify-center text-3xl shadow-elegant">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-3 sm:mb-4 bg-gradient-primary rounded-full flex items-center justify-center text-2xl sm:text-3xl shadow-elegant">
                   {contributor.avatar}
                 </div>
 
                 {/* Name & Title */}
-                <h3 className="text-xl font-semibold text-foreground mb-2">
+                <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-2">
                   {contributor.name}
                 </h3>
-                <p className="text-muted-foreground mb-4">
+                <p className="text-sm sm:text-base text-muted-foreground mb-3 sm:mb-4">
                   {contributor.title}
                 </p>
 
                 {/* Badges */}
-                <div className="flex flex-wrap justify-center gap-2 mb-4">
+                <div className="flex flex-wrap justify-center gap-1 sm:gap-2 mb-3 sm:mb-4">
                   {contributor.badges.map((badge, badgeIndex) => (
                     <Badge
                       key={badgeIndex}
@@ -99,8 +99,8 @@ export const TopContributorsSection = () => {
                 </div>
 
                 {/* Skills */}
-                <div className="mb-4">
-                  <p className="text-sm text-muted-foreground mb-2">{t('actions.skills')}</p>
+                <div className="mb-3 sm:mb-4">
+                  <p className="text-xs sm:text-sm text-muted-foreground mb-2">{t('actions.skills')}</p>
                   <div className="flex flex-wrap justify-center gap-1">
                     {contributor.skills.map((skill, skillIndex) => (
                       <Badge
@@ -115,7 +115,7 @@ export const TopContributorsSection = () => {
                 </div>
 
                 {/* Stats */}
-                <div className="flex justify-between items-center text-sm">
+                <div className="flex justify-between items-center text-xs sm:text-sm">
                   <div>
                     <div className="font-semibold text-foreground">
                       {contributor.studentsHelped}

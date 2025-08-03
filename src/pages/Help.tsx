@@ -32,112 +32,112 @@ const Help = () => {
 
   const faqItems = [
     {
-      category: "Getting Started",
+      category: t('help.categories.gettingStarted'),
       icon: BookOpen,
       questions: [
         {
-          q: "How do I create an account?",
-          a: "Click the 'Sign In' button in the header and then select 'Sign Up'. Fill in your details and verify your email address to get started."
+          q: t('faq.questions.howSkillExchangeWorks.question'),
+          a: t('faq.questions.howSkillExchangeWorks.answer')
         },
         {
-          q: "How do I find people to exchange skills with?",
-          a: "Use the search bar to find skills you want to learn, browse learning requests, or explore user profiles. You can filter by location, skill level, and other criteria."
+          q: t('faq.questions.isItFree.question'),
+          a: t('faq.questions.isItFree.answer')
         },
         {
-          q: "How does skill exchange work?",
-          a: "Maharat Hub connects people who want to teach with those who want to learn. You can offer skills you're good at and learn new skills from others in the community."
+          q: t('faq.questions.howToFindTeacher.question'),
+          a: t('faq.questions.howToFindTeacher.answer')
         },
         {
-          q: "Is Maharat Hub free to use?",
-          a: "Yes! Maharat Hub offers a free tier with basic features. We also have premium plans with additional features like unlimited invitations and priority support."
+          q: t('faq.questions.noSkillsToTeach.question'),
+          a: t('faq.questions.noSkillsToTeach.answer')
         }
       ]
     },
     {
-      category: "Account & Profile",
+      category: t('help.categories.accountProfile'),
       icon: Users,
       questions: [
         {
-          q: "How do I edit my profile?",
-          a: "Go to your Dashboard and click on 'Profile' in the sidebar. You can update your bio, skills, location, and other information there."
+          q: t('faq.questions.editProfile.question'),
+          a: t('faq.questions.editProfile.answer')
         },
         {
-          q: "How do I add skills to my profile?",
-          a: "In your profile settings, you can add skills you want to teach and skills you want to learn. Be specific about your skill level and experience."
+          q: t('faq.questions.addSkills.question'),
+          a: t('faq.questions.addSkills.answer')
         },
         {
-          q: "Can I change my username?",
-          a: "Yes, you can update your display name in the Settings page under the Profile tab."
+          q: t('faq.questions.changeUsername.question'),
+          a: t('faq.questions.changeUsername.answer')
         },
         {
-          q: "How do I delete my account?",
-          a: "You can delete your account in Settings > Account > Danger Zone. Please note that this action is permanent and cannot be undone."
+          q: t('faq.questions.deleteAccount.question'),
+          a: t('faq.questions.deleteAccount.answer')
         }
       ]
     },
     {
-      category: "Invitations & Messages",
+      category: t('help.categories.invitationsMessages'),
       icon: MessageCircle,
       questions: [
         {
-          q: "How do I send an invitation?",
-          a: "Find a user you'd like to learn from and click 'Send Invitation' on their profile. Premium users can include personalized messages with their invitations."
+          q: t('faq.questions.sendInvitation.question'),
+          a: t('faq.questions.sendInvitation.answer')
         },
         {
-          q: "What's the difference between free and premium invitations?",
-          a: "Free users have limited invitations per month and cannot send personalized messages. Premium users get unlimited invitations with custom messages."
+          q: t('faq.questions.invitationDifference.question'),
+          a: t('faq.questions.invitationDifference.answer')
         },
         {
-          q: "How do I respond to invitations?",
-          a: "Check your Dashboard > Invites to see received invitations. You can accept, decline, or respond with questions."
+          q: t('faq.questions.respondInvitation.question'),
+          a: t('faq.questions.respondInvitation.answer')
         },
         {
-          q: "Can I message users directly?",
-          a: "You can message users you've connected with through accepted invitations. All conversations happen within Maharat Hub for safety."
+          q: t('faq.questions.messageUsers.question'),
+          a: t('faq.questions.messageUsers.answer')
         }
       ]
     },
     {
-      category: "Premium Features",
+      category: t('help.categories.premiumFeatures'),
       icon: CreditCard,
       questions: [
         {
-          q: "What are the benefits of premium membership?",
-          a: "Premium members get unlimited invitations, personalized messages, priority matching, advanced analytics, and priority support."
+          q: t('faq.questions.premiumBenefits.question'),
+          a: t('faq.questions.premiumBenefits.answer')
         },
         {
-          q: "How much does premium cost?",
-          a: "We offer several premium plans starting at $9/month. Check our Pricing page for current rates and features."
+          q: t('faq.questions.premiumCost.question'),
+          a: t('faq.questions.premiumCost.answer')
         },
         {
-          q: "Can I cancel my premium subscription?",
-          a: "Yes, you can cancel anytime from Settings > Billing. Your premium features will remain active until the end of your billing period."
+          q: t('faq.questions.cancelPremium.question'),
+          a: t('faq.questions.cancelPremium.answer')
         },
         {
-          q: "Do you offer refunds?",
-          a: "We offer a 14-day money-back guarantee for new premium subscriptions. Contact support for refund requests."
+          q: t('faq.questions.refunds.question'),
+          a: t('faq.questions.refunds.answer')
         }
       ]
     },
     {
-      category: "Safety & Privacy",
+      category: t('help.categories.safetySecurity'),
       icon: Shield,
       questions: [
         {
-          q: "Is it safe to meet people from Maharat Hub?",
-          a: "We recommend starting with video calls and meeting in public places. Never share personal information like your home address or financial details."
+          q: t('faq.questions.safety.question'),
+          a: t('faq.questions.safety.answer')
         },
         {
-          q: "How do you verify users?",
-          a: "We verify email addresses and offer optional phone verification. Verified users have badges on their profiles."
+          q: t('faq.questions.verifyUsers.question'),
+          a: t('faq.questions.verifyUsers.answer')
         },
         {
-          q: "What information is visible on my profile?",
-          a: "You control what information is visible. Check Settings > Privacy to manage your profile visibility and contact information sharing."
+          q: t('faq.questions.profileVisibility.question'),
+          a: t('faq.questions.profileVisibility.answer')
         },
         {
-          q: "How do I report inappropriate behavior?",
-          a: "Use the report button on user profiles or contact our support team immediately. We take safety seriously and investigate all reports."
+          q: t('faq.questions.reportBehavior.question'),
+          a: t('faq.questions.reportBehavior.answer')
         }
       ]
     }
@@ -156,7 +156,7 @@ const Help = () => {
     e.preventDefault();
     // TODO: Implement contact form submission
     console.log("Contact form submitted:", contactForm);
-    alert("Thank you for your message! We'll get back to you soon.");
+    alert(t('contactSupport.form.success'));
     setContactForm({ name: "", email: "", subject: "", message: "" });
   };
 
@@ -165,9 +165,9 @@ const Help = () => {
       <div className="container mx-auto px-4 py-12 max-w-6xl">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">{t('pages.help.title')}</h1>
+          <h1 className="text-4xl font-bold mb-4">{t('help.title')}</h1>
           <p className="text-xl text-muted-foreground mb-8">
-            {t('actions.findAnswersAndSupport')}
+            {t('help.subtitle')}
           </p>
           
           {/* Search */}
@@ -175,7 +175,7 @@ const Help = () => {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
-                placeholder={t('pages.help.searchPlaceholder')}
+                placeholder={t('help.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -188,7 +188,7 @@ const Help = () => {
           {/* FAQ Section */}
           <div className="lg:col-span-2">
             <div className="mb-8">
-              <h2 className="text-2xl font-bold mb-6">{t('pages.help.faq')}</h2>
+              <h2 className="text-2xl font-bold mb-6">{t('faq.title')}</h2>
               
               {filteredFAQ.length === 0 ? (
                 <Card>
@@ -305,49 +305,49 @@ const Help = () => {
             {/* Support Options */}
             <Card>
               <CardHeader>
-                <CardTitle>Other Ways to Get Help</CardTitle>
+                <CardTitle>{t('contactSupport.sidebar.otherWays')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-3">
                   <Mail className="w-5 h-5 text-muted-foreground" />
                   <div>
-                    <div className="font-medium">Email Support</div>
-                    <div className="text-sm text-muted-foreground">support@Maharat Hub.com</div>
+                    <div className="font-medium">{t('contactSupport.sidebar.email')}</div>
+                    <div className="text-sm text-muted-foreground">{t('contactSupport.sidebar.emailAddress')}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <MessageCircle className="w-5 h-5 text-muted-foreground" />
                   <div>
-                    <div className="font-medium">Live Chat</div>
-                    <div className="text-sm text-muted-foreground">Available 24/7</div>
+                    <div className="font-medium">{t('contactSupport.sidebar.liveChat')}</div>
+                    <div className="text-sm text-muted-foreground">{t('contactSupport.sidebar.liveChatDescription')}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <Phone className="w-5 h-5 text-muted-foreground" />
                   <div>
-                    <div className="font-medium">Phone Support</div>
-                    <div className="text-sm text-muted-foreground">Premium members only</div>
+                    <div className="font-medium">{t('contactSupport.sidebar.phone')}</div>
+                    <div className="text-sm text-muted-foreground">{t('contactSupport.sidebar.phoneDescription')}</div>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Status */}
-            <Card>
-              <CardHeader>
-                <CardTitle>System Status</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="font-medium">All systems operational</span>
-                </div>
-                <Button variant="link" className="p-0 h-auto text-sm gap-1">
-                  View status page
-                  <ExternalLink className="w-3 h-3" />
-                </Button>
-              </CardContent>
-            </Card>
+                         {/* Status */}
+             <Card>
+               <CardHeader>
+                 <CardTitle>{t('contactSupport.systemStatus.title')}</CardTitle>
+               </CardHeader>
+               <CardContent>
+                 <div className="flex items-center gap-2 mb-2">
+                   <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                   <span className="font-medium">{t('contactSupport.systemStatus.operational')}</span>
+                 </div>
+                 <Button variant="link" className="p-0 h-auto text-sm gap-1">
+                   {t('contactSupport.systemStatus.viewStatusPage')}
+                   <ExternalLink className="w-3 h-3" />
+                 </Button>
+               </CardContent>
+             </Card>
           </div>
         </div>
       </div>

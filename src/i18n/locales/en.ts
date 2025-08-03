@@ -7,6 +7,7 @@ export default {
     profile: "Profile",
     settings: "Settings",
     help: "Help",
+    contact: "Contact",
     pricing: "Pricing",
     privacy: "Privacy Policy",
     terms: "Terms of Use",
@@ -483,7 +484,33 @@ export default {
     // Messages page strings
     noMessagesYet: "No messages yet",
     failedToLoadConversations: "Failed to load conversations",
-    backToMessages: "Back to Messages"
+    backToMessages: "Back to Messages",
+    notifications: "Notifications",
+    exchangeRequest: "Exchange Request",
+    exchangeFinished: "Exchange Finished",
+    viewAllNotifications: "View All Notifications",
+    // Authentication keys
+    enterEmail: "Enter your email",
+    enterPassword: "Enter your password",
+    signingIn: "Signing in...",
+    welcomeBack: "Welcome back",
+    joinLearningCommunity: "Join our learning community",
+    step: "Step",
+    of: "of",
+    // Additional missing keys
+    newMessage: "New Message",
+    viewAllMessages: "View All Messages",
+    profile: "Profile",
+    settings: "Settings",
+    help: "Help",
+    privacy: "Privacy",
+    signOut: "Sign Out",
+    signUp: "Sign Up",
+    signIn: "Sign In",
+    email: "Email",
+    password: "Password",
+    signin: "Sign In",
+    orContinueWith: "or continue with"
   },
 
   // Status
@@ -521,6 +548,70 @@ export default {
       multipleSkills: {
         question: "Can I learn multiple skills at once?",
         answer: "Absolutely! You can engage in multiple skill exchanges simultaneously. Many users learn several skills at once, which is a great way to maximize your learning potential and meet more people in our community."
+      },
+      editProfile: {
+        question: "How do I edit my profile?",
+        answer: "Go to your Dashboard and click on 'Profile' in the sidebar. You can update your bio, skills, location, and other information there."
+      },
+      addSkills: {
+        question: "How do I add skills to my profile?",
+        answer: "In your profile settings, you can add skills you want to teach and skills you want to learn. Be specific about your skill level and experience."
+      },
+      changeUsername: {
+        question: "Can I change my username?",
+        answer: "Yes, you can update your display name in the Settings page under the Profile tab."
+      },
+      deleteAccount: {
+        question: "How do I delete my account?",
+        answer: "You can delete your account in Settings > Account > Danger Zone. Please note that this action is permanent and cannot be undone."
+      },
+      sendInvitation: {
+        question: "How do I send an invitation?",
+        answer: "Find a user you'd like to learn from and click 'Send Invitation' on their profile. Premium users can include personalized messages with their invitations."
+      },
+      invitationDifference: {
+        question: "What's the difference between free and premium invitations?",
+        answer: "Free users have limited invitations per month and cannot send personalized messages. Premium users get unlimited invitations with custom messages."
+      },
+      respondInvitation: {
+        question: "How do I respond to invitations?",
+        answer: "Check your Dashboard > Invites to see received invitations. You can accept, decline, or respond with questions."
+      },
+      messageUsers: {
+        question: "Can I message users directly?",
+        answer: "You can message users you've connected with through accepted invitations. All conversations happen within Maharat Hub for safety."
+      },
+      premiumBenefits: {
+        question: "What are the benefits of premium membership?",
+        answer: "Premium members get unlimited invitations, personalized messages, priority matching, advanced analytics, and priority support."
+      },
+      premiumCost: {
+        question: "How much does premium cost?",
+        answer: "We offer several premium plans starting at $9/month. Check our Pricing page for current rates and features."
+      },
+      cancelPremium: {
+        question: "Can I cancel my premium subscription?",
+        answer: "Yes, you can cancel anytime from Settings > Billing. Your premium features will remain active until the end of your billing period."
+      },
+      refunds: {
+        question: "Do you offer refunds?",
+        answer: "We offer a 14-day money-back guarantee for new premium subscriptions. Contact support for refund requests."
+      },
+      safety: {
+        question: "Is it safe to meet people from Maharat Hub?",
+        answer: "We recommend starting with video calls and meeting in public places. Never share personal information like your home address or financial details."
+      },
+      verifyUsers: {
+        question: "How do you verify users?",
+        answer: "We verify email addresses and offer optional phone verification. Verified users have badges on their profiles."
+      },
+      profileVisibility: {
+        question: "What information is visible on my profile?",
+        answer: "You control what information is visible. Check Settings > Privacy to manage your profile visibility and contact information sharing."
+      },
+      reportBehavior: {
+        question: "How do I report inappropriate behavior?",
+        answer: "Use the report button on user profiles or contact our support team immediately. We take safety seriously and investigate all reports."
       }
     }
   },
@@ -805,5 +896,68 @@ export default {
     },
     upgradeError: "Please sign in to upgrade your plan",
     comingSoon: "{{planName}} plan upgrade coming soon! Price: ${{price}}/{{cycle}}"
+  },
+
+  // Contact Support
+  contactSupport: {
+    title: "Contact Support",
+    subtitle: "We're here to help! Send us a message and we'll get back to you within 24 hours.",
+    form: {
+      title: "Send us a message",
+      name: "Name",
+      namePlaceholder: "Your full name",
+      email: "Email",
+      emailPlaceholder: "your.email@example.com",
+      inquiryType: "What can we help you with?",
+      inquiryTypePlaceholder: "Select inquiry type",
+      message: "Message",
+      messagePlaceholder: "Tell us more about your inquiry...",
+      sendMessage: "Send Message",
+      sending: "Sending...",
+      success: "Message sent successfully!",
+      successDescription: "We'll get back to you within 24 hours.",
+      error: "Failed to send message",
+      errorDescription: "Please try again or contact us directly."
+    },
+    inquiryTypes: {
+      collaboration: {
+        label: "Collaboration",
+        description: "I want to collaborate or partner with Maharat Hub"
+      },
+      problem: {
+        label: "Problem/Issue",
+        description: "I'm experiencing a technical issue or problem"
+      },
+      feature: {
+        label: "Feature Request",
+        description: "I'd like to suggest a new feature or improvement"
+      },
+      general: {
+        label: "General Inquiry",
+        description: "I have a general question or feedback"
+      }
+    },
+    sidebar: {
+      inquiryTypes: "Inquiry Types",
+      responseTime: "Response Time",
+      responseTimeDescription: "Within 24 hours",
+      detailedResponses: "Detailed responses",
+      followUpSupport: "Follow-up support",
+      otherWays: "Other Ways to Reach Us",
+      email: "Email",
+      emailAddress: "support@maharathub.com",
+      liveChat: "Live Chat",
+      liveChatDescription: "Available 24/7",
+      phone: "Phone",
+      phoneDescription: "Premium members only",
+      quickHelp: "Quick Help",
+      quickHelpDescription: "Check our FAQ for quick answers to common questions.",
+      viewFAQ: "View FAQ"
+    },
+    systemStatus: {
+      title: "System Status",
+      operational: "All systems operational",
+      viewStatusPage: "View status page"
+    }
   }
 }; 

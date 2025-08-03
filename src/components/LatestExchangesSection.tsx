@@ -42,6 +42,7 @@ export const LatestExchangesSection = React.memo(() => {
 
   // Visibility detection to pause animations when not visible
   useEffect(() => {
+    const currentRef = sectionRef.current;
     const observer = new IntersectionObserver(
       ([entry]) => {
         setIsVisible(entry.isIntersecting);
@@ -49,13 +50,13 @@ export const LatestExchangesSection = React.memo(() => {
       { threshold: 0.1 }
     );
 
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
+    if (currentRef) {
+      observer.observe(currentRef);
     }
 
     return () => {
-      if (sectionRef.current) {
-        observer.unobserve(sectionRef.current);
+      if (currentRef) {
+        observer.unobserve(currentRef);
       }
     };
   }, []);
@@ -101,50 +102,50 @@ export const LatestExchangesSection = React.memo(() => {
   // Loading skeleton
   if (isLoading) {
     return (
-      <section ref={sectionRef} className="py-20 bg-background">
-        <div className="container mx-auto px-6">
+      <section ref={sectionRef} className="py-12 sm:py-16 md:py-20 bg-background">
+        <div className="container mx-auto px-4 sm:px-6">
           {/* Header */}
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4 sm:mb-6 px-2">
               🔥 {t('latestExchanges.title')}
             </h2>
-            <p className="text-xl text-muted-foreground mb-8">
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-6 sm:mb-8 px-4">
               {t('latestExchanges.subtitle')}
             </p>
             
             {/* Loading Counter */}
-            <div className="inline-flex items-center gap-2 bg-gradient-warm text-warm-foreground px-6 py-3 rounded-full shadow-elegant animate-pulse">
-              <div className="w-3 h-3 bg-success rounded-full animate-pulse" />
-                          <span className="font-semibold text-lg">
-              {t('actions.loadingExchanges')}
-            </span>
+            <div className="inline-flex items-center gap-2 bg-gradient-warm text-warm-foreground px-4 sm:px-6 py-2 sm:py-3 rounded-full shadow-elegant animate-pulse">
+              <div className="w-2 h-2 sm:w-3 sm:h-3 bg-success rounded-full animate-pulse" />
+              <span className="font-semibold text-sm sm:text-lg">
+                {t('actions.loadingExchanges')}
+              </span>
             </div>
           </div>
 
           {/* Loading Carousel */}
           <div className="relative max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {Array.from({ length: 3 }).map((_, index) => (
                 <Card 
                   key={index}
                   className="shadow-card animate-pulse border-0 bg-gradient-to-br from-card to-muted"
                 >
-                  <CardContent className="p-6 text-center">
+                  <CardContent className="p-4 sm:p-6 text-center">
                     {/* Loading Avatar */}
-                    <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center text-2xl">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 bg-muted rounded-full flex items-center justify-center text-xl sm:text-2xl">
                       📝
                     </div>
 
                     {/* Loading Content */}
-                    <div className="mb-4">
-                      <div className="h-4 bg-muted rounded mb-2"></div>
-                      <div className="h-3 bg-muted rounded"></div>
+                    <div className="mb-3 sm:mb-4">
+                      <div className="h-3 sm:h-4 bg-muted rounded mb-2"></div>
+                      <div className="h-2 sm:h-3 bg-muted rounded"></div>
                     </div>
 
                     {/* Loading Rating */}
                     <div className="flex items-center justify-center gap-1">
                       {Array.from({ length: 5 }).map((_, i) => (
-                        <div key={i} className="w-4 h-4 bg-muted rounded"></div>
+                        <div key={i} className="w-3 h-3 sm:w-4 sm:h-4 bg-muted rounded"></div>
                       ))}
                     </div>
                   </CardContent>
@@ -158,21 +159,21 @@ export const LatestExchangesSection = React.memo(() => {
   }
 
   return (
-    <section ref={sectionRef} className="py-20 bg-background">
-      <div className="container mx-auto px-6">
+    <section ref={sectionRef} className="py-12 sm:py-16 md:py-20 bg-background">
+      <div className="container mx-auto px-4 sm:px-6">
         {/* Header */}
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+        <div className="text-center mb-12 sm:mb-16">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4 sm:mb-6 px-2">
             🔥 {t('latestExchanges.title')}
           </h2>
-          <p className="text-xl text-muted-foreground mb-8">
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-6 sm:mb-8 px-4">
             {t('latestExchanges.subtitle')}
           </p>
           
           {/* Live Counter */}
-          <div className="inline-flex items-center gap-2 bg-gradient-warm text-warm-foreground px-6 py-3 rounded-full shadow-elegant animate-scale-in">
-            <div className={`w-3 h-3 bg-success rounded-full ${isVisible ? 'animate-pulse' : ''}`} />
-            <span className="font-semibold text-lg">
+          <div className="inline-flex items-center gap-2 bg-gradient-warm text-warm-foreground px-4 sm:px-6 py-2 sm:py-3 rounded-full shadow-elegant animate-scale-in">
+            <div className={`w-2 h-2 sm:w-3 sm:h-3 bg-success rounded-full ${isVisible ? 'animate-pulse' : ''}`} />
+            <span className="font-semibold text-sm sm:text-lg">
               {counter.toLocaleString()} {t('actions.skillExchanges')}
             </span>
           </div>
@@ -182,27 +183,27 @@ export const LatestExchangesSection = React.memo(() => {
         <div className="relative max-w-6xl mx-auto">
           {exchanges.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {visibleExchanges.map((exchange, index) => (
                   <Card 
                     key={`${exchange.id}-${currentIndex}-${index}`}
                     className="shadow-card hover:shadow-elegant transition-all duration-300 hover:scale-105 animate-scale-in border-0 bg-gradient-to-br from-card to-muted"
                     style={{ animationDelay: `${index * 0.1}s` }}
                   >
-                    <CardContent className="p-6 text-center">
+                    <CardContent className="p-4 sm:p-6 text-center">
                       {/* Avatar */}
-                      <div className="w-16 h-16 mx-auto mb-4 bg-gradient-primary rounded-full flex items-center justify-center text-2xl shadow-elegant">
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 bg-gradient-primary rounded-full flex items-center justify-center text-xl sm:text-2xl shadow-elegant">
                         {exchange.avatar}
                       </div>
 
                       {/* Content */}
-                      <div className="mb-4">
-                        <div className="flex items-center justify-center gap-2 mb-2">
+                      <div className="mb-3 sm:mb-4">
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 mb-2 text-sm sm:text-base">
                           <span className="font-semibold text-foreground">{exchange.student}</span>
                           <span className="text-muted-foreground">{t(`latestExchanges.cardContent.${exchange.action}`)}</span>
                           <span className="font-semibold text-primary">{exchange.skill}</span>
                         </div>
-                        <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground">
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-1 text-xs sm:text-sm text-muted-foreground">
                           <span>{t('latestExchanges.with')}</span>
                           <span className="font-medium">{exchange.mentor}</span>
                           <span className="text-accent">{exchange.mentorBadge}</span>
@@ -212,7 +213,7 @@ export const LatestExchangesSection = React.memo(() => {
                       {/* Rating */}
                       <div className="flex items-center justify-center gap-1">
                         {Array.from({ length: exchange.rating }).map((_, i) => (
-                          <Star key={i} className="w-4 h-4 fill-accent text-accent" />
+                          <Star key={i} className="w-3 h-3 sm:w-4 sm:h-4 fill-accent text-accent" />
                         ))}
                       </div>
                     </CardContent>
@@ -221,23 +222,23 @@ export const LatestExchangesSection = React.memo(() => {
               </div>
 
               {/* Navigation */}
-              <div className="flex justify-center items-center gap-4 mt-8">
+              <div className="flex justify-center items-center gap-3 sm:gap-4 mt-6 sm:mt-8">
                 <Button
                   variant="outline"
                   size="icon"
                   onClick={prevSlide}
-                  className="rounded-full hover:bg-primary hover:text-primary-foreground"
+                  className="rounded-full hover:bg-primary hover:text-primary-foreground w-8 h-8 sm:w-10 sm:h-10"
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
                 </Button>
 
-                <div className="flex gap-2">
+                <div className="flex gap-1 sm:gap-2">
                   {exchanges.map((_, index) => (
                     <button
                       key={index}
                       onClick={() => setCurrentIndex(index)}
-                      className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                        index === currentIndex ? "bg-primary w-6" : "bg-muted-foreground/30"
+                      className={`h-2 rounded-full transition-all duration-300 ${
+                        index === currentIndex ? "bg-primary w-4 sm:w-6" : "bg-muted-foreground/30 w-2"
                       }`}
                     />
                   ))}
@@ -247,20 +248,20 @@ export const LatestExchangesSection = React.memo(() => {
                   variant="outline"
                   size="icon"
                   onClick={nextSlide}
-                  className="rounded-full hover:bg-primary hover:text-primary-foreground"
+                  className="rounded-full hover:bg-primary hover:text-primary-foreground w-8 h-8 sm:w-10 sm:h-10"
                 >
-                  <ChevronRight className="w-4 h-4" />
+                  <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
                 </Button>
               </div>
             </>
           ) : (
             // No exchanges found
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4">🤝</div>
-              <h3 className="text-2xl font-semibold text-foreground mb-2">
+            <div className="text-center py-8 sm:py-12">
+              <div className="text-4xl sm:text-6xl mb-3 sm:mb-4">🤝</div>
+              <h3 className="text-xl sm:text-2xl font-semibold text-foreground mb-2 px-4">
                 {t('actions.noExchangesYet')}
               </h3>
-              <p className="text-muted-foreground">
+              <p className="text-sm sm:text-base text-muted-foreground px-4">
                 {t('actions.beFirstToExchange')}
               </p>
             </div>

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Settings, Mail, Coins } from "lucide-react";
+import { Search, Settings, Mail, Coins, Menu, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { UserAvatar } from "@/components/auth/UserAvatar";
@@ -21,6 +21,7 @@ export const Header = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<'signup' | 'signin'>('signin');
   const [searchQuery, setSearchQuery] = useState("");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Use centralized validation
   const searchDisabled = isSearchDisabled(user?.name);
@@ -35,21 +36,29 @@ export const Header = () => {
     if (searchQuery.trim()) {
       navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
       setSearchQuery("");
+      setMobileMenuOpen(false);
     }
   };
 
   const handleAuthClick = (mode: 'signup' | 'signin') => {
     setAuthMode(mode);
     setShowAuthModal(true);
+    setMobileMenuOpen(false);
   };
 
-  const handleAuthComplete = (userData?: any) => {
+  const handleAuthComplete = (userData?: unknown) => {
     console.log('Auth completed:', userData);
     setShowAuthModal(false);
   };
 
   const handleCoinClick = () => {
     navigate('/gamification');
+    setMobileMenuOpen(false);
+  };
+
+  const handleMobileNavClick = (path: string) => {
+    navigate(path);
+    setMobileMenuOpen(false);
   };
 
   return (
@@ -63,7 +72,7 @@ export const Header = () => {
               {t('nav.maharatHub')}
             </Link>
 
-            {/* Navigation Links */}
+            {/* Desktop Navigation Links */}
             <div className={`hidden lg:flex items-center gap-2 ${isRTL ? 'order-8' : 'order-2'}`}>
               <Link to="/requests-feed">
                 <Button variant="ghost" size="sm">{t('nav.requestsFeed')}</Button>
@@ -73,7 +82,7 @@ export const Header = () => {
               </Link>
             </div>
 
-            {/* Search Bar - Center */}
+            {/* Desktop Search Bar - Center */}
             <div className={`hidden md:flex flex-1 max-w-md mx-4 ${isRTL ? 'order-5' : 'order-3'}`}>
               <div className={`relative w-full ${searchDisabled ? 'opacity-50' : ''}`}>
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -98,8 +107,8 @@ export const Header = () => {
               </div>
             </div>
 
-            {/* Right side elements */}
-            <div className={`flex items-center gap-2 md:gap-4 ${isRTL ? 'order-1' : 'order-4'}`}>
+            {/* Desktop Right side elements */}
+            <div className={`hidden md:flex items-center gap-2 lg:gap-4 ${isRTL ? 'order-1' : 'order-4'}`}>
               {/* Language Switcher */}
               <LanguageSwitcher />
               
@@ -130,6 +139,9 @@ export const Header = () => {
                   <Link to="/help">
                     <Button variant="ghost" size="sm">{t('nav.help')}</Button>
                   </Link>
+                  <Link to="/contact">
+                    <Button variant="ghost" size="sm">{t('nav.contact')}</Button>
+                  </Link>
                   <Button onClick={() => handleAuthClick('signin')} size="sm">
                     {t('nav.signIn')}
                   </Button>
@@ -139,6 +151,16 @@ export const Header = () => {
                 </div>
               )}
             </div>
+
+            {/* Mobile Menu Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden"
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </Button>
           </div>
 
           {/* Mobile Search Bar */}
@@ -156,6 +178,102 @@ export const Header = () => {
               />
             </div>
           </div>
+
+          {/* Mobile Menu */}
+          {mobileMenuOpen && (
+            <div className="md:hidden mt-4 pb-4 border-t pt-4">
+              <div className="space-y-3">
+                {/* Mobile Navigation Links */}
+                <div className="flex flex-col space-y-2">
+                  <Button
+                    variant="ghost"
+                    onClick={() => handleMobileNavClick('/requests-feed')}
+                    className="justify-start"
+                  >
+                    {t('nav.requestsFeed')}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={() => handleMobileNavClick('/pricing')}
+                    className="justify-start"
+                  >
+                    {t('nav.pricing')}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={() => handleMobileNavClick('/help')}
+                    className="justify-start"
+                  >
+                    {t('nav.help')}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={() => handleMobileNavClick('/contact')}
+                    className="justify-start"
+                  >
+                    {t('nav.contact')}
+                  </Button>
+                </div>
+
+                {/* Mobile Language Switcher */}
+                <div className="pt-2 border-t">
+                  <LanguageSwitcher />
+                </div>
+
+                {/* Mobile Auth/User Section */}
+                {isAuthenticated ? (
+                  <div className="pt-2 border-t space-y-2">
+                    <Button
+                      variant="ghost"
+                      onClick={handleCoinClick}
+                      className="justify-start text-yellow-600"
+                    >
+                      <Coins className="w-4 h-4 mr-2" />
+                      Coins
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleMobileNavClick('/messages')}
+                      className="justify-start"
+                    >
+                      {t('nav.messages')}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleMobileNavClick('/my-exchanges')}
+                      className="justify-start"
+                    >
+                      {t('nav.myExchanges')}
+                    </Button>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Notifications</span>
+                      <div className="flex gap-2">
+                        <NotificationDropdown type="general" />
+                        <NotificationDropdown type="chat" />
+                      </div>
+                    </div>
+                    <UserAvatar />
+                  </div>
+                ) : (
+                  <div className="pt-2 border-t space-y-2">
+                    <Button
+                      onClick={() => handleAuthClick('signin')}
+                      className="w-full"
+                    >
+                      {t('nav.signIn')}
+                    </Button>
+                    <Button
+                      onClick={() => handleAuthClick('signup')}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      {t('nav.signUp')}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </nav>
 

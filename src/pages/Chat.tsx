@@ -81,8 +81,8 @@ const ChatMessageComponent = React.memo(({
 
   if (isSystemMessage) {
     return (
-      <div key={msg.id} className="flex justify-center my-4">
-        <div className="bg-muted px-4 py-2 rounded-lg text-sm text-muted-foreground">
+      <div key={msg.id} className="flex justify-center my-3 sm:my-4">
+        <div className="bg-muted px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm text-muted-foreground">
           {msg.message.replace('[SYSTEM] ', '')}
         </div>
       </div>
@@ -90,18 +90,18 @@ const ChatMessageComponent = React.memo(({
   }
 
   return (
-    <div key={msg.id} className={`flex gap-2 mb-4 ${isCurrentUser ? 'flex-row-reverse' : ''}`}>
-      <Avatar className="w-8 h-8 flex-shrink-0">
+    <div key={msg.id} className={`flex gap-2 mb-3 sm:mb-4 ${isCurrentUser ? 'flex-row-reverse' : ''}`}>
+      <Avatar className="w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0">
         <AvatarImage src={isCurrentUser ? currentUserAvatar : otherUser?.avatar_url} />
-        <AvatarFallback>
+        <AvatarFallback className="text-xs sm:text-sm">
           {isCurrentUser 
             ? (currentUserName?.charAt(0).toUpperCase() || currentUserId?.charAt(0).toUpperCase() || 'Y')
             : (otherUser?.display_name?.charAt(0).toUpperCase() || 'U')
           }
         </AvatarFallback>
       </Avatar>
-      <div className={`max-w-[70%] ${isCurrentUser ? 'text-right' : ''}`}>
-        <div className={`inline-block p-3 rounded-lg ${
+      <div className={`max-w-[75%] sm:max-w-[70%] ${isCurrentUser ? 'text-right' : ''}`}>
+        <div className={`inline-block p-2 sm:p-3 rounded-lg text-xs sm:text-sm ${
           isCurrentUser 
             ? 'bg-primary text-primary-foreground' 
             : 'bg-muted'
@@ -1382,28 +1382,28 @@ const Chat = React.memo(() => {
     return (
       <div className="min-h-screen bg-background">
         {/* Header */}
-        <div className="border-b bg-card p-4">
+        <div className="border-b bg-card p-3 sm:p-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               <Button
                 onClick={() => navigate('/messages')}
                 variant="ghost"
                 size="sm"
-                className="gap-2"
+                className="gap-1 sm:gap-2"
               >
                 <ArrowLeft className="h-4 w-4" />
-                {t('actions.backToMessages')}
+                <span className="hidden sm:inline">{t('actions.backToMessages')}</span>
               </Button>
-              <div className="flex items-center gap-3">
-                <Avatar className="w-10 h-10">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Avatar className="w-8 h-8 sm:w-10 sm:h-10">
                   <AvatarImage src={otherUser.avatar_url} />
                   <AvatarFallback>
                     {otherUser.display_name?.charAt(0).toUpperCase() || 'U'}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h2 className="font-semibold">{otherUser.display_name}</h2>
-                  <p className="text-sm text-muted-foreground">
+                  <h2 className="font-semibold text-sm sm:text-base">{otherUser.display_name}</h2>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     {exchangeState === 'active_exchange' ? 'Active Exchange' : 'Chat'}
                   </p>
                 </div>
@@ -1412,7 +1412,7 @@ const Chat = React.memo(() => {
             
             {/* Exchange Status Badge */}
             {exchangeState !== 'pending_start' && (
-              <Badge variant={exchangeState === 'active_exchange' ? 'default' : 'secondary'}>
+              <Badge variant={exchangeState === 'active_exchange' ? 'default' : 'secondary'} className="text-xs">
                 {exchangeState === 'active_exchange' ? 'Active Exchange' : 'Draft Exchange'}
               </Badge>
             )}
@@ -1420,10 +1420,10 @@ const Chat = React.memo(() => {
         </div>
 
         {/* Messages */}
-        <div className="container mx-auto max-w-4xl p-4 pb-24">
+        <div className="container mx-auto max-w-4xl p-2 sm:p-4 pb-20 sm:pb-24">
           <Card>
-            <CardContent className="p-6">
-              <div className="h-96 overflow-y-auto mb-4 relative">
+            <CardContent className="p-3 sm:p-6">
+              <div className="h-80 sm:h-96 overflow-y-auto mb-3 sm:mb-4 relative">
                 {messages.map(msg => (
                   <ChatMessageComponent 
                     key={msg.id}
@@ -1441,33 +1441,33 @@ const Chat = React.memo(() => {
                   <Button
                     onClick={scrollToBottom}
                     size="sm"
-                    className="absolute bottom-4 right-4 rounded-full w-10 h-10 p-0 shadow-lg"
+                    className="absolute bottom-2 sm:bottom-4 right-2 sm:right-4 rounded-full w-8 h-8 sm:w-10 sm:h-10 p-0 shadow-lg"
                     variant="secondary"
                   >
-                    <ChevronDown className="w-4 h-4" />
+                    <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4" />
                   </Button>
                 )}
               </div>
 
               {/* Exchange Action Buttons */}
-              <div className="flex gap-2 mb-4">
+              <div className="flex flex-col sm:flex-row gap-2 mb-3 sm:mb-4">
                 {canStartExchange && (
                   <Button
                     onClick={handleStartExchange}
-                    className="gap-2"
+                    className="gap-1 sm:gap-2 text-xs sm:text-sm"
                     variant="default"
                   >
-                    <Play className="h-4 w-4" />
+                    <Play className="h-3 w-3 sm:h-4 sm:w-4" />
                     Start Exchange
                   </Button>
                 )}
                 {canFinishExchange && exchangeActive && (
                   <Button
                     onClick={handleFinishExchange}
-                    className="gap-2"
+                    className="gap-1 sm:gap-2 text-xs sm:text-sm"
                     variant="outline"
                   >
-                    <Square className="h-4 w-4" />
+                    <Square className="h-3 w-3 sm:h-4 sm:w-4" />
                     Finish Exchange
                   </Button>
                 )}
@@ -1479,11 +1479,11 @@ const Chat = React.memo(() => {
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Type your message... (You can share Zoom links, WhatsApp contacts, etc.)"
-                  className="flex-1"
+                  placeholder="Type your message..."
+                  className="flex-1 text-xs sm:text-sm"
                 />
-                <Button onClick={handleSendMessage} size="icon">
-                  <Send className="h-4 w-4" />
+                <Button onClick={handleSendMessage} size="icon" className="w-8 h-8 sm:w-10 sm:h-10">
+                  <Send className="h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
               </div>
             </CardContent>
