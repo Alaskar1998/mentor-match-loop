@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Crown, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface AdBannerProps {
   onClose?: () => void;
@@ -10,6 +11,16 @@ interface AdBannerProps {
 }
 
 export const AdBanner = ({ onClose, onUpgrade }: AdBannerProps) => {
+  const navigate = useNavigate();
+
+  const handleUpgrade = () => {
+    if (onUpgrade) {
+      onUpgrade();
+    } else {
+      navigate('/pricing');
+    }
+  };
+
   return (
     <Card className="bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20">
       <CardContent className="p-4">
@@ -27,7 +38,7 @@ export const AdBanner = ({ onClose, onUpgrade }: AdBannerProps) => {
             <div className="flex items-center gap-2">
               <Button 
                 size="sm" 
-                onClick={onUpgrade}
+                onClick={handleUpgrade}
                 className="gap-2"
               >
                 <Crown className="w-4 h-4" />

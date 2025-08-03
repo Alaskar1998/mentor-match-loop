@@ -20,6 +20,7 @@ interface TierLimitations {
   mentorFilterEnabled: boolean;
   adsVisible: boolean;
   requestPostsPerMonth: number;
+  maxSearchResults: number;
 }
 
 interface MonetizationContextType {
@@ -30,6 +31,7 @@ interface MonetizationContextType {
   getRemainingInvites: () => number;
   getRemainingRequestPosts: () => number;
   getCoinPrice: (item: string, basePrice: number) => number;
+  getMaxSearchResults: () => number;
 }
 
 const MonetizationContext = createContext<MonetizationContextType | null>(null);
@@ -45,35 +47,46 @@ export const useMonetization = () => {
 export const MonetizationProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   
-  // Temporarily make all features free for testing
-  const userTier = 'premium'; // Force premium for all users
+  // Determine user tier based on user data or default to free
+  const userTier = user?.userType || 'free';
   
-  // All features available for free
+  // Premium features
   const features: PremiumFeatures = {
-    unlimitedInvites: true,
-    worldwideSearch: true,
-    mapSearch: true,
-    fullFilters: true,
-    noAds: true,
-    earlyEventAccess: true,
-    freeRequestPosts: 10, // Give more free posts
-    monthlyCoinStipend: 100, // Give some coins
-    discountedCoinCosts: true
+    unlimitedInvites: userTier === 'premium',
+    worldwideSearch: userTier === 'premium',
+    mapSearch: userTier === 'premium',
+    fullFilters: userTier === 'premium',
+    noAds: userTier === 'premium',
+    earlyEventAccess: userTier === 'premium',
+    freeRequestPosts: userTier === 'premium' ? 10 : 2,
+    monthlyCoinStipend: userTier === 'premium' ? 100 : 0,
+    discountedCoinCosts: userTier === 'premium'
   };
 
-  // No limitations for now
+  // Tier limitations
   const limitations: TierLimitations = {
-    maxInvitesPerMonth: Infinity,
-    searchScope: 'worldwide',
-    mapSearchEnabled: true,
-    mentorFilterEnabled: true,
-    adsVisible: false,
-    requestPostsPerMonth: 10
+    maxInvitesPerMonth: userTier === 'premium' ? Infinity : 5,
+    searchScope: userTier === 'premium' ? 'worldwide' : 'country',
+    mapSearchEnabled: userTier === 'premium',
+    mentorFilterEnabled: userTier === 'premium',
+    adsVisible: userTier === 'free',
+    requestPostsPerMonth: userTier === 'premium' ? 10 : 2,
+    maxSearchResults: userTier === 'premium' ? Infinity : 3
   };
 
   const canUseFeature = (feature: string): boolean => {
-    // All features are available for free now
-    return true;
+    switch (feature) {
+      case 'country_filter':
+      case 'mentor_filter':
+      case 'full_filters':
+        return userTier === 'premium';
+      case 'unlimited_search':
+        return userTier === 'premium';
+      case 'no_ads':
+        return userTier === 'premium';
+      default:
+        return true;
+    }
   };
 
   const getRemainingInvites = (): number => {
@@ -82,8 +95,11 @@ export const MonetizationProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const getRemainingRequestPosts = (): number => {
-    // All users get free request posts now
     return features.freeRequestPosts;
+  };
+
+  const getMaxSearchResults = (): number => {
+    return limitations.maxSearchResults;
   };
 
   const getCoinPrice = (item: string, basePrice: number): number => {
@@ -106,7 +122,8 @@ export const MonetizationProvider = ({ children }: { children: ReactNode }) => {
       canUseFeature,
       getRemainingInvites,
       getRemainingRequestPosts,
-      getCoinPrice
+      getCoinPrice,
+      getMaxSearchResults
     }}>
       {children}
     </MonetizationContext.Provider>

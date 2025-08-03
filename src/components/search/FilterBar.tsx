@@ -1,15 +1,15 @@
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { SearchFilters } from "@/pages/SearchResults";
-import { Crown, Lock } from "lucide-react";
-import { useLanguage } from "@/hooks/useLanguage";
-import { translateCountry } from "@/utils/translationUtils";
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
+import { Crown, Lock } from 'lucide-react';
+import { SearchFilters } from '@/pages/SearchResults';
+import { useLanguage } from '@/hooks/useLanguage';
+import { translateCountry } from '@/utils/translationUtils';
+import { useNavigate } from 'react-router-dom';
 
 interface FilterBarProps {
   filters: SearchFilters;
@@ -17,23 +17,36 @@ interface FilterBarProps {
   isPremium: boolean;
 }
 
+// Filter options
 const countries = [
-  "United States", "Canada", "United Kingdom", "Australia", "Germany", 
-  "France", "Spain", "Italy", "Netherlands", "Sweden", "Norway", "Denmark",
-  "Singapore", "Japan", "South Korea", "China", "India", "Brazil", "Mexico",
-  "Argentina", "Chile", "South Africa", "Egypt", "Nigeria", "Kenya"
+  "United States", "Canada", "United Kingdom", "Germany", "France", 
+  "Australia", "Japan", "Brazil", "India", "Mexico", "Italy", "Spain",
+  "Netherlands", "Sweden", "Norway", "Denmark", "Finland", "Switzerland",
+  "Austria", "Belgium", "Portugal", "Greece", "Poland", "Czech Republic",
+  "Hungary", "Slovakia", "Slovenia", "Croatia", "Serbia", "Bulgaria",
+  "Romania", "Ukraine", "Russia", "Turkey", "Israel", "Saudi Arabia",
+  "UAE", "Egypt", "South Africa", "Nigeria", "Kenya", "Morocco",
+  "Argentina", "Chile", "Colombia", "Peru", "Venezuela", "Uruguay",
+  "Paraguay", "Bolivia", "Ecuador", "Guyana", "Suriname", "French Guiana"
 ];
 
-const skillLevels = ["Beginner", "Intermediate", "Expert"];
+const skillLevels = [
+  { label: "Beginner", value: "Beginner" },
+  { label: "Intermediate", value: "Intermediate" },
+  { label: "Expert", value: "Expert" }
+];
+
 const ratingOptions = [
-  { label: "5⭐ only", value: "5" },
+  { label: "Any Rating", value: "" },
   { label: "4⭐+", value: "4" },
   { label: "3⭐+", value: "3" }
 ];
+
 const genderOptions = ["Male", "Female"];
 
 export const FilterBar = ({ filters, onFiltersChange, isPremium }: FilterBarProps) => {
   const { language } = useLanguage();
+  const navigate = useNavigate();
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
   const [countrySearch, setCountrySearch] = useState("");
 
@@ -62,6 +75,10 @@ export const FilterBar = ({ filters, onFiltersChange, isPremium }: FilterBarProp
     });
   };
 
+  const handleUpgrade = () => {
+    navigate('/pricing');
+  };
+
   const hasActiveFilters = filters.country || filters.skillLevel || filters.rating || 
                           filters.gender.length > 0 || filters.mentorOnly;
 
@@ -69,125 +86,87 @@ export const FilterBar = ({ filters, onFiltersChange, isPremium }: FilterBarProp
     country.toLowerCase().includes(countrySearch.toLowerCase())
   );
 
-  // Component to show premium lock indicator
   const PremiumLockIndicator = ({ children }: { children: React.ReactNode }) => (
     <div className="flex items-center gap-2">
       {children}
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Lock className="w-4 h-4 text-muted-foreground cursor-help" />
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Unlock with Premium</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      {!isPremium && <Lock className="w-3 h-3 text-muted-foreground" />}
     </div>
   );
 
   return (
-    <Card className="sticky top-6 shadow-card">
+    <Card className="shadow-lg">
       <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">Filters</CardTitle>
-          {isPremium && hasActiveFilters && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={clearAllFilters}
-              className="text-xs text-muted-foreground hover:text-foreground"
-            >
-              Clear All
-            </Button>
-          )}
-        </div>
-        {!isPremium && (
-          <Badge variant="outline" className="text-xs bg-orange-100 text-orange-700 border-orange-200">
-            Free Plan - All Filters Locked
-          </Badge>
-        )}
+        <CardTitle className="text-lg font-semibold flex items-center gap-2">
+          <Crown className="w-5 h-5" />
+          Advanced Filters
+          {!isPremium && <Badge variant="secondary" className="text-xs">Premium</Badge>}
+        </CardTitle>
       </CardHeader>
 
       <CardContent className="space-y-6">
-        {/* Country Filter - Premium Only */}
+        {/* Country Filter - Disabled for Free Users */}
         <div className="space-y-3">
           <PremiumLockIndicator>
-            <Label className={`text-sm font-medium ${!isPremium ? 'text-muted-foreground' : 'text-foreground'}`}>
-              Country
-            </Label>
+            <Label className="text-sm font-medium">Country</Label>
           </PremiumLockIndicator>
           <select
             value={filters.country}
             onChange={(e) => updateFilters("country", e.target.value)}
             disabled={!isPremium}
-            className={`w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary ${
-              isPremium 
-                ? 'bg-background text-foreground' 
-                : 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'
+            className={`w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground ${
+              !isPremium ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
             <option value="">All Countries</option>
-            {countries.map(country => (
+            {filteredCountries.map(country => (
               <option key={country} value={country}>{translateCountry(country, language)}</option>
             ))}
           </select>
         </div>
 
-        {/* Skill Level Filter - Always Visible, Disabled for Free */}
+        {/* Skill Level Filter - Disabled for Free Users */}
         <div className="space-y-3">
           <PremiumLockIndicator>
-            <Label className={`text-sm font-medium ${!isPremium ? 'text-muted-foreground' : 'text-foreground'}`}>
-              Skill Level
-            </Label>
+            <Label className="text-sm font-medium">Skill Level</Label>
           </PremiumLockIndicator>
           <select
             value={filters.skillLevel}
             onChange={(e) => updateFilters("skillLevel", e.target.value)}
             disabled={!isPremium}
-            className={`w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary ${
-              isPremium 
-                ? 'bg-background text-foreground' 
-                : 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'
+            className={`w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground ${
+              !isPremium ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
-            <option value="">All Levels</option>
+            <option value="">Any Level</option>
             {skillLevels.map(level => (
-              <option key={level} value={level}>{level}</option>
+              <option key={level.value} value={level.value}>{level.label}</option>
             ))}
           </select>
         </div>
 
-        {/* Rating Filter - Always Visible, Disabled for Free */}
+        {/* Rating Filter - Disabled for Free Users */}
         <div className="space-y-3">
           <PremiumLockIndicator>
-            <Label className={`text-sm font-medium ${!isPremium ? 'text-muted-foreground' : 'text-foreground'}`}>
-              Minimum Rating
-            </Label>
+            <Label className="text-sm font-medium">Minimum Rating</Label>
           </PremiumLockIndicator>
           <select
             value={filters.rating}
             onChange={(e) => updateFilters("rating", e.target.value)}
             disabled={!isPremium}
-            className={`w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary ${
-              isPremium 
-                ? 'bg-background text-foreground' 
-                : 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'
+            className={`w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground ${
+              !isPremium ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
-            <option value="">Any Rating</option>
             {ratingOptions.map(option => (
               <option key={option.value} value={option.value}>{option.label}</option>
             ))}
           </select>
         </div>
 
-        {/* Gender Filter - Always Visible, Disabled for Free */}
+        {/* Gender Filter - Disabled for Free Users */}
         <div className="space-y-3">
           <PremiumLockIndicator>
-            <Label className={`text-sm font-medium ${!isPremium ? 'text-muted-foreground' : 'text-foreground'}`}>
-              Gender
-            </Label>
+            <Label className="text-sm font-medium">Gender</Label>
           </PremiumLockIndicator>
           <div className="space-y-2">
             {genderOptions.map(gender => (
@@ -243,7 +222,7 @@ export const FilterBar = ({ filters, onFiltersChange, isPremium }: FilterBarProp
             <p className="text-xs text-muted-foreground mb-3">
               Upgrade to Premium to use country, skill level, rating, gender, and mentor filters.
             </p>
-            <Button size="sm" className="w-full">
+            <Button size="sm" className="w-full" onClick={handleUpgrade}>
               <Crown className="w-4 h-4 mr-2" />
               Upgrade to Premium - $4.99/mo
             </Button>

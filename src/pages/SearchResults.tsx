@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { SearchResults } from "@/components/search/SearchResults";
 import { FilterSidebar } from "@/components/search/FilterSidebar";
 import { FilterButton } from "@/components/search/FilterButton";
@@ -49,12 +49,23 @@ const SearchResultsPage = () => {
     gender: [],
     mentorOnly: false
   });
-  const { userTier, canUseFeature } = useMonetization();
+  const { userTier, canUseFeature, getMaxSearchResults } = useMonetization();
   const isPremium = userTier === 'premium';
+  
   const [showAd, setShowAd] = useState(true);
   const [isFilterSidebarOpen, setIsFilterSidebarOpen] = useState(false);
   const { user } = useAuth();
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  
+  // Debug logging
+  console.log('🔍 Monetization Debug:', {
+    userTier,
+    isPremium,
+    user: user?.id,
+    userTypeFromUser: user?.userType,
+    maxSearchResults: getMaxSearchResults()
+  });
 
   const searchQuery = searchParams.get("q") || "";
 
@@ -81,6 +92,10 @@ const SearchResultsPage = () => {
 
   // Use centralized validation
   const searchDisabled = isSearchDisabled(user?.name);
+
+  const handleUpgrade = () => {
+    navigate('/pricing');
+  };
 
   // Fetch real user data from Supabase
   useEffect(() => {
@@ -162,7 +177,7 @@ const SearchResultsPage = () => {
     updateSearchTerm(searchQuery);
   }, [searchQuery, updateSearchTerm]);
 
-  // Apply filters to search results
+  // Apply filters to search results and limit for free users
   useEffect(() => {
     let filtered = searchQuery ? searchResults : users;
 
@@ -189,8 +204,23 @@ const SearchResultsPage = () => {
       filtered = filtered.filter(user => user.willingToTeachWithoutReturn);
     }
 
+    // Limit results for free users to ensure consistent 3 users
+    const maxResults = getMaxSearchResults();
+    if (!isPremium && filtered.length > maxResults) {
+      // For free users, always show the same 3 users based on a consistent sorting
+      // This ensures they see the same results even after refresh
+      const sortedUsers = [...filtered].sort((a, b) => {
+        // Sort by rating first, then by name for consistency
+        if (b.rating !== a.rating) {
+          return b.rating - a.rating;
+        }
+        return a.name.localeCompare(b.name);
+      });
+      filtered = sortedUsers.slice(0, maxResults);
+    }
+
     setFilteredUsers(filtered);
-  }, [searchResults, users, searchQuery, filters, canUseFeature]);
+  }, [searchResults, users, searchQuery, filters, canUseFeature, isPremium, getMaxSearchResults]);
 
   // Clear search cache when filters change (to ensure fresh results)
   useEffect(() => {
@@ -235,10 +265,7 @@ const SearchResultsPage = () => {
               <div className="mb-6">
                 <AdBanner 
                   onClose={() => setShowAd(false)}
-                  onUpgrade={() => {
-                    // TODO: Open premium upgrade modal
-                    console.log('Open premium upgrade');
-                  }}
+                  onUpgrade={handleUpgrade}
                 />
               </div>
             )}
@@ -256,9 +283,15 @@ const SearchResultsPage = () => {
                     filters.gender.length +
                     (filters.mentorOnly ? 1 : 0)
                   }
+                  // Allow free users to open the filter sidebar to see what's available
                 />
                 <span className="text-sm text-muted-foreground">
                   {filteredUsers.length} results found
+                  {!isPremium && filteredUsers.length >= 3 && (
+                    <span className="ml-2 text-xs text-orange-600">
+                      (Upgrade to see all {searchQuery ? searchResults.length : users.length} results)
+                    </span>
+                  )}
                 </span>
               </div>
             </div>
@@ -274,6 +307,7 @@ const SearchResultsPage = () => {
                   isPremium={isPremium}
                   searchResponse={searchResponse}
                   onSuggestionClick={handleSuggestionClick}
+                  totalResults={searchQuery ? searchResults.length : users.length}
                 />
               )}
             </div>

@@ -6,10 +6,11 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 
-import { X, Filter } from 'lucide-react';
+import { X, Filter, Crown } from 'lucide-react';
 import { SearchFilters } from '@/pages/SearchResults';
 import { useLanguage } from '@/hooks/useLanguage';
 import { translateCountry } from '@/utils/translationUtils';
+import { useNavigate } from 'react-router-dom';
 
 interface FilterSidebarProps {
   filters: SearchFilters;
@@ -46,16 +47,25 @@ const ratingOptions = [
 
 const genderOptions = ["Male", "Female"];
 
-
-
 export const FilterSidebar = ({ filters, onFiltersChange, isPremium, isOpen, onClose }: FilterSidebarProps) => {
   const { language } = useLanguage();
-  // All filters are now available for free
+  const navigate = useNavigate();
+  
+  // Debug logging
+  console.log('🔍 FilterSidebar Debug:', {
+    isPremium,
+    shouldShowUpgradeBanner: !isPremium,
+    isOpen
+  });
+  
+  // Allow filter changes only for premium users
   const updateFilters = (key: keyof SearchFilters, value: any) => {
+    if (!isPremium) return; // Block all filter updates for free users
     onFiltersChange({ ...filters, [key]: value });
   };
 
   const updateGenderFilter = (gender: string, checked: boolean) => {
+    if (!isPremium) return; // Block gender filter updates for free users
     const newGenderFilters = checked
       ? [...filters.gender, gender]
       : filters.gender.filter(g => g !== gender);
@@ -63,6 +73,7 @@ export const FilterSidebar = ({ filters, onFiltersChange, isPremium, isOpen, onC
   };
 
   const clearAllFilters = () => {
+    if (!isPremium) return; // Block clearing filters for free users
     onFiltersChange({
       country: "",
       skillLevel: "",
@@ -70,6 +81,10 @@ export const FilterSidebar = ({ filters, onFiltersChange, isPremium, isOpen, onC
       gender: [],
       mentorOnly: false
     });
+  };
+
+  const handleUpgrade = () => {
+    navigate('/pricing');
   };
 
   // Close sidebar when clicking outside
@@ -135,12 +150,33 @@ export const FilterSidebar = ({ filters, onFiltersChange, isPremium, isOpen, onC
                 <X className="w-4 h-4" />
               </Button>
             </div>
-            
-
           </CardHeader>
 
           <CardContent className="p-6 space-y-6 overflow-y-auto h-[calc(100vh-120px)] lg:h-[calc(100vh-200px)]">
-            {/* Country Filter */}
+            {/* Premium Upgrade Banner for Free Users */}
+            {!isPremium && (
+              <Card className="border-orange-200 bg-orange-50/50 mb-6">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Crown className="w-4 h-4 text-orange-600" />
+                    <h3 className="font-semibold text-orange-800 text-sm">Upgrade to Premium</h3>
+                  </div>
+                  <p className="text-xs text-orange-700 mb-3">
+                    Advanced filtering is available with Premium. Upgrade to filter by country, gender, and more.
+                  </p>
+                  <Button 
+                    size="sm" 
+                    className="bg-orange-600 hover:bg-orange-700 text-white text-xs"
+                    onClick={handleUpgrade}
+                  >
+                    <Crown className="w-3 h-3 mr-1" />
+                    Upgrade to Premium
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Country Filter - Show but disabled for free users */}
             <div className="space-y-3">
               <Label className="text-sm font-medium text-foreground">
                 Country
@@ -148,16 +184,24 @@ export const FilterSidebar = ({ filters, onFiltersChange, isPremium, isOpen, onC
               <select
                 value={filters.country}
                 onChange={(e) => updateFilters("country", e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
+                disabled={!isPremium}
+                className={`w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground ${
+                  !isPremium ? 'opacity-60 cursor-not-allowed' : ''
+                }`}
               >
                 <option value="">All Countries</option>
                 {countries.map(country => (
                   <option key={country} value={country}>{translateCountry(country, language)}</option>
                 ))}
               </select>
+              {!isPremium && (
+                <p className="text-xs text-muted-foreground">
+                  Available with Premium
+                </p>
+              )}
             </div>
 
-            {/* Skill Level Filter */}
+            {/* Skill Level Filter - Available for all users */}
             <div className="space-y-3">
               <Label className="text-sm font-medium text-foreground">
                 Skill Level
@@ -165,16 +209,24 @@ export const FilterSidebar = ({ filters, onFiltersChange, isPremium, isOpen, onC
               <select
                 value={filters.skillLevel}
                 onChange={(e) => updateFilters("skillLevel", e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
+                disabled={!isPremium}
+                className={`w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground ${
+                  !isPremium ? 'opacity-60 cursor-not-allowed' : ''
+                }`}
               >
                 <option value="">Any Level</option>
                 {skillLevels.map(level => (
                   <option key={level.value} value={level.value}>{level.label}</option>
                 ))}
               </select>
+              {!isPremium && (
+                <p className="text-xs text-muted-foreground">
+                  Available with Premium
+                </p>
+              )}
             </div>
 
-            {/* Rating Filter */}
+            {/* Rating Filter - Available for all users */}
             <div className="space-y-3">
               <Label className="text-sm font-medium text-foreground">
                 Minimum Rating
@@ -182,15 +234,23 @@ export const FilterSidebar = ({ filters, onFiltersChange, isPremium, isOpen, onC
               <select
                 value={filters.rating}
                 onChange={(e) => updateFilters("rating", e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
+                disabled={!isPremium}
+                className={`w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground ${
+                  !isPremium ? 'opacity-60 cursor-not-allowed' : ''
+                }`}
               >
                 {ratingOptions.map(option => (
                   <option key={option.value} value={option.value}>{option.label}</option>
                 ))}
               </select>
+              {!isPremium && (
+                <p className="text-xs text-muted-foreground">
+                  Available with Premium
+                </p>
+              )}
             </div>
 
-            {/* Gender Filter */}
+            {/* Gender Filter - Show but disabled for free users */}
             <div className="space-y-3">
               <Label className="text-sm font-medium text-foreground">
                 Gender
@@ -202,19 +262,25 @@ export const FilterSidebar = ({ filters, onFiltersChange, isPremium, isOpen, onC
                       id={`gender-${gender}`}
                       checked={filters.gender.includes(gender)}
                       onCheckedChange={(checked) => updateGenderFilter(gender, checked as boolean)}
+                      disabled={!isPremium}
                     />
                     <Label
                       htmlFor={`gender-${gender}`}
-                      className="text-sm cursor-pointer"
+                      className={`text-sm ${!isPremium ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
                     >
                       {gender}
                     </Label>
                   </div>
                 ))}
               </div>
+              {!isPremium && (
+                <p className="text-xs text-muted-foreground">
+                  Available with Premium
+                </p>
+              )}
             </div>
 
-            {/* Mentor Only Filter */}
+            {/* Mentor Only Filter - Show but disabled for free users */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium text-foreground">
@@ -223,11 +289,17 @@ export const FilterSidebar = ({ filters, onFiltersChange, isPremium, isOpen, onC
                 <Switch
                   checked={filters.mentorOnly}
                   onCheckedChange={(checked) => updateFilters("mentorOnly", checked)}
+                  disabled={!isPremium}
                 />
               </div>
               <p className="text-xs text-muted-foreground">
                 Show only users willing to teach without expecting anything in return
               </p>
+              {!isPremium && (
+                <p className="text-xs text-primary">
+                  Available with Premium
+                </p>
+              )}
             </div>
 
             {/* Active Filters Summary & Clear All */}
@@ -238,6 +310,7 @@ export const FilterSidebar = ({ filters, onFiltersChange, isPremium, isOpen, onC
                     variant="outline"
                     size="sm"
                     onClick={clearAllFilters}
+                    disabled={!isPremium}
                     className="text-xs"
                   >
                     Clear All
