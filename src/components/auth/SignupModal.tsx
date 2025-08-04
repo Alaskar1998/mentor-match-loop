@@ -160,8 +160,8 @@ export const SignupModal = ({ isOpen, onClose, onSignupComplete }: SignupModalPr
       }
     } catch (error) {
       toast({
-        title: "Upload failed",
-        description: "Failed to upload avatar. Please try again.",
+        title: t('actions.uploadFailed'),
+                  description: t('actions.failedToUploadAvatar'),
         variant: "destructive"
       });
     } finally {

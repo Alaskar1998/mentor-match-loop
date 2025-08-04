@@ -79,7 +79,7 @@ export default function ProfileView() {
 
       if (profileError) {
         console.error('Error fetching profile:', profileError);
-        toast.error("User profile not found");
+        toast.error(t('actions.userProfileNotFound'));
         navigate('/');
         return;
       }
@@ -161,7 +161,7 @@ export default function ProfileView() {
 
     } catch (error) {
       console.error('Error:', error);
-      toast.error("Failed to load profile");
+              toast.error(t('actions.failedToLoadProfile'));
       navigate('/');
     } finally {
       setLoading(false);
@@ -183,7 +183,7 @@ export default function ProfileView() {
 
       await notificationService.createNotification({
         userId: id,
-        title: 'Profile Viewed',
+        title: t('actions.profileViewed'),
         message: `${viewerName} viewed your profile`,
         isRead: false,
         type: 'profile_viewed',
@@ -228,7 +228,7 @@ export default function ProfileView() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
-          <p>Loading profile...</p>
+          <p>{t('actions.loadingProfile')}</p>
         </div>
       </div>
     );
@@ -238,9 +238,9 @@ export default function ProfileView() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-2">Profile not found</h2>
-          <p className="text-muted-foreground mb-4">The user profile you're looking for doesn't exist.</p>
-          <Button onClick={() => navigate('/')}>Go Home</Button>
+          <h2 className="text-2xl font-bold mb-2">{t('actions.profileNotFound')}</h2>
+          <p className="text-muted-foreground mb-4">{t('actions.profileNotFoundDesc')}</p>
+          <Button onClick={() => navigate('/')}>{t('actions.goHome')}</Button>
         </div>
       </div>
     );
@@ -254,7 +254,7 @@ export default function ProfileView() {
 
     // For authenticated users, show invitation modal
     if (user.id === currentUser?.id) {
-      toast.error("You cannot send an invitation to yourself");
+      toast.error(t('actions.cannotInviteSelf'));
       return;
     }
 

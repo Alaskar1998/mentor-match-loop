@@ -63,7 +63,7 @@ export const HeroSection = () => {
   const handleSearch = (skill?: string) => {
     // Prevent search if user is disabled
     if (searchDisabled) {
-      toast.error("Search is disabled for your account type");
+      toast.error(t('actions.searchDisabled'));
       return;
     }
     
@@ -106,7 +106,7 @@ export const HeroSection = () => {
               <div className="relative flex flex-col sm:flex-row items-center bg-white rounded-full p-2 shadow-elegant">
                 <Input
                   type="text"
-                  placeholder={searchDisabled ? "Search disabled for your account" : t('hero.searchPlaceholder')}
+                  placeholder={searchDisabled ? t('actions.searchDisabledPlaceholder') : t('hero.searchPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => !searchDisabled && setSearchQuery(e.target.value)}
                   className="flex-1 border-0 focus-visible:ring-0 text-base sm:text-lg px-4 sm:px-6 py-3 sm:py-4 bg-transparent"

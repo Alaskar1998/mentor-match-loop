@@ -239,12 +239,12 @@ const SearchResultsPage = () => {
           <div className="text-center py-12">
             <div className="max-w-md mx-auto">
               <div className="text-6xl mb-4">🔒</div>
-              <h2 className="text-2xl font-bold mb-2">Search Disabled</h2>
+              <h2 className="text-2xl font-bold mb-2">{t('actions.searchDisabledTitle')}</h2>
               <p className="text-muted-foreground mb-4">
                 Search functionality is not available for your account type.
               </p>
               <p className="text-sm text-muted-foreground">
-                Contact support if you believe this is an error.
+                {t('actions.contactSupportIfError')}
               </p>
             </div>
           </div>
@@ -299,7 +299,7 @@ const SearchResultsPage = () => {
             {/* Search Results */}
             <div className="flex-1">
               {loading || isSearchLoading ? (
-                <div className="text-center py-8">Loading...</div>
+                <div className="text-center py-8">{t('actions.loading')}</div>
               ) : (
                 <SearchResults 
                   users={filteredUsers} 

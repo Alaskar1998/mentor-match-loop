@@ -42,7 +42,7 @@ export const Header = () => {
   const handleSearch = () => {
     // Prevent search if user is disabled
     if (searchDisabled) {
-      toast.error("Search is disabled for your account type");
+      toast.error(t('actions.searchDisabled'));
       return;
     }
     
@@ -101,7 +101,7 @@ export const Header = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input
                   type="text"
-                  placeholder={searchDisabled ? "Search disabled" : t('hero.searchPlaceholder')}
+                  placeholder={searchDisabled ? t('actions.searchDisabledPlaceholder') : t('hero.searchPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => !searchDisabled && setSearchQuery(e.target.value)}
                   onKeyDown={(e) => !searchDisabled && e.key === "Enter" && handleSearch()}
@@ -182,7 +182,7 @@ export const Header = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
                 type="text"
-                placeholder={searchDisabled ? "Search disabled" : t('hero.searchPlaceholder')}
+                placeholder={searchDisabled ? t('actions.searchDisabledPlaceholder') : t('hero.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => !searchDisabled && setSearchQuery(e.target.value)}
                 onKeyDown={(e) => !searchDisabled && e.key === "Enter" && handleSearch()}
@@ -242,7 +242,7 @@ export const Header = () => {
                       className="justify-start text-yellow-600"
                     >
                       <Coins className="w-4 h-4 mr-2" />
-                      Coins
+                      {t('actions.coins')}
                     </Button>
                     <Button
                       variant="ghost"
@@ -259,7 +259,7 @@ export const Header = () => {
                       {t('nav.myExchanges')}
                     </Button>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Notifications</span>
+                      <span className="text-sm text-muted-foreground">{t('actions.notifications')}</span>
                       <div className="flex gap-2">
                         <NotificationDropdown type="general" />
                         <NotificationDropdown type="chat" />

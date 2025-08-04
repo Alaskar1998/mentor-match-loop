@@ -112,12 +112,12 @@ export default function Profile() {
     try {
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        throw new Error('File size must be less than 5MB');
+        throw new Error(t('actions.fileSizeTooLarge'));
       }
 
       // Validate file type
       if (!file.type.startsWith('image/')) {
-        throw new Error('Please select an image file');
+        throw new Error(t('actions.pleaseSelectImageFile'));
       }
 
       const fileExt = file.name.split('.').pop();
@@ -147,7 +147,7 @@ export default function Profile() {
 
       if (uploadResult.error) {
         console.error('Upload error details:', uploadResult.error);
-        throw new Error(uploadResult.error.message || 'Upload failed');
+        throw new Error(uploadResult.error.message || t('actions.uploadFailed'));
       }
 
       const { data: { publicUrl } } = supabase.storage
@@ -164,8 +164,8 @@ export default function Profile() {
     } catch (error) {
       console.error('Error uploading avatar:', error);
       toast({
-        title: "Upload failed",
-        description: error instanceof Error ? error.message : "Failed to upload avatar. Please try again.",
+        title: t('actions.uploadFailed'),
+        description: error instanceof Error ? error.message : t('actions.failedToUploadAvatar'),
         variant: "destructive"
       });
     } finally {
@@ -221,7 +221,7 @@ export default function Profile() {
       clearTimeout(timeoutId);
       toast({
         title: "Profile updated!",
-        description: "Your profile has been saved successfully.",
+        description: t('actions.profileSavedSuccessfully'),
       });
       setIsEditing(false);
     } catch (error) {
@@ -267,8 +267,8 @@ export default function Profile() {
       if (fetchError) {
         console.error('Error fetching current skills:', fetchError);
         toast({
-          title: "Error",
-          description: "Failed to fetch current skills",
+          title: t('actions.error'),
+          description: t('actions.failedToFetchSkills'),
           variant: "destructive"
         });
         return;
@@ -292,8 +292,8 @@ export default function Profile() {
       if (error) {
         console.error('Error adding skill:', error);
         toast({
-          title: "Error",
-          description: "Failed to add skill",
+          title: t('actions.error'),
+          description: t('actions.failedToAddSkill'),
           variant: "destructive"
         });
         return;
@@ -306,15 +306,15 @@ export default function Profile() {
       
       clearTimeout(timeoutId);
       toast({
-        title: "Success",
-        description: "Skill added successfully!"
+        title: t('actions.success'),
+        description: t('actions.skillAddedSuccessfully')
       });
     } catch (error) {
       clearTimeout(timeoutId);
       console.error('Error adding skill:', error);
       toast({
-        title: "Error",
-        description: "Failed to add skill",
+        title: t('actions.error'),
+        description: t('actions.failedToAddSkill'),
         variant: "destructive"
       });
     } finally {
@@ -338,8 +338,8 @@ export default function Profile() {
       if (error) {
         console.error('Error removing skill:', error);
         toast({
-          title: "Error",
-          description: "Failed to remove skill",
+          title: t('actions.error'),
+          description: t('actions.failedToRemoveSkill'),
           variant: "destructive"
         });
         return;
@@ -350,14 +350,14 @@ export default function Profile() {
       });
       
       toast({
-        title: "Success",
-        description: "Skill removed successfully!"
+        title: t('actions.success'),
+        description: t('actions.skillRemovedSuccessfully')
       });
     } catch (error) {
       console.error('Error removing skill:', error);
       toast({
-        title: "Error",
-        description: "Failed to remove skill",
+        title: t('actions.error'),
+        description: t('actions.failedToRemoveSkill'),
         variant: "destructive"
       });
     } finally {

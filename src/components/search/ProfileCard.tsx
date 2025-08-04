@@ -39,7 +39,7 @@ export const ProfileCard = React.memo(({ user, isBlurred = false, searchResult }
 
     // For authenticated users, show invitation modal
     if (user.id === currentUser?.id) {
-      toast.error("You cannot send an invitation to yourself");
+      toast.error(t('actions.cannotInviteSelf'));
       return;
     }
 
