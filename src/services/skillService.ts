@@ -318,10 +318,10 @@ export const getPopularSkillsFromDatabase = async (limit: number = 20): Promise<
 
     logger.debug('Popular skills found:', popularSkills);
 
-    // If no skills found in database, return default skills
+    // If no skills found in database, return empty array (no mock data)
     if (popularSkills.length === 0) {
-      logger.debug('No skills found in database, using default skills');
-      return getDefaultPopularSkills(limit);
+      logger.debug('No skills found in database, returning empty array');
+      return [];
     }
 
     // Add category information for each skill
@@ -334,37 +334,11 @@ export const getPopularSkillsFromDatabase = async (limit: number = 20): Promise<
     return skillsWithCategory;
   } catch (error) {
     logger.error('Error in getPopularSkillsFromDatabase:', error);
-    return getDefaultPopularSkills(limit);
+    return []; // Return empty array instead of mock data
   }
 };
 
-// Helper function to get default popular skills when database is empty
-const getDefaultPopularSkills = (limit: number = 20): DatabaseSkill[] => {
-  const defaultSkills = [
-    { name: "JavaScript", count: 15, category: "Programming & Tech" },
-    { name: "Python", count: 12, category: "Programming & Tech" },
-    { name: "React", count: 10, category: "Programming & Tech" },
-    { name: "Cooking", count: 8, category: "Culinary Arts" },
-    { name: "Guitar", count: 7, category: "Music & Arts" },
-    { name: "Spanish", count: 6, category: "Languages" },
-    { name: "Photography", count: 5, category: "Music & Arts" },
-    { name: "Yoga", count: 4, category: "Health & Wellness" },
-    { name: "Marketing", count: 4, category: "Business & Professional" },
-    { name: "Drawing", count: 3, category: "Music & Arts" },
-    { name: "Fitness", count: 3, category: "Health & Wellness" },
-    { name: "Writing", count: 3, category: "Writing & Communication" },
-    { name: "Piano", count: 2, category: "Music & Arts" },
-    { name: "French", count: 2, category: "Languages" },
-    { name: "Baking", count: 2, category: "Culinary Arts" },
-    { name: "Web Development", count: 2, category: "Programming & Tech" },
-    { name: "Public Speaking", count: 2, category: "Business & Professional" },
-    { name: "Swimming", count: 1, category: "Health & Wellness" },
-    { name: "Singing", count: 1, category: "Music & Arts" },
-    { name: "Data Analysis", count: 1, category: "Science & Education" }
-  ];
-
-  return defaultSkills.slice(0, limit);
-};
+// Mock data function removed - only real database data is used
 
 // Helper function to find category for a skill (import from skills.ts)
 import { logger } from '@/utils/logger';

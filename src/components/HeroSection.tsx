@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import heroImage from "@/assets/hero-image.jpg";
-import { POPULAR_SKILLS, getSkillTranslation } from "@/data/skills";
+import { getSkillTranslation } from "@/data/skills";
 import { isSearchDisabled } from "@/utils/userValidation";
 import { getPopularSkillsFromDatabase, getCategoryEmoji, DatabaseSkill } from "@/services/skillService";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -35,12 +35,8 @@ export const HeroSection = () => {
         setPopularSkills(skills);
       } catch (error) {
         logger.error('Error fetching popular skills:', error);
-        // Fallback to static skills if database fetch fails
-        setPopularSkills(POPULAR_SKILLS.map(skill => ({
-          name: skill.name,
-          count: 1,
-          category: skill.category
-        })));
+        // No fallback - only show real data
+        setPopularSkills([]);
       } finally {
         setIsLoadingSkills(false);
       }
@@ -145,7 +141,7 @@ export const HeroSection = () => {
                     Loading...
                   </div>
                 ))
-              ) : (
+              ) : popularSkills.length > 0 ? (
                 popularSkills.slice(0, 12).map((skill) => (
                   <button
                     key={skill.name}
@@ -164,25 +160,37 @@ export const HeroSection = () => {
                     <span className="ml-1 sm:ml-2 text-xs opacity-75">({skill.count})</span>
                   </button>
                 ))
+              ) : (
+                <div className="text-white/60 text-sm sm:text-base">
+                  No skills available yet. Be the first to add your skills!
+                </div>
               )}
             </div>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 max-w-3xl mx-auto px-4">
-            <div className="text-center">
-              <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-1 sm:mb-2">10K+</div>
-              <div className="text-white/80 text-sm sm:text-base">{t('hero.stats.learners')}</div>
+          {/* Stats - Only show when we have real data */}
+          {popularSkills.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 max-w-3xl mx-auto px-4">
+              <div className="text-center">
+                <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-1 sm:mb-2">
+                  {popularSkills.reduce((total, skill) => total + skill.count, 0)}
+                </div>
+                <div className="text-white/80 text-sm sm:text-base">{t('hero.stats.teachers')}</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-1 sm:mb-2">
+                  {popularSkills.length}
+                </div>
+                <div className="text-white/80 text-sm sm:text-base">Skills Available</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-1 sm:mb-2">
+                  {Math.max(...popularSkills.map(s => s.count))}
+                </div>
+                <div className="text-white/80 text-sm sm:text-base">Most Popular</div>
+              </div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-1 sm:mb-2">5K+</div>
-              <div className="text-white/80 text-sm sm:text-base">{t('hero.stats.teachers')}</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-1 sm:mb-2">25K+</div>
-              <div className="text-white/80 text-sm sm:text-base">{t('hero.stats.exchanges')}</div>
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
