@@ -31,18 +31,34 @@ export default defineConfig(({ mode }) => ({
       },
     },
     chunkSizeWarningLimit: 1000,
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: mode === 'production',
-        drop_debugger: mode === 'production',
-      },
-    },
+    minify: 'esbuild', // Use esbuild for faster builds
+    target: 'esnext', // Target modern browsers
+    sourcemap: mode === 'development',
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', '@supabase/supabase-js'],
+    include: [
+      'react', 
+      'react-dom', 
+      '@supabase/supabase-js',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      'date-fns',
+      'clsx',
+      'tailwind-merge'
+    ],
+    exclude: ['@vitejs/plugin-react-swc'], // Exclude from optimization
+  },
+  esbuild: {
+    // Optimize esbuild configuration
+    target: 'esnext',
+    format: 'esm',
+    treeShaking: true,
+    minifyIdentifiers: mode === 'production',
+    minifySyntax: mode === 'production',
+    minifyWhitespace: mode === 'production',
   },
   define: {
     __DEV__: mode === 'development',
+    'process.env.NODE_ENV': JSON.stringify(mode),
   },
 }));

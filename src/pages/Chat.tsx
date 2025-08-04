@@ -17,8 +17,8 @@ import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '@/hooks/useLanguage';
 import { transliterateName } from '@/utils/translationUtils';
-import { 
 import { logger } from '@/utils/logger';
+import { 
   Send, 
   ArrowLeft, 
   Play, 

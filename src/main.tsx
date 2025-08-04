@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
+import { logger } from '@/utils/logger';
 
 // Register service worker for PWA
 if ('serviceWorker' in navigator) {
@@ -18,7 +19,6 @@ if ('serviceWorker' in navigator) {
 
 // Add global error handler for development
 if (import.meta.env.DEV) {
-import { logger } from '@/utils/logger';
   window.addEventListener('error', (event) => {
     logger.error('Global error:', event.error);
   });

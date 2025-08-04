@@ -184,7 +184,7 @@ const SearchResultsPage = () => {
         logger.debug('🔍 DEBUG: Transformed users:', transformedUsers.length);
         logger.debug('🔍 DEBUG: Sample users with skills:');
         transformedUsers.slice(0, 5).forEach(user => {
-          logger.debug('  - ${user.name}: [${user.skills.join(', ')}]`);
+          logger.debug(`  - ${user.name}: [${user.skills.join(', ')}]`);
         });
         
         // Debug: Log raw skills data from database
@@ -196,7 +196,7 @@ const SearchResultsPage = () => {
         // Debug: Show all users regardless of search term for testing
         logger.debug('🔍 DEBUG: All users available for search:', transformedUsers.length);
         transformedUsers.forEach((user, index) => {
-          logger.debug('User ${index + 1}: ${user.name} - Skills: [${user.skills.join(', ')}]`);
+                      logger.debug(`User ${index + 1}: ${user.name} - Skills: [${user.skills.join(', ')}]`);
         });
         
         // Debug: Check for "Accounting" specifically
@@ -205,7 +205,7 @@ const SearchResultsPage = () => {
         );
         console.log('🔍 DEBUG: Users with "Accounting" skill:', accountingUsers.length);
         accountingUsers.forEach((user, index) => {
-          logger.debug('Accounting User ${index + 1}: ${user.name} - Skills: [${user.skills.join(', ')}]`);
+                      logger.debug(`Accounting User ${index + 1}: ${user.name} - Skills: [${user.skills.join(', ')}]`);
         });
         
         logger.debug('🔍 DEBUG: Setting users in SearchResults:', transformedUsers.length);
