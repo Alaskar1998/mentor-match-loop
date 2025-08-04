@@ -13,13 +13,14 @@ import { getPopularSkillsFromDatabase, getCategoryEmoji, DatabaseSkill } from "@
 import { useLanguage } from "@/hooks/useLanguage";
 
 export const HeroSection = () => {
+  const navigate = useNavigate();
+  const { user, isSessionRestoring } = useAuth();
+  const { t } = useTranslation();
+  const { language } = useLanguage();
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [popularSkills, setPopularSkills] = useState<DatabaseSkill[]>([]);
   const [isLoadingSkills, setIsLoadingSkills] = useState(true);
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const { t } = useTranslation();
-  const { language } = useLanguage();
 
   // Use centralized validation
   const searchDisabled = isSearchDisabled(user?.name);
@@ -46,6 +47,18 @@ export const HeroSection = () => {
 
     fetchPopularSkills();
   }, []);
+
+  // Show loading state while session is being restored
+  if (isSessionRestoring) {
+    return (
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-white/90">Loading...</p>
+        </div>
+      </section>
+    );
+  }
 
   const handleSearch = (skill?: string) => {
     // Prevent search if user is disabled

@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { isSearchDisabled } from "@/utils/userValidation";
 
 export const Header = () => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, isSessionRestoring } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { isRTL } = useLanguage();
@@ -25,6 +25,19 @@ export const Header = () => {
 
   // Use centralized validation
   const searchDisabled = isSearchDisabled(user?.name);
+
+  // Show loading state while session is being restored
+  if (isSessionRestoring) {
+    return (
+      <nav className="bg-background/80 backdrop-blur-sm border-b sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-center">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+          </div>
+        </div>
+      </nav>
+    );
+  }
 
   const handleSearch = () => {
     // Prevent search if user is disabled

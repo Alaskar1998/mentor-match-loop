@@ -91,7 +91,14 @@ const ChatMessageComponent = React.memo(({
 
   return (
     <div key={msg.id} className={`flex gap-2 mb-3 sm:mb-4 ${isCurrentUser ? 'flex-row-reverse' : ''}`}>
-      <Avatar className="w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0">
+      <Avatar 
+        className="w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+        onClick={() => {
+          if (!isCurrentUser && otherUser?.id) {
+            window.open(`/profile/${otherUser.id}`, '_blank');
+          }
+        }}
+      >
         <AvatarImage src={isCurrentUser ? currentUserAvatar : otherUser?.avatar_url} />
         <AvatarFallback className="text-xs sm:text-sm">
           {isCurrentUser 
@@ -1395,7 +1402,10 @@ const Chat = React.memo(() => {
                 <span className="hidden sm:inline">{t('actions.backToMessages')}</span>
               </Button>
               <div className="flex items-center gap-2 sm:gap-3">
-                <Avatar className="w-8 h-8 sm:w-10 sm:h-10">
+                <Avatar 
+                  className="w-8 h-8 sm:w-10 sm:h-10 cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => window.open(`/profile/${otherUser.id}`, '_blank')}
+                >
                   <AvatarImage src={otherUser.avatar_url} />
                   <AvatarFallback>
                     {otherUser.display_name?.charAt(0).toUpperCase() || 'U'}

@@ -361,7 +361,10 @@ export default function Messages() {
               >
                 <CardContent className="p-4">
                   <div className="flex items-center gap-4">
-                    <Avatar className="h-12 w-12">
+                    <Avatar 
+                      className="h-12 w-12 cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => window.open(`/profile/${chat.recipientId}`, '_blank')}
+                    >
                       <AvatarImage src={chat.recipientAvatar} />
                       <AvatarFallback>
                         {chat.recipientName.charAt(0).toUpperCase()}
@@ -370,7 +373,10 @@ export default function Messages() {
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <h3 className="font-semibold text-foreground truncate">
+                        <h3 
+                          className="font-semibold text-foreground truncate cursor-pointer hover:text-primary transition-colors"
+                          onClick={() => window.open(`/profile/${chat.recipientId}`, '_blank')}
+                        >
                           {chat.recipientName}
                         </h3>
                         <div className="flex items-center gap-2 flex-shrink-0">

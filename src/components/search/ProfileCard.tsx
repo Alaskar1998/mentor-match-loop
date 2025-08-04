@@ -134,7 +134,10 @@ export const ProfileCard = React.memo(({ user, isBlurred = false, searchResult }
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 mb-4">
           {/* Avatar */}
           <div className="flex-shrink-0">
-            <Avatar className="w-12 h-12 sm:w-16 sm:h-16">
+            <Avatar 
+              className="w-12 h-12 sm:w-16 sm:h-16 cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => navigate(`/profile/${user.id}`)}
+            >
               <AvatarImage src={user.profilePicture} alt={user.name} />
               <AvatarFallback className="bg-gradient-primary text-white text-lg sm:text-xl">
                 {user.name.charAt(0).toUpperCase()}
@@ -145,7 +148,10 @@ export const ProfileCard = React.memo(({ user, isBlurred = false, searchResult }
           {/* Name & Info */}
           <div className="flex-1 min-w-0">
             <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
-              <h3 className="text-base sm:text-lg font-semibold text-foreground truncate">
+              <h3 
+                className="text-base sm:text-lg font-semibold text-foreground truncate cursor-pointer hover:text-primary transition-colors"
+                onClick={() => navigate(`/profile/${user.id}`)}
+              >
                 {user.name}
               </h3>
               <div className="flex items-center gap-1 sm:gap-2">
@@ -253,7 +259,7 @@ export const ProfileCard = React.memo(({ user, isBlurred = false, searchResult }
           recipientName={user.name}
           userType={currentUser.userType}
           remainingInvites={currentUser.remainingInvites}
-          appCoins={currentUser.appCoins}
+          isPremium={currentUser.userType === 'premium'}
           skillsToTeach={user.skills || []}
         />
       )}

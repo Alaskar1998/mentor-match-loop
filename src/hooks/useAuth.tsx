@@ -13,6 +13,7 @@ interface User {
   age_range?: string;
   gender?: string;
   phone?: string;
+  role?: string;
   skillsToTeach: Array<{
     name: string;
     level: string;
@@ -131,10 +132,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                   age_range: '',
                   gender: '',
                   phone: '',
+                  role: 'user',
                   skillsToTeach: [],
                   skillsToLearn: [],
                   willingToTeachWithoutReturn: false,
-                  userType: "free",
+                  userType: "free", // Default for error cases
                   remainingInvites: 3,
                   appCoins: 50,
                   phoneVerified: false,
@@ -160,16 +162,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                   age_range: (profile as any).age_range, // Type assertion for age_range
                   gender: profile.gender,
                   phone: profile.phone,
+                  role: profile.role,
                   skillsToTeach: Array.isArray(profile.skills_to_teach) ? profile.skills_to_teach as Array<{name: string; level: string; description: string; category?: string}> : [],
                   skillsToLearn: profile.skills_to_learn || [],
                   willingToTeachWithoutReturn: profile.willing_to_teach_without_return || false,
-                  userType: "free", // TODO: Check subscription status from database
+                  userType: profile.user_type || "free", // Read user_type from database
                   remainingInvites: 3,
                   appCoins: 50,
                   phoneVerified: false,
                   successfulExchanges: 0,
                   rating: 5.0
                 };
+                console.log('🔍 User type from database:', profile.user_type, '→ Mapped to:', userData.userType);
                 console.log('Mapped user data:', userData);
                 setUser(userData);
                 setIsAuthenticated(true);
@@ -189,6 +193,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                 age_range: '',
                 gender: '',
                 phone: '',
+                role: 'user',
                 skillsToTeach: [],
                 skillsToLearn: [],
                 willingToTeachWithoutReturn: false,

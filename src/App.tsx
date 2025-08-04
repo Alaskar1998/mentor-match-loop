@@ -9,7 +9,7 @@ import { MonetizationProvider } from "@/hooks/useMonetization";
 import { NotificationProvider } from "@/hooks/useNotifications";
 import { LanguageProvider } from "@/hooks/useLanguage";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useState, useEffect } from "react";
 import '@/i18n'; // Import to initialize i18n
 
 // Lazy load pages for better performance
@@ -29,6 +29,14 @@ const MyExchanges = lazy(() => import("./pages/MyExchanges"));
 const Gamification = lazy(() => import("./pages/Gamification"));
 const ContactSupport = lazy(() => import("./pages/ContactSupport"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+
+// Admin pages
+const AdminLayout = lazy(() => import("./components/admin/AdminLayout"));
+const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
+const AdminUsers = lazy(() => import("./pages/admin/Users"));
+const AdminInvitations = lazy(() => import("./pages/admin/Invitations"));
+const AdminChats = lazy(() => import("./pages/admin/Chats"));
+const AdminReviews = lazy(() => import("./pages/admin/Reviews"));
 
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
@@ -70,59 +78,88 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => (
-  <ErrorBoundary>
+const App = () => {
+  // Development-specific fix for refresh issues
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    // Ensure component is properly mounted in development
+    if (import.meta.env.DEV) {
+      const timer = setTimeout(() => {
+        setMounted(true);
+      }, 0);
+      return () => clearTimeout(timer);
+    } else {
+      setMounted(true);
+    }
+  }, []);
+
+  // Show loading while mounting in development
+  if (import.meta.env.DEV && !mounted) {
+    return <PageLoader />;
+  }
+
+  return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <LanguageProvider>
           <AuthProvider>
             <NotificationProvider>
-              {/* Temporarily disabled for performance optimization */}
-              {/* <GamificationProvider> */}
-                <MonetizationProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <div className="min-h-screen flex flex-col overflow-x-hidden">
-                <Header />
-                <main className="flex-1 overflow-x-hidden">
-                  <Suspense fallback={<PageLoader />}>
-                    <Routes>
-                      <Route path="/" element={<Index />} />
-                      <Route path="/pricing" element={<Pricing />} />
-                      <Route path="/privacy" element={<PrivacyPolicy />} />
-                      <Route path="/terms" element={<TermsOfUse />} />
-                      <Route path="/settings" element={<Settings />} />
-                      <Route path="/help" element={<Help />} />
-                      <Route path="/contact" element={<ContactSupport />} />
-                      <Route path="/search" element={<SearchResults />} />
-                      <Route path="/requests-feed" element={<RequestsFeed />} />
-                      <Route path="/chat/:chatId" element={<Chat />} />
-                      <Route path="/messages" element={<Messages />} />
-                      <Route path="/my-exchanges" element={<MyExchanges />} />
-                      <Route path="/profile" element={<Profile />} />
-                      <Route path="/profile/:id" element={<ProfileView />} />
-                      <Route path="/gamification" element={<Gamification />} />
-                      {/* Redirect old dashboard/invites?tab=... to /my-exchanges?tab=... */}
-                      <Route path="/dashboard/invites" element={<DashboardInvitesRedirect />} />
-                      <Route path="/dashboard/messages" element={<MyExchanges />} />
-                      <Route path="/dashboard" element={<MyExchanges />} />
-                      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </Suspense>
-                </main>
-                <Footer />
-              </div>
-            </BrowserRouter>
-            </MonetizationProvider>
-            {/* </GamificationProvider> */}
+              <MonetizationProvider>
+                <BrowserRouter>
+                  <ErrorBoundary>
+                    <div className="min-h-screen flex flex-col overflow-x-hidden">
+                      <Header />
+                      <main className="flex-1 overflow-x-hidden">
+                        <Suspense fallback={<PageLoader />}>
+                          <Routes>
+                            <Route path="/" element={<Index />} />
+                            <Route path="/pricing" element={<Pricing />} />
+                            <Route path="/privacy" element={<PrivacyPolicy />} />
+                            <Route path="/terms" element={<TermsOfUse />} />
+                            <Route path="/settings" element={<Settings />} />
+                            <Route path="/help" element={<Help />} />
+                            <Route path="/contact" element={<ContactSupport />} />
+                            <Route path="/search" element={<SearchResults />} />
+                            <Route path="/requests-feed" element={<RequestsFeed />} />
+                            <Route path="/chat/:chatId" element={<Chat />} />
+                            <Route path="/messages" element={<Messages />} />
+                            <Route path="/my-exchanges" element={<MyExchanges />} />
+                            <Route path="/profile" element={<Profile />} />
+                            <Route path="/profile/:id" element={<ProfileView />} />
+                            <Route path="/gamification" element={<Gamification />} />
+                            
+                            {/* Admin routes */}
+                            <Route path="/admin" element={<AdminLayout title="Admin Dashboard" />}>
+                              <Route index element={<AdminDashboard />} />
+                              <Route path="users" element={<AdminUsers />} />
+                              <Route path="invitations" element={<AdminInvitations />} />
+                              <Route path="chats" element={<AdminChats />} />
+                              <Route path="reviews" element={<AdminReviews />} />
+                            </Route>
+                            
+                            {/* Redirect old dashboard/invites?tab=... to /my-exchanges?tab=... */}
+                            <Route path="/dashboard/invites" element={<DashboardInvitesRedirect />} />
+                            <Route path="/dashboard/messages" element={<MyExchanges />} />
+                            <Route path="/dashboard" element={<MyExchanges />} />
+                            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                            <Route path="*" element={<NotFound />} />
+                          </Routes>
+                        </Suspense>
+                      </main>
+                      <Footer />
+                    </div>
+                    <Toaster />
+                    <Sonner />
+                  </ErrorBoundary>
+                </BrowserRouter>
+              </MonetizationProvider>
             </NotificationProvider>
           </AuthProvider>
         </LanguageProvider>
       </TooltipProvider>
     </QueryClientProvider>
-  </ErrorBoundary>
-);
+  );
+};
 
 export default App;

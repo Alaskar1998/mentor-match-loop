@@ -1033,13 +1033,21 @@ const MyExchanges = () => {
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-4">
-                          <Avatar className="w-12 h-12">
+                          <Avatar 
+                            className="w-12 h-12 cursor-pointer hover:opacity-80 transition-opacity"
+                            onClick={() => window.open(`/profile/${exchange.otherUser.id}`, '_blank')}
+                          >
                             <AvatarImage src={exchange.otherUser.avatar || undefined} />
                             <AvatarFallback>{exchange.otherUser.name.charAt(0)}</AvatarFallback>
                           </Avatar>
                           <div>
                             <div className="flex items-center gap-2 mb-1">
-                              <h3 className="font-semibold">{exchange.otherUser.name}</h3>
+                              <h3 
+                                className="font-semibold cursor-pointer hover:text-primary transition-colors"
+                                onClick={() => window.open(`/profile/${exchange.otherUser.id}`, '_blank')}
+                              >
+                                {exchange.otherUser.name}
+                              </h3>
                               <Badge className={getStatusConfig(exchange.status, exchange.type).color}>
                                 {getStatusConfig(exchange.status, exchange.type).label}
                               </Badge>
@@ -1095,13 +1103,21 @@ const MyExchanges = () => {
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-4">
-                          <Avatar className="w-12 h-12">
+                          <Avatar 
+                            className="w-12 h-12 cursor-pointer hover:opacity-80 transition-opacity"
+                            onClick={() => window.open(`/profile/${invite.otherUser.id}`, '_blank')}
+                          >
                             <AvatarImage src={invite.otherUser.avatar || undefined} />
                             <AvatarFallback>{invite.otherUser.name.charAt(0)}</AvatarFallback>
                           </Avatar>
                           <div>
                             <div className="flex items-center gap-2 mb-1">
-                              <h3 className="font-semibold">{invite.otherUser.name}</h3>
+                              <h3 
+                                className="font-semibold cursor-pointer hover:text-primary transition-colors"
+                                onClick={() => window.open(`/profile/${invite.otherUser.id}`, '_blank')}
+                              >
+                                {invite.otherUser.name}
+                              </h3>
                               <Badge className={getStatusConfig(invite.status, invite.type).color}>
                                 {getStatusConfig(invite.status, invite.type).label}
                               </Badge>
@@ -1190,13 +1206,21 @@ const MyExchanges = () => {
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-4">
-                          <Avatar className="w-12 h-12">
+                          <Avatar 
+                            className="w-12 h-12 cursor-pointer hover:opacity-80 transition-opacity"
+                            onClick={() => window.open(`/profile/${invite.otherUser.id}`, '_blank')}
+                          >
                             <AvatarImage src={invite.otherUser.avatar || undefined} />
                             <AvatarFallback>{invite.otherUser.name.charAt(0)}</AvatarFallback>
                           </Avatar>
                           <div>
                             <div className="flex items-center gap-2 mb-1">
-                              <h3 className="font-semibold">{invite.otherUser.name}</h3>
+                              <h3 
+                                className="font-semibold cursor-pointer hover:text-primary transition-colors"
+                                onClick={() => window.open(`/profile/${invite.otherUser.id}`, '_blank')}
+                              >
+                                {invite.otherUser.name}
+                              </h3>
                               <Badge className={getStatusConfig(invite.status, invite.type).color}>
                                 {getStatusConfig(invite.status, invite.type).label}
                               </Badge>
@@ -1232,13 +1256,21 @@ const MyExchanges = () => {
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-4">
-                          <Avatar className="w-12 h-12">
+                          <Avatar 
+                            className="w-12 h-12 cursor-pointer hover:opacity-80 transition-opacity"
+                            onClick={() => window.open(`/profile/${exchange.otherUser.id}`, '_blank')}
+                          >
                             <AvatarImage src={exchange.otherUser.avatar || undefined} />
                             <AvatarFallback>{exchange.otherUser.name.charAt(0)}</AvatarFallback>
                           </Avatar>
                           <div>
                             <div className="flex items-center gap-2 mb-1">
-                              <h3 className="font-semibold">{exchange.otherUser.name}</h3>
+                              <h3 
+                                className="font-semibold cursor-pointer hover:text-primary transition-colors"
+                                onClick={() => window.open(`/profile/${exchange.otherUser.id}`, '_blank')}
+                              >
+                                {exchange.otherUser.name}
+                              </h3>
                               <Badge className={getStatusConfig(exchange.status, exchange.type).color}>
                                 {getStatusConfig(exchange.status, exchange.type).label}
                               </Badge>

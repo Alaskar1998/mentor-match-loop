@@ -1,21 +1,17 @@
--- Fix reviews table structure
--- This script will check and recreate the reviews table with the correct structure
+-- Force recreate reviews table with correct structure
+-- This script will completely recreate the table regardless of current state
 
--- 1. Check if reviews table exists and its current structure
-SELECT 
-  'Current table structure' as check_type,
-  column_name,
-  data_type,
-  is_nullable
-FROM information_schema.columns 
-WHERE table_schema = 'public' 
-AND table_name = 'reviews'
-ORDER BY ordinal_position;
+-- 1. Drop all policies first
+DROP POLICY IF EXISTS "Users can view all reviews" ON public.reviews;
+DROP POLICY IF EXISTS "Users can create reviews they write" ON public.reviews;
+DROP POLICY IF EXISTS "Users can update reviews they wrote" ON public.reviews;
+DROP POLICY IF EXISTS "Admins can view all reviews" ON public.reviews;
+DROP POLICY IF EXISTS "Admins can update any review" ON public.reviews;
 
--- 2. Drop the existing reviews table if it exists (this will also drop all data)
+-- 2. Drop the table completely (this will remove all data)
 DROP TABLE IF EXISTS public.reviews CASCADE;
 
--- 3. Create the reviews table with the correct structure
+-- 3. Create the table with the EXACT structure from the migration
 CREATE TABLE public.reviews (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   reviewer_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -28,10 +24,10 @@ CREATE TABLE public.reviews (
   UNIQUE(reviewer_id, reviewee_id, chat_id)
 );
 
--- 4. Enable RLS on reviews table
+-- 4. Enable RLS
 ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
 
--- 5. Create RLS policies for reviews
+-- 5. Create basic policies
 CREATE POLICY "Users can view all reviews"
 ON public.reviews 
 FOR SELECT 
@@ -47,7 +43,7 @@ ON public.reviews
 FOR UPDATE 
 USING (auth.uid() = reviewer_id);
 
--- 6. Add admin-specific policies
+-- 6. Create admin policies
 CREATE POLICY "Admins can view all reviews"
 ON public.reviews 
 FOR SELECT 
@@ -69,14 +65,14 @@ USING (
   )
 );
 
--- 7. Create indexes for better performance
+-- 7. Create indexes
 CREATE INDEX idx_reviews_reviewee ON public.reviews(reviewee_id);
 CREATE INDEX idx_reviews_reviewer ON public.reviews(reviewer_id);
 CREATE INDEX idx_reviews_created_at ON public.reviews(created_at DESC);
 
--- 8. Verify the table structure
+-- 8. Verify the structure
 SELECT 
-  'New table structure' as check_type,
+  'Verification - Table structure' as check_type,
   column_name,
   data_type,
   is_nullable
@@ -85,5 +81,15 @@ WHERE table_schema = 'public'
 AND table_name = 'reviews'
 ORDER BY ordinal_position;
 
--- 9. Test the table
-SELECT 'Test query' as check_type, COUNT(*) as review_count FROM public.reviews; 
+-- 9. Test basic query
+SELECT 'Test - Basic query' as check_type, COUNT(*) as review_count FROM public.reviews;
+
+-- 10. Test with specific columns
+SELECT 'Test - Column access' as check_type,
+       id,
+       reviewer_id,
+       reviewee_id,
+       skill,
+       rating
+FROM public.reviews 
+LIMIT 1; 
