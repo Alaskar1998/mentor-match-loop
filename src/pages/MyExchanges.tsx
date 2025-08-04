@@ -221,6 +221,34 @@ const MyExchanges = () => {
         return;
       }
 
+      // First get active chats for this user
+      const { data: activeChats, error: chatsError } = await supabase
+        .from('chats')
+        .select(`
+          id,
+          user1_id,
+          user2_id,
+          skill,
+          exchange_state,
+          created_at,
+          updated_at
+        `)
+        .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
+        .eq('exchange_state', 'active_exchange');
+
+      if (chatsError) {
+        console.error('Error fetching active chats:', chatsError);
+        setExchanges(prev => ({ ...prev, active: [] }));
+        return;
+      }
+
+      if (!activeChats || activeChats.length === 0) {
+        setExchanges(prev => ({ ...prev, active: [] }));
+        return;
+      }
+
+      // Get the contract data for these active chats
+      const chatIds = activeChats.map(chat => chat.id);
       const { data: contractsData, error: contractsError } = await supabase
         .from('exchange_contracts')
         .select(`
@@ -234,9 +262,7 @@ const MyExchanges = () => {
           created_at,
           updated_at
         `)
-        .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
-        .eq('user1_agreed', true)
-        .eq('user2_agreed', true);
+        .in('chat_id', chatIds);
 
       if (contractsError) {
         console.error('Error fetching active exchanges:', contractsError);
@@ -326,11 +352,17 @@ const MyExchanges = () => {
         };
       });
 
+      // Sort active exchanges from newest to oldest
+      const sortedActiveExchanges = activeExchanges.sort((a, b) => 
+        new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
+
       // Only log in development mode
       if (process.env.NODE_ENV === 'development') {
-        console.log('✅ Active exchanges processed:', activeExchanges.length);
+        console.log('✅ Active exchanges processed:', sortedActiveExchanges.length);
+        console.log('📊 Active exchanges data:', sortedActiveExchanges);
       }
-      setExchanges(prev => ({ ...prev, active: activeExchanges }));
+      setExchanges(prev => ({ ...prev, active: sortedActiveExchanges }));
     } catch (error) {
       console.error('Error in fetchActiveExchanges:', error);
       setExchanges(prev => ({ ...prev, active: [] }));
@@ -351,6 +383,34 @@ const MyExchanges = () => {
         return;
       }
 
+      // First get completed chats for this user
+      const { data: completedChats, error: chatsError } = await supabase
+        .from('chats')
+        .select(`
+          id,
+          user1_id,
+          user2_id,
+          skill,
+          exchange_state,
+          created_at,
+          updated_at
+        `)
+        .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
+        .eq('exchange_state', 'completed');
+
+      if (chatsError) {
+        console.error('Error fetching completed chats:', chatsError);
+        setExchanges(prev => ({ ...prev, completed: [] }));
+        return;
+      }
+
+      if (!completedChats || completedChats.length === 0) {
+        setExchanges(prev => ({ ...prev, completed: [] }));
+        return;
+      }
+
+      // Get the contract data for these completed chats
+      const chatIds = completedChats.map(chat => chat.id);
       const { data: contractsData, error: contractsError } = await supabase
         .from('exchange_contracts')
         .select(`
@@ -365,8 +425,7 @@ const MyExchanges = () => {
           created_at,
           updated_at
         `)
-        .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
-        .not('finished_at', 'is', null);
+        .in('chat_id', chatIds);
 
       if (contractsError) {
         console.error('Error fetching completed exchanges:', contractsError);
@@ -408,12 +467,12 @@ const MyExchanges = () => {
       });
 
       // Check which exchanges the current user has already reviewed
-      const chatIds = contractsData.map(c => c.chat_id);
+      const reviewChatIds = contractsData.map(c => c.chat_id);
       const { data: existingReviews, error: reviewsError } = await supabase
         .from('reviews')
         .select('chat_id')
         .eq('reviewer_id', user.id)
-        .in('chat_id', chatIds);
+        .in('chat_id', reviewChatIds);
 
       if (reviewsError) {
         console.error('Error fetching existing reviews:', reviewsError);
@@ -459,6 +518,7 @@ const MyExchanges = () => {
       // Only log in development mode
       if (process.env.NODE_ENV === 'development') {
         console.log('✅ Completed exchanges processed:', completedExchanges.length);
+        console.log('📊 Completed exchanges data:', completedExchanges);
       }
       
       // Sort completed exchanges from newest to oldest
@@ -526,7 +586,7 @@ const MyExchanges = () => {
         return;
       }
       
-      // First fetch invitations without joins
+      // First fetch invitations without joins - exclude accepted ones
       const { data: invitesData, error: invitesError } = await supabase
         .from('invitations')
         .select(`
@@ -538,7 +598,8 @@ const MyExchanges = () => {
           status,
           created_at
         `)
-        .eq('sender_id', user.id);
+        .eq('sender_id', user.id)
+        .neq('status', 'accepted');
 
       if (invitesError) {
         console.error('Error fetching sent invites:', invitesError);
@@ -593,6 +654,10 @@ const MyExchanges = () => {
           };
         });
 
+      // Only log in development mode
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📊 Sent invites data:', sentInvites);
+      }
       setExchanges(prev => ({ ...prev, sent: sentInvites }));
     } catch (error) {
       console.error('Error in fetchSentInvites:', error);
@@ -610,7 +675,7 @@ const MyExchanges = () => {
         return;
       }
       
-      // First fetch invitations without joins
+      // First fetch invitations without joins - exclude accepted ones
       const { data: invitesData, error: invitesError } = await supabase
         .from('invitations')
         .select(`
@@ -622,7 +687,8 @@ const MyExchanges = () => {
           status,
           created_at
         `)
-        .eq('recipient_id', user.id);
+        .eq('recipient_id', user.id)
+        .neq('status', 'accepted');
 
       if (invitesError) {
         console.error('Error fetching received invites:', invitesError);
@@ -688,6 +754,10 @@ const MyExchanges = () => {
           };
         });
 
+      // Only log in development mode
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📊 Received invites data:', receivedInvites);
+      }
       setExchanges(prev => ({ ...prev, request: receivedInvites }));
     } catch (error) {
       console.error('Error in fetchReceivedInvites:', error);

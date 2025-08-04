@@ -162,6 +162,7 @@ const Chat = React.memo(() => {
   const [showExchangeModal, setShowExchangeModal] = useState(false);
   const [showFinishModal, setShowFinishModal] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const [hasReviewed, setHasReviewed] = useState(false);
   const [isUpdatingState, setIsUpdatingState] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
@@ -429,6 +430,33 @@ const Chat = React.memo(() => {
               setShowFinishModal(true);
             }
           }
+
+          // Auto-open review modal when both users have finished and exchange is completed
+          if (updatedContract && !showReviewModal && exchangeState === 'completed') {
+            const userFinished = contractData.currentUserFinished;
+            const otherUserFinished = contractData.otherUserFinished;
+            
+            // If both users have finished and exchange is completed, check if user has already reviewed
+            if (userFinished && otherUserFinished) {
+                          // Check if user has already submitted a review
+            const { data: existingReview, error: reviewCheckError } = await supabase
+              .from('reviews')
+              .select('id')
+              .eq('chat_id', chatId)
+              .eq('reviewer_id', user.id)
+              .maybeSingle();
+
+            console.log('🔍 Review check result:', { existingReview, reviewCheckError });
+
+            if (!existingReview && !hasReviewed) {
+              console.log('🎯 Auto-opening review modal - exchange completed and user hasn\'t reviewed yet');
+              setShowReviewModal(true);
+            } else {
+              console.log('🎯 User has already reviewed this exchange, not showing modal');
+              setHasReviewed(true);
+            }
+            }
+          }
         }
       } catch (error) {
         console.error('Error in exchange polling:', error);
@@ -516,6 +544,29 @@ const Chat = React.memo(() => {
           };
           setContractData(contractData);
           console.log('✅ Contract data set:', contractData);
+
+          // Check if we should show review modal for completed exchange
+          if (chat.exchange_state === 'completed' && contractData.currentUserFinished && contractData.otherUserFinished) {
+            // Check if user has already submitted a review
+            const { data: existingReview, error: reviewCheckError } = await supabase
+              .from('reviews')
+              .select('id')
+              .eq('chat_id', chatId)
+              .eq('reviewer_id', user.id)
+              .maybeSingle();
+
+            console.log('🔍 Initial review check result:', { existingReview, reviewCheckError });
+
+            if (!existingReview && !hasReviewed) {
+              console.log('🎯 Showing review modal for completed exchange');
+              setTimeout(() => {
+                setShowReviewModal(true);
+              }, 1000);
+            } else {
+              console.log('🎯 User has already reviewed this exchange, not showing modal');
+              setHasReviewed(true);
+            }
+          }
         }
       } catch (contractError) {
         console.log('⚠️ Contract table not found or no contract exists yet');
@@ -1298,6 +1349,7 @@ const Chat = React.memo(() => {
     toast.success("Thank you!", {
       description: "Your review helps improve our community. Keep learning and teaching!",
     });
+    setHasReviewed(true);
   };
 
   // Memoize the renderMessage function to prevent unnecessary re-renders
