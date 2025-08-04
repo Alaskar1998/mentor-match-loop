@@ -1,4 +1,5 @@
 import { getAllSkills, searchSkillsBilingual, findSkillByTranslation, getSkillTranslation } from "@/data/skills";
+import { logger } from '@/utils/logger';
 
 export interface SearchResult {
   user: any;
@@ -38,7 +39,7 @@ class SearchService {
   }
 
   private async _initialize(users: any[]) {
-    console.log('SearchService: Initializing with', users.length, 'users');
+    logger.debug('SearchService: Initializing with', users.length, 'users');
     
     // Extract all unique skills for suggestion generation
     this.allSkills.clear();
@@ -86,7 +87,7 @@ class SearchService {
       this.allSkills.add(skill.toLowerCase());
     });
     
-    console.log('SearchService: Extracted skills:', Array.from(this.allSkills));
+    logger.debug('SearchService: Extracted skills:', Array.from(this.allSkills));
     this.isInitialized = true;
   }
 
@@ -107,8 +108,8 @@ class SearchService {
     // Log search term for analytics
     this.logSearchTerm(term);
 
-    console.log('SearchService: Searching for term:', term);
-    console.log('SearchService: Users available:', users.length);
+    logger.debug('SearchService: Searching for term:', term);
+    logger.debug('SearchService: Users available:', users.length);
 
     // Initialize if not already done
     if (!this.isInitialized) {
@@ -126,10 +127,10 @@ class SearchService {
         matchedSkills: user.skills,
         matchType: 'debug' as any
       }));
-      console.log('🔍 DEBUG: All users for advertising search:', debugResults);
+      logger.debug('🔍 DEBUG: All users for advertising search:', debugResults);
       
       // Also check what the popular skills function would see
-      console.log('🔍 DEBUG: Checking what popular skills function sees...');
+      logger.debug('🔍 DEBUG: Checking what popular skills function sees...');
       const skillCounts: { [key: string]: number } = {};
       users.forEach(user => {
         if (Array.isArray(user.skills)) {
@@ -143,7 +144,7 @@ class SearchService {
           });
         }
       });
-      console.log('🔍 DEBUG: Skill counts from search users:', skillCounts);
+      logger.debug('🔍 DEBUG: Skill counts from search users:', skillCounts);
       console.log('🔍 DEBUG: "Advertising" count in search users:', skillCounts['Advertising'] || 0);
     }
     
@@ -168,22 +169,22 @@ class SearchService {
 
     // First, try to find English skill names that match the search term
     const matchingEnglishSkills = searchSkillsBilingual(searchTerm);
-    console.log('SearchService: Searching for term:', searchTerm);
-    console.log('SearchService: Bilingual search found skills:', matchingEnglishSkills);
-    console.log('SearchService: Total users to search:', users.length);
+    logger.debug('SearchService: Searching for term:', searchTerm);
+    logger.debug('SearchService: Bilingual search found skills:', matchingEnglishSkills);
+    logger.debug('SearchService: Total users to search:', users.length);
     
     // Debug: Check if "Advertising" is in the skills list
     const allSkills = getAllSkills();
     console.log('SearchService: "Advertising" in skills list:', allSkills.includes('Advertising'));
     console.log('SearchService: All skills containing "advertising":', allSkills.filter(skill => skill.toLowerCase().includes('advertising')));
 
-    console.log('🔍 DEBUG: Starting to process', users.length, 'users');
-    console.log('🔍 DEBUG: Users array:', users.map(u => ({ name: u.name, skillsCount: Array.isArray(u.skills) ? u.skills.length : 'not array' })));
+    logger.debug('🔍 DEBUG: Starting to process', users.length, 'users');
+    logger.debug('🔍 DEBUG: Users array:', users.map(u => ({ name: u.name, skillsCount: Array.isArray(u.skills) ? u.skills.length : 'not array' })));
     
     users.forEach((user, index) => {
-      console.log(`🔍 DEBUG: Processing user ${index + 1}/${users.length}:`, user.name, 'with skills:', user.skills);
+      logger.debug('🔍 DEBUG: Processing user ${index + 1}/${users.length}:', user.name, 'with skills:', user.skills);
       if (!Array.isArray(user.skills)) {
-        console.log('🔍 DEBUG: User', user.name, 'has no skills array, skipping');
+        logger.debug('🔍 DEBUG: User', user.name, 'has no skills array, skipping');
         return;
       }
 
@@ -192,9 +193,9 @@ class SearchService {
       
       // Debug: Log user skills
       if (user.skills.length > 0) {
-        console.log('SearchService: User', user.name, 'has skills:', user.skills);
+        logger.debug('SearchService: User', user.name, 'has skills:', user.skills);
       } else {
-        console.log('SearchService: User', user.name, 'has NO skills');
+        logger.debug('SearchService: User', user.name, 'has NO skills');
       }
 
       user.skills.forEach((skill: any) => {
@@ -213,14 +214,14 @@ class SearchService {
         const skillLower = skillName.toLowerCase().trim();
         const searchTermLower = searchTerm.toLowerCase().trim();
         
-        console.log('🔍 DEBUG: Skill comparison - Original:', skillName, 'Lowercase:', skillLower, 'Search term:', searchTermLower);
-        console.log('🔍 DEBUG: Exact match check:', skillLower === searchTermLower, 'for skill:', skillName);
+        logger.debug('🔍 DEBUG: Skill comparison - Original:', skillName, 'Lowercase:', skillLower, 'Search term:', searchTermLower);
+        logger.debug('🔍 DEBUG: Exact match check:', skillLower === searchTermLower, 'for skill:', skillName);
         
         // Check for exact match first (case-insensitive)
         if (skillLower === searchTermLower) {
           matchedSkills.push(skillName);
           matchType = 'exact';
-          console.log('🔍 DEBUG: Exact match found:', skillName, 'for term:', searchTerm);
+          logger.debug('🔍 DEBUG: Exact match found:', skillName, 'for term:', searchTerm);
         }
         // Check for prefix match
         else if (skillLower.startsWith(searchTermLower)) {
@@ -250,18 +251,18 @@ class SearchService {
 
       // Only add user if they have matched skills
       if (matchedSkills.length > 0) {
-        console.log('🔍 DEBUG: Adding user to results:', user.name, 'with matched skills:', matchedSkills, 'match type:', matchType);
+        logger.debug('🔍 DEBUG: Adding user to results:', user.name, 'with matched skills:', matchedSkills, 'match type:', matchType);
         results.push({
           user,
           matchedSkills: [...new Set(matchedSkills)], // Remove duplicates
           matchType
         });
       } else {
-        console.log('🔍 DEBUG: User', user.name, 'has no matched skills, skipping');
+        logger.debug('🔍 DEBUG: User', user.name, 'has no matched skills, skipping');
       }
     });
 
-    console.log('SearchService: Found', results.length, 'results with bilingual matching');
+    logger.debug('SearchService: Found', results.length, 'results with bilingual matching');
     
     // Sort results: exact matches first, then by match type priority
     return results.sort((a, b) => {
@@ -272,8 +273,8 @@ class SearchService {
 
   // Generate "Did you mean?" suggestion ONLY when no results found
   private generateSuggestion(searchTerm: string): SearchSuggestion | undefined {
-    console.log('SearchService: No results found, generating suggestion for:', searchTerm);
-    console.log('SearchService: Available skills for suggestions:', Array.from(this.allSkills));
+    logger.debug('SearchService: No results found, generating suggestion for:', searchTerm);
+    logger.debug('SearchService: Available skills for suggestions:', Array.from(this.allSkills));
     
     let bestSuggestion = '';
     let bestConfidence = 0;
@@ -292,14 +293,14 @@ class SearchService {
     });
 
     if (bestConfidence > 0.5) {
-      console.log('SearchService: Final suggestion:', bestSuggestion, 'with confidence:', bestConfidence);
+      logger.debug('SearchService: Final suggestion:', bestSuggestion, 'with confidence:', bestConfidence);
       return {
         suggestedTerm: bestSuggestion,
         confidence: bestConfidence
       };
     }
 
-    console.log('SearchService: No strong suggestion found (best confidence was:', bestConfidence, ')');
+    logger.debug('SearchService: No strong suggestion found (best confidence was:', bestConfidence, ')');
     return undefined;
   }
 

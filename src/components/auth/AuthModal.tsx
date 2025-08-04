@@ -27,6 +27,7 @@ import {
 // Only import Json from the correct location
 import { Json } from "@/integrations/supabase/types";
 import { useTranslation } from "react-i18next";
+import { logger } from '@/utils/logger';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -292,11 +293,11 @@ export const AuthModal = ({ isOpen, onClose, onAuthComplete, defaultMode = 'sign
     }
 
     setIsLoading(true);
-    console.log('Starting signup process with formData:', formData);
+    logger.debug('Starting signup process with formData:', formData);
     
     try {
       const result = await signup(formData);
-      console.log('Signup result:', result);
+      logger.debug('Signup result:', result);
       
       if (result.error) {
         setIsLoading(false);
@@ -308,12 +309,12 @@ export const AuthModal = ({ isOpen, onClose, onAuthComplete, defaultMode = 'sign
         return;
       }
       
-      console.log('Signup successful, proceeding to profile update...');
+      logger.debug('Signup successful, proceeding to profile update...');
 
       // Get the current user from session
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) {
-        console.error('No user session after signup');
+        logger.error('No user session after signup');
         setIsLoading(false);
         toast({
           title: "Profile Update Error",
@@ -324,7 +325,7 @@ export const AuthModal = ({ isOpen, onClose, onAuthComplete, defaultMode = 'sign
       }
 
       const currentUser = session.user;
-      console.log('Got current user:', currentUser.id);
+      logger.debug('Got current user:', currentUser.id);
 
       // Update profile with upsert
       const normalizedSkillsToTeach: Skill[] = (formData.skillsToTeach || []).map(skill =>
@@ -349,7 +350,7 @@ export const AuthModal = ({ isOpen, onClose, onAuthComplete, defaultMode = 'sign
       }]);
 
       if (profileError) {
-        console.error('Error updating profile:', profileError);
+        logger.error('Error updating profile:', profileError);
         toast({
           title: "Profile Update Error",
           description: `Failed to update profile: ${profileError.message}`,
@@ -359,7 +360,7 @@ export const AuthModal = ({ isOpen, onClose, onAuthComplete, defaultMode = 'sign
         return;
       }
 
-      console.log('Profile updated successfully');
+      logger.debug('Profile updated successfully');
       
       // Force a profile refresh to ensure auth context has latest data
       try {
@@ -372,7 +373,7 @@ export const AuthModal = ({ isOpen, onClose, onAuthComplete, defaultMode = 'sign
             .single();
           
           if (refreshedProfile) {
-            console.log('Refreshed profile data:', refreshedProfile);
+            logger.debug('Refreshed profile data:', refreshedProfile);
             // Update the auth context with the new profile data
             updateUser({
               name: refreshedProfile.display_name,
@@ -396,7 +397,7 @@ export const AuthModal = ({ isOpen, onClose, onAuthComplete, defaultMode = 'sign
           }
         }
       } catch (refreshError) {
-        console.error('Error refreshing profile after signup:', refreshError);
+        logger.error('Error refreshing profile after signup:', refreshError);
         // Continue anyway - the auth state change will handle it
       }
       
@@ -409,7 +410,7 @@ export const AuthModal = ({ isOpen, onClose, onAuthComplete, defaultMode = 'sign
       onClose();
       
     } catch (error) {
-      console.error('Error in signup process:', error);
+      logger.error('Error in signup process:', error);
       setIsLoading(false);
       toast({
         title: "Signup Error",
@@ -477,7 +478,7 @@ export const AuthModal = ({ isOpen, onClose, onAuthComplete, defaultMode = 'sign
         description: "Your profile picture has been updated.",
       });
     } catch (error) {
-      console.error('Error uploading avatar:', error);
+      logger.error('Error uploading avatar:', error);
       toast({
         title: t('actions.uploadFailed'),
                   description: t('actions.failedToUploadAvatar'),

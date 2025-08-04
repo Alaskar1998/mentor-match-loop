@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Users, BookOpen, Handshake, CheckCircle, Clock, ArrowRight, Sparkles, AlertTriangle, RefreshCw, RotateCcw, XCircle, Circle, CheckCircle2 } from "lucide-react";
+import { logger } from '@/utils/logger';
 
 interface ExchangeModalProps {
   isOpen: boolean;
@@ -232,7 +233,7 @@ export const ExchangeModal = React.memo(({
         await handleAgree();
       }
     } catch (err) {
-      console.error('Retry failed:', err);
+      logger.error('Retry failed:', err);
       setError("Retry failed. Please try again or restart the process.");
       setShowErrorRecovery(true);
     } finally {
@@ -260,7 +261,7 @@ export const ExchangeModal = React.memo(({
       onClose();
       toast.success("Exchange restarted successfully");
     } catch (err) {
-      console.error('Restart failed:', err);
+      logger.error('Restart failed:', err);
       setError("Failed to restart. Please refresh the page.");
     } finally {
       setIsLoading(false);
@@ -269,7 +270,7 @@ export const ExchangeModal = React.memo(({
 
   // Main agreement handler
   const handleAgree = async () => {
-    console.log('🎯 ExchangeModal handleAgree called with:', { selectedSkill });
+    logger.debug('🎯 ExchangeModal handleAgree called with:', { selectedSkill });
     
     setIsLoading(true);
     setError(null);
@@ -277,7 +278,7 @@ export const ExchangeModal = React.memo(({
     try {
       // If we're in contract_proposed state and user hasn't agreed yet, use onFinalAgree
       if (exchangeState === 'contract_proposed' && !contractData?.currentUserAgreed) {
-        console.log('🎯 Calling onFinalAgree for contract agreement');
+        logger.debug('🎯 Calling onFinalAgree for contract agreement');
         await onFinalAgree();
         return;
       }
@@ -290,14 +291,14 @@ export const ExchangeModal = React.memo(({
         return;
       }
 
-      console.log('🎯 Calling onAgree with data:', { userSkill: selectedSkill });
+      logger.debug('🎯 Calling onAgree with data:', { userSkill: selectedSkill });
       await onAgree({
         userSkill: selectedSkill
       });
       
-      console.log('🎯 onAgree called, about to close modal');
+      logger.debug('🎯 onAgree called, about to close modal');
     } catch (err) {
-      console.error('Agreement error:', err);
+      logger.error('Agreement error:', err);
       setError("Failed to save your selection. Please try again.");
       setShowErrorRecovery(true);
     } finally {
@@ -306,7 +307,7 @@ export const ExchangeModal = React.memo(({
   };
 
   const handleDecline = async () => {
-    console.log('🎯 ExchangeModal handleDecline called');
+    logger.debug('🎯 ExchangeModal handleDecline called');
     
     setIsLoading(true);
     setError(null);
@@ -327,7 +328,7 @@ export const ExchangeModal = React.memo(({
       
       toast.success("Exchange declined. You can start a new exchange from the beginning.");
     } catch (err) {
-      console.error('Decline error:', err);
+      logger.error('Decline error:', err);
       setError("Failed to decline the exchange. Please try again.");
       setShowErrorRecovery(true);
     } finally {
@@ -718,7 +719,7 @@ export const ExchangeModal = React.memo(({
                             handleAgree();
                           }
                         } catch (error) {
-                          console.error('Button click error:', error);
+                          logger.error('Button click error:', error);
                           setError("An error occurred. Please try again.");
                         }
                       }}
@@ -754,7 +755,7 @@ export const ExchangeModal = React.memo(({
                             handleAgree();
                           }
                         } catch (error) {
-                          console.error('Button click error:', error);
+                          logger.error('Button click error:', error);
                           setError("An error occurred. Please try again.");
                         }
                       }}
@@ -815,7 +816,7 @@ export const ExchangeModal = React.memo(({
       </Dialog>
     );
   } catch (error) {
-    console.error('Error rendering ExchangeModal:', error);
+    logger.error('Error rendering ExchangeModal:', error);
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto p-0">

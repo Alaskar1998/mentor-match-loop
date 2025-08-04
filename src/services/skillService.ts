@@ -57,7 +57,7 @@ class SkillService {
         .single();
 
       if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
-        console.error('Error validating skill:', error);
+        logger.error('Error validating skill:', error);
         return {
           isValid: false,
           error: 'Database error occurred'
@@ -80,7 +80,7 @@ class SkillService {
         category: 'Other' // Default category for new skills
       };
     } catch (error) {
-      console.error('Error validating skill:', error);
+      logger.error('Error validating skill:', error);
       return {
         isValid: false,
         error: 'Validation failed'
@@ -103,7 +103,7 @@ class SkillService {
         .single();
 
       if (findError && findError.code !== 'PGRST116') {
-        console.error('Error finding skill:', findError);
+        logger.error('Error finding skill:', findError);
         throw new Error('Database error occurred');
       }
 
@@ -124,13 +124,13 @@ class SkillService {
         .single();
 
       if (createError) {
-        console.error('Error creating skill:', createError);
+        logger.error('Error creating skill:', createError);
         throw new Error('Failed to create skill');
       }
 
       return newSkill.name;
     } catch (error) {
-      console.error('Error in getOrCreateSkill:', error);
+      logger.error('Error in getOrCreateSkill:', error);
       throw error;
     }
   }
@@ -147,13 +147,13 @@ class SkillService {
         .order('name');
 
       if (error) {
-        console.error('Error fetching skills:', error);
+        logger.error('Error fetching skills:', error);
         throw new Error('Failed to fetch skills');
       }
 
       return data || [];
     } catch (error) {
-      console.error('Error in getAllSkills:', error);
+      logger.error('Error in getAllSkills:', error);
       throw error;
     }
   }
@@ -171,13 +171,13 @@ class SkillService {
         .order('name');
 
       if (error) {
-        console.error('Error fetching skills by category:', error);
+        logger.error('Error fetching skills by category:', error);
         throw new Error('Failed to fetch skills by category');
       }
 
       return data || [];
     } catch (error) {
-      console.error('Error in getSkillsByCategory:', error);
+      logger.error('Error in getSkillsByCategory:', error);
       throw error;
     }
   }
@@ -194,7 +194,7 @@ class SkillService {
         .order('category');
 
       if (error) {
-        console.error('Error fetching categories:', error);
+        logger.error('Error fetching categories:', error);
         throw new Error('Failed to fetch categories');
       }
 
@@ -202,7 +202,7 @@ class SkillService {
       const categories = [...new Set(data?.map(skill => skill.category) || [])];
       return categories.sort();
     } catch (error) {
-      console.error('Error in getCategories:', error);
+      logger.error('Error in getCategories:', error);
       throw error;
     }
   }
@@ -255,7 +255,7 @@ export const skillService = new SkillService();
 
 export const getPopularSkillsFromDatabase = async (limit: number = 20): Promise<DatabaseSkill[]> => {
   try {
-    console.log('Fetching popular skills from database...');
+    logger.debug('Fetching popular skills from database...');
     
     // Query to get skills that actually exist in user profiles
     const { data, error } = await supabase
@@ -265,18 +265,18 @@ export const getPopularSkillsFromDatabase = async (limit: number = 20): Promise<
       .neq('skills_to_teach', '[]');
 
     if (error) {
-      console.error('Error fetching skills from database:', error);
+      logger.error('Error fetching skills from database:', error);
       return getDefaultPopularSkills(limit);
     }
 
-    console.log('Raw profiles data:', data);
-    console.log('Number of profiles with skills:', data?.length || 0);
+    logger.debug('Raw profiles data:', data);
+    logger.debug('Number of profiles with skills:', data?.length || 0);
 
     // Count occurrences of each skill
     const skillCounts: { [key: string]: number } = {};
     
     data?.forEach(profile => {
-      console.log('Profile skills_to_teach:', profile.skills_to_teach);
+      logger.debug('Profile skills_to_teach:', profile.skills_to_teach);
       
       if (profile.skills_to_teach) {
         // Handle jsonb format - could be array of strings or array of objects
@@ -308,7 +308,7 @@ export const getPopularSkillsFromDatabase = async (limit: number = 20): Promise<
       }
     });
 
-    console.log('Skill counts:', skillCounts);
+    logger.debug('Skill counts:', skillCounts);
 
     // Convert to array and sort by count (most popular first)
     const popularSkills = Object.entries(skillCounts)
@@ -316,11 +316,11 @@ export const getPopularSkillsFromDatabase = async (limit: number = 20): Promise<
       .sort((a, b) => b.count - a.count)
       .slice(0, limit);
 
-    console.log('Popular skills found:', popularSkills);
+    logger.debug('Popular skills found:', popularSkills);
 
     // If no skills found in database, return default skills
     if (popularSkills.length === 0) {
-      console.log('No skills found in database, using default skills');
+      logger.debug('No skills found in database, using default skills');
       return getDefaultPopularSkills(limit);
     }
 
@@ -330,10 +330,10 @@ export const getPopularSkillsFromDatabase = async (limit: number = 20): Promise<
       category: findCategoryForSkill(skill.name)
     }));
 
-    console.log('Final skills with categories:', skillsWithCategory);
+    logger.debug('Final skills with categories:', skillsWithCategory);
     return skillsWithCategory;
   } catch (error) {
-    console.error('Error in getPopularSkillsFromDatabase:', error);
+    logger.error('Error in getPopularSkillsFromDatabase:', error);
     return getDefaultPopularSkills(limit);
   }
 };
@@ -367,6 +367,7 @@ const getDefaultPopularSkills = (limit: number = 20): DatabaseSkill[] => {
 };
 
 // Helper function to find category for a skill (import from skills.ts)
+import { logger } from '@/utils/logger';
 const findCategoryForSkill = (skillName: string): string => {
   const normalizedSkillName = skillName.toLowerCase().trim();
   

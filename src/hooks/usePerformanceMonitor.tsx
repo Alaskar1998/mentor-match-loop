@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
+import { logger } from '@/utils/logger';
 
 interface PerformanceMetrics {
   renderTime: number;
@@ -41,13 +42,13 @@ export const usePerformanceMonitor = (
         memoryUsage: (performance as any).memory?.usedJSHeapSize
       };
 
-      console.warn(`Slow render detected in ${componentName}:`, metrics);
+      logger.warn('Slow render detected in ${componentName}:', metrics);
       onSlowRender?.(metrics);
     }
 
     // Log every 100th render for monitoring
     if (renderCount.current % 100 === 0) {
-      console.log(`${componentName} render count:`, renderCount.current);
+      logger.debug('${componentName} render count:', renderCount.current);
     }
   }, [enabled, threshold, componentName, onSlowRender]);
 

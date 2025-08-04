@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { searchService, SearchResponse } from '@/services/searchService';
+import { logger } from '@/utils/logger';
 
 interface UseOptimizedSearchOptions {
   debounceMs?: number;
@@ -33,21 +34,21 @@ export const useOptimizedSearch = (options: UseOptimizedSearchOptions = {}) => {
       userList.slice(0, 3).map(u => u.id || u.name).join('_') : 'empty';
     const cacheKey = `${term.toLowerCase().trim()}_${userList.length}_${userHash}`;
     
-    console.log('🔍 DEBUG: Search term:', term);
-    console.log('🔍 DEBUG: Cache key:', cacheKey);
-    console.log('🔍 DEBUG: Cache size:', cacheRef.current.size);
-    console.log('🔍 DEBUG: Cache has key:', cacheRef.current.has(cacheKey));
-    console.log('🔍 DEBUG: Available cache keys:', Array.from(cacheRef.current.keys()));
+    logger.debug('🔍 DEBUG: Search term:', term);
+    logger.debug('🔍 DEBUG: Cache key:', cacheKey);
+    logger.debug('🔍 DEBUG: Cache size:', cacheRef.current.size);
+    logger.debug('🔍 DEBUG: Cache has key:', cacheRef.current.has(cacheKey));
+    logger.debug('🔍 DEBUG: Available cache keys:', Array.from(cacheRef.current.keys()));
     
     if (cacheResults && cacheRef.current.has(cacheKey)) {
-      console.log('🔍 DEBUG: Using cached result for:', cacheKey);
+      logger.debug('🔍 DEBUG: Using cached result for:', cacheKey);
       const cached = cacheRef.current.get(cacheKey)!;
       setResults(cached.results.map(r => r.user));
       setSearchResponse(cached);
       return;
     }
 
-    console.log('🔍 DEBUG: Performing fresh search for:', term);
+    logger.debug('🔍 DEBUG: Performing fresh search for:', term);
     setIsLoading(true);
     try {
       // Fix: Properly await the async search method
@@ -55,29 +56,29 @@ export const useOptimizedSearch = (options: UseOptimizedSearchOptions = {}) => {
       
       // Add null check for response
       if (!response || !response.results) {
-        console.warn('SearchService returned invalid response:', response);
+        logger.warn('SearchService returned invalid response:', response);
         setResults([]);
         setSearchResponse(null);
         return;
       }
       
-      console.log('🔍 DEBUG: Search completed. Found', response.results.length, 'results');
+      logger.debug('🔍 DEBUG: Search completed. Found', response.results.length, 'results');
       
       // Cache the result
       if (cacheResults) {
         if (cacheRef.current.size >= maxCacheSize) {
           const firstKey = cacheRef.current.keys().next().value;
           cacheRef.current.delete(firstKey);
-          console.log('🔍 DEBUG: Evicted cache entry:', firstKey);
+          logger.debug('🔍 DEBUG: Evicted cache entry:', firstKey);
         }
         cacheRef.current.set(cacheKey, response);
-        console.log('🔍 DEBUG: Cached result for:', cacheKey);
+        logger.debug('🔍 DEBUG: Cached result for:', cacheKey);
       }
 
       setResults(response.results.map(r => r.user));
       setSearchResponse(response);
     } catch (error) {
-      console.error('Search error:', error);
+      logger.error('Search error:', error);
       setResults([]);
       setSearchResponse(null);
     } finally {
@@ -104,22 +105,22 @@ export const useOptimizedSearch = (options: UseOptimizedSearchOptions = {}) => {
 
   // Update users reference
   useEffect(() => {
-    console.log('🔍 DEBUG: Users updated in useOptimizedSearch:', users.length);
+    logger.debug('🔍 DEBUG: Users updated in useOptimizedSearch:', users.length);
     usersRef.current = users;
     // Clear cache when users change to ensure fresh results
     if (cacheResults) {
       cacheRef.current.clear();
-      console.log('🔍 DEBUG: Cache cleared due to users update');
+      logger.debug('🔍 DEBUG: Cache cleared due to users update');
     }
   }, [users, cacheResults]);
 
   const updateSearchTerm = useCallback((term: string) => {
-    console.log('🔍 DEBUG: Updating search term from:', searchTerm, 'to:', term);
+    logger.debug('🔍 DEBUG: Updating search term from:', searchTerm, 'to:', term);
     setSearchTerm(term);
   }, [searchTerm]);
 
   const clearCache = useCallback(() => {
-    console.log('🔍 DEBUG: Manually clearing cache');
+    logger.debug('🔍 DEBUG: Manually clearing cache');
     cacheRef.current.clear();
   }, []);
 

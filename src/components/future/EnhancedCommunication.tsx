@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
+import { logger } from '@/utils/logger';
   Mic, 
   Video, 
   Paperclip, 
@@ -25,17 +26,17 @@ export const EnhancedChatInput = ({ onSendMessage, disabled }: EnhancedChatInput
   const handleVoiceRecord = () => {
     setIsRecording(!isRecording);
     // Future: Implement ElevenLabs voice recording
-    console.log('Voice recording placeholder - Future: ElevenLabs integration');
+    logger.debug('Voice recording placeholder - Future: ElevenLabs integration');
   };
   
   // Placeholder for video call initiation
   const handleVideoCall = () => {
-    console.log('Video call placeholder - Future: WebRTC integration');
+    logger.debug('Video call placeholder - Future: WebRTC integration');
   };
   
   // Placeholder for file attachment
   const handleFileAttach = () => {
-    console.log('File attachment placeholder - Future: File upload system');
+    logger.debug('File attachment placeholder - Future: File upload system');
   };
 
   return (

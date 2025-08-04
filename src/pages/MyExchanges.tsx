@@ -30,6 +30,7 @@ import { useOptimizedPolling } from '../hooks/useOptimizedPolling';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../hooks/useLanguage';
 import { translateSkill, translateName, translateDescription } from '../utils/translationUtils';
+import { logger } from '@/utils/logger';
 
 // Interface for exchange data
 interface Exchange {
@@ -146,7 +147,7 @@ const MyExchanges = () => {
   useEffect(() => {
     const timeout = setTimeout(() => {
       if (loading) {
-        console.log('Loading timeout reached, setting loading to false');
+        logger.debug('Loading timeout reached, setting loading to false');
         setLoading(false);
       }
     }, 10000); // 10 second timeout
@@ -172,7 +173,7 @@ const MyExchanges = () => {
     try {
       // Check if user ID exists before making any queries
       if (!user?.id) {
-        console.error("No user ID available for fetching exchanges data");
+        logger.error('No user ID available for fetching exchanges data');
         return;
       }
       
@@ -183,7 +184,7 @@ const MyExchanges = () => {
       
       // Only log in development mode
       if (process.env.NODE_ENV === 'development') {
-        console.log('🔄 Fetching exchanges data for user:', user.id);
+        logger.debug('🔄 Fetching exchanges data for user:', user.id);
       }
       
       // Fetch all data in parallel
@@ -196,10 +197,10 @@ const MyExchanges = () => {
       
       // Only log in development mode
       if (process.env.NODE_ENV === 'development') {
-        console.log('✅ All exchanges data fetched successfully');
+        logger.debug('✅ All exchanges data fetched successfully');
       }
     } catch (error) {
-      console.error('Error in fetchData:', error);
+      logger.error('Error in fetchData:', error);
     } finally {
       if (!isPolling) {
         setLoading(false);
@@ -211,12 +212,12 @@ const MyExchanges = () => {
     try {
       // Only log in development mode
       if (process.env.NODE_ENV === 'development') {
-        console.log('🔄 Fetching active exchanges for user:', user?.id);
+        logger.debug('🔄 Fetching active exchanges for user:', user?.id);
       }
       
       // Check if user ID exists before making the query
       if (!user?.id) {
-        console.error("No user ID available for fetching active exchanges");
+        logger.error('No user ID available for fetching active exchanges');
         setExchanges(prev => ({ ...prev, active: [] }));
         return;
       }
@@ -237,7 +238,7 @@ const MyExchanges = () => {
         .eq('exchange_state', 'active_exchange');
 
       if (chatsError) {
-        console.error('Error fetching active chats:', chatsError);
+        logger.error('Error fetching active chats:', chatsError);
         setExchanges(prev => ({ ...prev, active: [] }));
         return;
       }
@@ -265,14 +266,14 @@ const MyExchanges = () => {
         .in('chat_id', chatIds);
 
       if (contractsError) {
-        console.error('Error fetching active exchanges:', contractsError);
+        logger.error('Error fetching active exchanges:', contractsError);
         setExchanges(prev => ({ ...prev, active: [] }));
         return;
       }
 
       // Only log in development mode
       if (process.env.NODE_ENV === 'development') {
-        console.log('📋 Found contracts:', contractsData?.length || 0);
+        logger.debug('📋 Found contracts:', contractsData?.length || 0);
       }
 
       if (!contractsData || contractsData.length === 0) {
@@ -293,7 +294,7 @@ const MyExchanges = () => {
         .in('id', userIds);
 
       if (profilesError) {
-        console.error('Error fetching profiles:', profilesError);
+        logger.error('Error fetching profiles:', profilesError);
         // Continue without profiles rather than failing completely
       }
 
@@ -359,12 +360,12 @@ const MyExchanges = () => {
 
       // Only log in development mode
       if (process.env.NODE_ENV === 'development') {
-        console.log('✅ Active exchanges processed:', sortedActiveExchanges.length);
-        console.log('📊 Active exchanges data:', sortedActiveExchanges);
+        logger.debug('✅ Active exchanges processed:', sortedActiveExchanges.length);
+        logger.debug('📊 Active exchanges data:', sortedActiveExchanges);
       }
       setExchanges(prev => ({ ...prev, active: sortedActiveExchanges }));
     } catch (error) {
-      console.error('Error in fetchActiveExchanges:', error);
+      logger.error('Error in fetchActiveExchanges:', error);
       setExchanges(prev => ({ ...prev, active: [] }));
     }
   };
@@ -373,12 +374,12 @@ const MyExchanges = () => {
     try {
       // Only log in development mode
       if (process.env.NODE_ENV === 'development') {
-        console.log('🔄 Fetching completed exchanges for user:', user?.id);
+        logger.debug('🔄 Fetching completed exchanges for user:', user?.id);
       }
       
       // Check if user ID exists before making the query
       if (!user?.id) {
-        console.error("No user ID available for fetching completed exchanges");
+        logger.error('No user ID available for fetching completed exchanges');
         setExchanges(prev => ({ ...prev, completed: [] }));
         return;
       }
@@ -399,7 +400,7 @@ const MyExchanges = () => {
         .eq('exchange_state', 'completed');
 
       if (chatsError) {
-        console.error('Error fetching completed chats:', chatsError);
+        logger.error('Error fetching completed chats:', chatsError);
         setExchanges(prev => ({ ...prev, completed: [] }));
         return;
       }
@@ -428,14 +429,14 @@ const MyExchanges = () => {
         .in('chat_id', chatIds);
 
       if (contractsError) {
-        console.error('Error fetching completed exchanges:', contractsError);
+        logger.error('Error fetching completed exchanges:', contractsError);
         setExchanges(prev => ({ ...prev, completed: [] }));
         return;
       }
 
       // Only log in development mode
       if (process.env.NODE_ENV === 'development') {
-        console.log('📋 Found completed contracts:', contractsData?.length || 0);
+        logger.debug('📋 Found completed contracts:', contractsData?.length || 0);
       }
 
       if (!contractsData || contractsData.length === 0) {
@@ -456,7 +457,7 @@ const MyExchanges = () => {
         .in('id', userIds);
 
       if (profilesError) {
-        console.error('Error fetching profiles:', profilesError);
+        logger.error('Error fetching profiles:', profilesError);
         // Continue without profiles rather than failing completely
       }
 
@@ -475,7 +476,7 @@ const MyExchanges = () => {
         .in('chat_id', reviewChatIds);
 
       if (reviewsError) {
-        console.error('Error fetching existing reviews:', reviewsError);
+        logger.error('Error fetching existing reviews:', reviewsError);
       }
 
       // Create a set of chat IDs that the current user has already reviewed
@@ -517,8 +518,8 @@ const MyExchanges = () => {
 
       // Only log in development mode
       if (process.env.NODE_ENV === 'development') {
-        console.log('✅ Completed exchanges processed:', completedExchanges.length);
-        console.log('📊 Completed exchanges data:', completedExchanges);
+        logger.debug('✅ Completed exchanges processed:', completedExchanges.length);
+        logger.debug('📊 Completed exchanges data:', completedExchanges);
       }
       
       // Sort completed exchanges from newest to oldest
@@ -528,7 +529,7 @@ const MyExchanges = () => {
       
       setExchanges(prev => ({ ...prev, completed: sortedCompletedExchanges }));
     } catch (error) {
-      console.error('Error in fetchCompletedExchanges:', error);
+      logger.error('Error in fetchCompletedExchanges:', error);
       setExchanges(prev => ({ ...prev, completed: [] }));
     }
   };
@@ -551,7 +552,7 @@ const MyExchanges = () => {
   //       .eq('learning_requests.user_id', user?.id);
 
   //     if (error) {
-  //       console.error('Error fetching user responses:', error);
+  //       logger.error('Error fetching user responses:', error);
   //       return;
   //     }
 
@@ -573,7 +574,7 @@ const MyExchanges = () => {
 
   //     setResponses(formattedResponses);
   //   } catch (error) {
-  //     console.error('Error in fetchUserResponses:', error);
+  //     logger.error('Error in fetchUserResponses:', error);
   //   }
   // };
 
@@ -581,7 +582,7 @@ const MyExchanges = () => {
     try {
       // Check if user ID exists before making the query
       if (!user?.id) {
-        console.error("No user ID available for fetching sent invites");
+        logger.error('No user ID available for fetching sent invites');
         setExchanges(prev => ({ ...prev, sent: [] }));
         return;
       }
@@ -602,7 +603,7 @@ const MyExchanges = () => {
         .neq('status', 'accepted');
 
       if (invitesError) {
-        console.error('Error fetching sent invites:', invitesError);
+        logger.error('Error fetching sent invites:', invitesError);
         setExchanges(prev => ({ ...prev, sent: [] }));
         return;
       }
@@ -622,7 +623,7 @@ const MyExchanges = () => {
         .in('id', recipientIds);
 
       if (profilesError) {
-        console.error('Error fetching profiles:', profilesError);
+        logger.error('Error fetching profiles:', profilesError);
         // Continue without profiles rather than failing completely
       }
 
@@ -656,11 +657,11 @@ const MyExchanges = () => {
 
       // Only log in development mode
       if (process.env.NODE_ENV === 'development') {
-        console.log('📊 Sent invites data:', sentInvites);
+        logger.debug('📊 Sent invites data:', sentInvites);
       }
       setExchanges(prev => ({ ...prev, sent: sentInvites }));
     } catch (error) {
-      console.error('Error in fetchSentInvites:', error);
+      logger.error('Error in fetchSentInvites:', error);
       setExchanges(prev => ({ ...prev, sent: [] }));
     }
   };
@@ -669,7 +670,7 @@ const MyExchanges = () => {
     try {
       // Check if user ID exists before making the query
       if (!user?.id) {
-        console.error("No user ID available for fetching received invites");
+        logger.error('No user ID available for fetching received invites');
         setExchanges(prev => ({ ...prev, request: [] }));
         setInvitations([]);
         return;
@@ -691,7 +692,7 @@ const MyExchanges = () => {
         .neq('status', 'accepted');
 
       if (invitesError) {
-        console.error('Error fetching received invites:', invitesError);
+        logger.error('Error fetching received invites:', invitesError);
         setExchanges(prev => ({ ...prev, request: [] }));
         setInvitations([]);
         return;
@@ -722,7 +723,7 @@ const MyExchanges = () => {
         .in('id', senderIds);
 
       if (profilesError) {
-        console.error('Error fetching profiles:', profilesError);
+        logger.error('Error fetching profiles:', profilesError);
         // Continue without profiles rather than failing completely
       }
 
@@ -756,11 +757,11 @@ const MyExchanges = () => {
 
       // Only log in development mode
       if (process.env.NODE_ENV === 'development') {
-        console.log('📊 Received invites data:', receivedInvites);
+        logger.debug('📊 Received invites data:', receivedInvites);
       }
       setExchanges(prev => ({ ...prev, request: receivedInvites }));
     } catch (error) {
-      console.error('Error in fetchReceivedInvites:', error);
+      logger.error('Error in fetchReceivedInvites:', error);
       setExchanges(prev => ({ ...prev, request: [] }));
       setInvitations([]);
     }
@@ -853,11 +854,11 @@ const MyExchanges = () => {
 
   const handleAcceptInvitation = async (invite: Invitation) => {
     try {
-      console.log('Accepting invitation:', invite);
+      logger.debug('Accepting invitation:', invite);
       
       // Validate invitation data
       if (!invite.sender_id || !invite.recipient_id) {
-        console.error('Invalid invitation data:', invite);
+        logger.error('Invalid invitation data:', invite);
         toast.error(t('actions.invalidInvitationData'));
         return;
       }
@@ -869,7 +870,7 @@ const MyExchanges = () => {
         .eq('id', invite.id);
 
       if (updateError) {
-        console.error('Error accepting invitation:', updateError);
+        logger.error('Error accepting invitation:', updateError);
         toast.error(t('actions.failedToAcceptInvitation'));
         return;
       }
@@ -886,10 +887,10 @@ const MyExchanges = () => {
       if (existingChat) {
         // Use existing chat
         chatData = existingChat;
-        console.log('Using existing chat:', chatData.id);
+        logger.debug('Using existing chat:', chatData.id);
       } else {
         // Create a new chat between the users
-        console.log('💬 Creating new chat for accepted invitation...');
+        logger.debug('💬 Creating new chat for accepted invitation...');
         const { data: newChatData, error: chatError } = await supabase
           .from('chats')
           .insert({
@@ -903,12 +904,12 @@ const MyExchanges = () => {
           .single();
 
         if (chatError) {
-          console.error('Error creating chat:', chatError);
+          logger.error('Error creating chat:', chatError);
           toast.error(t('actions.failedToCreateChat'));
           return;
         }
         chatData = newChatData;
-        console.log('✅ Chat created successfully:', chatData.id);
+        logger.debug('✅ Chat created successfully:', chatData.id);
       }
 
       // Get current user's profile for notification
@@ -922,7 +923,7 @@ const MyExchanges = () => {
 
       // Create notification for the sender about the acceptance
       try {
-        console.log('📧 Creating acceptance notification with chat ID:', chatData.id);
+        logger.debug('📧 Creating acceptance notification with chat ID:', chatData.id);
         await notificationService.createNotification({
           userId: invite.sender_id,
           title: 'Invitation Accepted!',
@@ -937,9 +938,9 @@ const MyExchanges = () => {
             skill: invite.skill
           }
         });
-        console.log('✅ Acceptance notification created successfully');
+        logger.debug('✅ Acceptance notification created successfully');
       } catch (notificationError) {
-        console.error('Failed to create acceptance notification:', notificationError);
+        logger.error('Failed to create acceptance notification:', notificationError);
       }
 
       toast.success(t('actions.invitationAccepted'));
@@ -953,14 +954,14 @@ const MyExchanges = () => {
       // Refresh data without showing loading state
       await fetchData(true); // Pass isPolling = true to avoid loading state
     } catch (error) {
-      console.error('Error accepting invitation:', error);
+      logger.error('Error accepting invitation:', error);
       toast.error(t('actions.failedToAcceptInvitation'));
     }
   };
 
   const handleSendMessage = async (invite: Invitation) => {
     try {
-      console.log('🔍 Looking for existing chat for invitation:', invite.id);
+      logger.debug('🔍 Looking for existing chat for invitation:', invite.id);
       
       // Check if a chat already exists between these users for this skill
       const { data: existingChat, error: chatQueryError } = await supabase
@@ -971,17 +972,17 @@ const MyExchanges = () => {
         .maybeSingle();
 
       if (chatQueryError) {
-        console.error('Error querying for existing chat:', chatQueryError);
+        logger.error('Error querying for existing chat:', chatQueryError);
         toast.error(t('actions.failedToFindChat'));
         return;
       }
 
       if (existingChat) {
-        console.log('✅ Found existing chat:', existingChat.id);
+        logger.debug('✅ Found existing chat:', existingChat.id);
         // Navigate to existing chat
         navigate(`/chat/${existingChat.id}`);
       } else {
-        console.log('❌ No existing chat found, creating new one...');
+        logger.debug('❌ No existing chat found, creating new one...');
         // Create a new chat and navigate to it
         const { data: newChatData, error: chatError } = await supabase
           .from('chats')
@@ -996,27 +997,27 @@ const MyExchanges = () => {
           .single();
 
         if (chatError) {
-          console.error('Error creating chat:', chatError);
+          logger.error('Error creating chat:', chatError);
           toast.error(t('actions.failedToCreateChat'));
           return;
         }
 
-        console.log('✅ Created new chat:', newChatData.id);
+        logger.debug('✅ Created new chat:', newChatData.id);
         navigate(`/chat/${newChatData.id}`);
       }
     } catch (error) {
-      console.error('Error sending message:', error);
+      logger.error('Error sending message:', error);
       toast.error(t('actions.failedToOpenChat'));
     }
   };
 
   const handleDeclineInvitation = async (invite: Invitation) => {
     try {
-      console.log('Declining invitation:', invite);
+      logger.debug('Declining invitation:', invite);
       
       // Validate invitation data
       if (!invite.id) {
-        console.error('Invalid invitation data:', invite);
+        logger.error('Invalid invitation data:', invite);
         toast.error(t('actions.invalidInvitationData'));
         return;
       }
@@ -1027,7 +1028,7 @@ const MyExchanges = () => {
         .eq('id', invite.id);
 
       if (error) {
-        console.error('Error declining invitation:', error);
+        logger.error('Error declining invitation:', error);
         toast.error(t('actions.failedToDeclineInvitation'));
         return;
       }
@@ -1036,7 +1037,7 @@ const MyExchanges = () => {
       // Refresh data without showing loading state
       await fetchData(true); // Pass isPolling = true to avoid loading state
     } catch (error) {
-      console.error('Error declining invitation:', error);
+      logger.error('Error declining invitation:', error);
       toast.error(t('actions.failedToDeclineInvitation'));
     }
   };

@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { logger } from '@/utils/logger';
 
 export const UserAvatar = () => {
   const { user, logout } = useAuth();
@@ -31,15 +32,15 @@ export const UserAvatar = () => {
   const handleLogout = async () => {
     if (isLoggingOut) return; // Prevent multiple clicks
     
-    console.log('Logout button clicked');
+    logger.debug('Logout button clicked');
     setIsLoggingOut(true);
     
     try {
       await logout();
-      console.log('Logout completed, navigating to home');
+      logger.debug('Logout completed, navigating to home');
       navigate("/");
     } catch (error) {
-      console.error('Error during logout:', error);
+      logger.error('Error during logout:', error);
     } finally {
       setIsLoggingOut(false);
     }

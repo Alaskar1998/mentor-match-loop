@@ -1,4 +1,5 @@
 import { 
+import { logger } from '@/utils/logger';
   CoinTransaction, 
   CoinTransactionType, 
   DailyStreak, 
@@ -355,15 +356,15 @@ class CoinEconomyService {
     const twoInvitesCost = this.SPENDING_RULES.extraInvite.free * 2; // 100 coins
     const starterPackCoins = this.COIN_PACKS.starter.coins; // 100 coins
     
-    console.log('Economy Validation:');
-    console.log(`3 exchanges earn: ${freeUserExchangeEarnings} coins`);
-    console.log(`2 invites cost: ${twoInvitesCost} coins`);
-    console.log(`$0.99 pack gives: ${starterPackCoins} coins`);
+    logger.debug('Economy Validation:');
+    logger.debug('3 exchanges earn: ${freeUserExchangeEarnings} coins');
+    logger.debug('2 invites cost: ${twoInvitesCost} coins');
+    logger.debug('$0.99 pack gives: ${starterPackCoins} coins');
     
     const profileBoostCost = this.SPENDING_RULES.profileBoost.free; // 150 coins
     const exchangesForBoost = Math.ceil(profileBoostCost / this.EARNING_RULES.exchangeCompletion); // 8 exchanges
     
-    console.log(`Profile boost costs: ${profileBoostCost} coins (~${exchangesForBoost} exchanges)`);
+    logger.debug('Profile boost costs: ${profileBoostCost} coins (~${exchangesForBoost} exchanges)');
     
     return true;
   }
@@ -490,7 +491,7 @@ class CoinEconomyService {
 
   private async checkReferralCompletion(userId: string): Promise<void> {
     // Implementation for referral reward processing
-    console.log('Checking referral completion for user:', userId);
+    logger.debug('Checking referral completion for user:', userId);
   }
 }
 

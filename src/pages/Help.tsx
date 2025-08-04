@@ -19,6 +19,7 @@ import {
   ExternalLink
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { logger } from '@/utils/logger';
 
 const Help = () => {
   const { t } = useTranslation();
@@ -155,7 +156,7 @@ const Help = () => {
   const handleContactSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // TODO: Implement contact form submission
-    console.log("Contact form submitted:", contactForm);
+    logger.debug('Contact form submitted:', contactForm);
     alert(t('contactSupport.form.success'));
     setContactForm({ name: "", email: "", subject: "", message: "" });
   };

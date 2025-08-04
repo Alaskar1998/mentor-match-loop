@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/hooks/useLanguage";
 import { toast } from "sonner";
 import { isSearchDisabled } from "@/utils/userValidation";
+import { logger } from '@/utils/logger';
 
 export const Header = () => {
   const { isAuthenticated, user, isSessionRestoring } = useAuth();
@@ -60,7 +61,7 @@ export const Header = () => {
   };
 
   const handleAuthComplete = (userData?: unknown) => {
-    console.log('Auth completed:', userData);
+    logger.debug('Auth completed:', userData);
     setShowAuthModal(false);
   };
 

@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
 
 export interface ExchangeData {
   id: string;
@@ -25,7 +26,7 @@ export interface LatestExchange {
 
 export const getLatestExchanges = async (limit: number = 10, isArabic: boolean = false): Promise<LatestExchange[]> => {
   try {
-    console.log('Fetching latest exchanges...');
+    logger.debug('Fetching latest exchanges...');
     
     // Use a simpler query without foreign key relationships
     const { data, error } = await supabase
@@ -50,14 +51,14 @@ export const getLatestExchanges = async (limit: number = 10, isArabic: boolean =
       .limit(limit);
 
     if (error) {
-      console.error('Error fetching exchanges:', error);
+      logger.error('Error fetching exchanges:', error);
       return getDefaultExchanges(limit, isArabic);
     }
 
-    console.log('Raw exchange data:', data);
+    logger.debug('Raw exchange data:', data);
 
     if (!data || data.length === 0) {
-      console.log('No completed exchanges found, using default data');
+      logger.debug('No completed exchanges found, using default data');
       return getDefaultExchanges(limit, isArabic);
     }
 
@@ -85,10 +86,10 @@ export const getLatestExchanges = async (limit: number = 10, isArabic: boolean =
       };
     });
 
-    console.log('Transformed exchanges:', exchanges);
+    logger.debug('Transformed exchanges:', exchanges);
     return exchanges;
   } catch (error) {
-    console.error('Error in getLatestExchanges:', error);
+    logger.error('Error in getLatestExchanges:', error);
     return getDefaultExchanges(limit, isArabic);
   }
 };
@@ -101,13 +102,13 @@ export const getExchangeCount = async (): Promise<number> => {
       .not('finished_at', 'is', null);
 
     if (error) {
-      console.error('Error fetching exchange count:', error);
+      logger.error('Error fetching exchange count:', error);
       return 3248; // Default fallback
     }
 
     return count || 3248;
   } catch (error) {
-    console.error('Error in getExchangeCount:', error);
+    logger.error('Error in getExchangeCount:', error);
     return 3248;
   }
 };

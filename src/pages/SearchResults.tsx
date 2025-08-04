@@ -13,6 +13,7 @@ import { SearchSuggestionCard, NoResultsMessage } from "@/components/search/Sear
 import { isSearchDisabled } from "@/utils/userValidation";
 import { useOptimizedSearch } from "@/hooks/useOptimizedSearch";
 import { useTranslation } from "react-i18next";
+import { logger } from '@/utils/logger';
 
 export interface UserProfile {
   id: string;
@@ -103,7 +104,7 @@ const SearchResultsPage = () => {
       try {
         setLoading(true);
         
-        console.log('🔍 DEBUG: Starting to fetch users from Supabase...');
+        logger.debug('🔍 DEBUG: Starting to fetch users from Supabase...');
         
         // Fetch profiles from Supabase with reviews and exchanges data
         const { data: profiles, error } = await supabase
@@ -121,12 +122,12 @@ const SearchResultsPage = () => {
           .not('id', 'is', null);
 
         if (error) {
-          console.error('Error fetching profiles:', error);
+          logger.error('Error fetching profiles:', error);
           setUsers([]);
           return;
         }
 
-        console.log('🔍 DEBUG: Raw profiles from Supabase:', profiles?.length || 0);
+        logger.debug('🔍 DEBUG: Raw profiles from Supabase:', profiles?.length || 0);
 
         // Transform Supabase data to UserProfile format and filter out current user
         const transformedUsers: UserProfile[] = await Promise.all(
@@ -180,10 +181,10 @@ const SearchResultsPage = () => {
             }) || []
         );
 
-        console.log('🔍 DEBUG: Transformed users:', transformedUsers.length);
-        console.log('🔍 DEBUG: Sample users with skills:');
+        logger.debug('🔍 DEBUG: Transformed users:', transformedUsers.length);
+        logger.debug('🔍 DEBUG: Sample users with skills:');
         transformedUsers.slice(0, 5).forEach(user => {
-          console.log(`  - ${user.name}: [${user.skills.join(', ')}]`);
+          logger.debug('  - ${user.name}: [${user.skills.join(', ')}]`);
         });
         
         // Debug: Log raw skills data from database
@@ -193,9 +194,9 @@ const SearchResultsPage = () => {
         })));
         
         // Debug: Show all users regardless of search term for testing
-        console.log('🔍 DEBUG: All users available for search:', transformedUsers.length);
+        logger.debug('🔍 DEBUG: All users available for search:', transformedUsers.length);
         transformedUsers.forEach((user, index) => {
-          console.log(`User ${index + 1}: ${user.name} - Skills: [${user.skills.join(', ')}]`);
+          logger.debug('User ${index + 1}: ${user.name} - Skills: [${user.skills.join(', ')}]`);
         });
         
         // Debug: Check for "Accounting" specifically
@@ -204,20 +205,20 @@ const SearchResultsPage = () => {
         );
         console.log('🔍 DEBUG: Users with "Accounting" skill:', accountingUsers.length);
         accountingUsers.forEach((user, index) => {
-          console.log(`Accounting User ${index + 1}: ${user.name} - Skills: [${user.skills.join(', ')}]`);
+          logger.debug('Accounting User ${index + 1}: ${user.name} - Skills: [${user.skills.join(', ')}]`);
         });
         
-        console.log('🔍 DEBUG: Setting users in SearchResults:', transformedUsers.length);
+        logger.debug('🔍 DEBUG: Setting users in SearchResults:', transformedUsers.length);
         setUsers(transformedUsers);
         setSearchUsers(transformedUsers); // Update optimized search hook
         
         // Force search service initialization with the new users
         if (searchQuery && transformedUsers.length > 0) {
-          console.log('🔍 DEBUG: Forcing search service initialization with', transformedUsers.length, 'users');
+          logger.debug('🔍 DEBUG: Forcing search service initialization with', transformedUsers.length, 'users');
           // The search will be triggered by the useEffect that watches searchQuery
         }
       } catch (error) {
-        console.error('Error fetching users:', error);
+        logger.error('Error fetching users:', error);
         setUsers([]);
         setSearchUsers([]);
       } finally {
@@ -230,7 +231,7 @@ const SearchResultsPage = () => {
 
   // Update search term when URL changes
   useEffect(() => {
-    console.log('🔍 DEBUG: Search query changed to:', searchQuery);
+    logger.debug('🔍 DEBUG: Search query changed to:', searchQuery);
     updateSearchTerm(searchQuery);
     // Clear cache when search query changes to ensure fresh results
     clearCache();
@@ -239,7 +240,7 @@ const SearchResultsPage = () => {
   // Ensure search service is initialized when users are loaded
   useEffect(() => {
     if (users.length > 0 && searchQuery) {
-      console.log('🔍 DEBUG: Users loaded, re-triggering search for:', searchQuery);
+      logger.debug('🔍 DEBUG: Users loaded, re-triggering search for:', searchQuery);
       // Force a fresh search with the loaded users
       updateSearchTerm(searchQuery);
     }

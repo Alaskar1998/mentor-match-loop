@@ -20,6 +20,7 @@ import { skillService } from '@/services/skillService';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '@/hooks/useLanguage';
 import { translateSkillCategory, translateSkillLevel, translateSkill } from '@/utils/translationUtils';
+import { logger } from '@/utils/logger';
 
 interface SkillInputComponentProps {
   onAddSkill: (skill: Skill) => void;
@@ -148,7 +149,7 @@ export const SkillInputComponent: React.FC<SkillInputComponentProps> = ({
         description: "Skill added successfully!"
       });
     } catch (error) {
-      console.error('Error adding skill:', error);
+      logger.error('Error adding skill:', error);
       toast({
         title: "Error",
         description: "Failed to add skill. Please try again.",

@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
+import { logger } from '@/utils/logger';
 
 interface User {
   id: string;
@@ -71,12 +72,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state change:', event, session?.user?.id);
+        logger.debug('Auth state change:', event, session?.user?.id);
         setSession(session);
         if (session?.user) {
           // Prevent multiple simultaneous profile fetches
           if (isLoadingProfile) {
-            console.log('⏱️ Profile fetch already in progress, skipping...');
+            logger.debug('⏱️ Profile fetch already in progress, skipping...');
             return;
           }
           
@@ -87,7 +88,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               
               // Check if we already have the user data for this session
               if (user?.id === session.user.id) {
-                console.log('✅ User data already loaded for this session');
+                logger.debug('✅ User data already loaded for this session');
                 setIsLoadingProfile(false);
                 return;
               }
@@ -114,12 +115,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                   break;
                 } else {
                   error = result.error;
-                  console.log(`Profile fetch attempt ${attempt + 1} failed:`, result.error);
+                  logger.debug('Profile fetch attempt ${attempt + 1} failed:', result.error);
                 }
               }
 
               if (error) {
-                console.error('Error fetching user profile after all attempts:', error);
+                logger.error('Error fetching user profile after all attempts:', error);
                 // Set basic user data even if profile fetch fails
                 // Fetch user stats even in error case
                 const { data: reviewsData } = await supabase
@@ -168,7 +169,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               }
 
               if (profile) {
-                console.log('Fetched profile from database:', profile);
+                logger.debug('Fetched profile from database:', profile);
                 // Fetch user stats
                 const { data: reviewsData } = await supabase
                   .from('reviews')
@@ -209,14 +210,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                   successfulExchanges: successfulExchanges,
                   rating: averageRating || 0
                 };
-                console.log('🔍 User type from database:', profile.user_type, '→ Mapped to:', userData.userType);
-                console.log('Mapped user data:', userData);
+                logger.debug('🔍 User type from database:', profile.user_type, '→ Mapped to:', userData.userType);
+                logger.debug('Mapped user data:', userData);
                 setUser(userData);
                 setIsAuthenticated(true);
                 setIsSessionRestoring(false); // Mark session restoration as complete
               }
             } catch (error) {
-              console.error('Error in auth state change handler:', error);
+              logger.error('Error in auth state change handler:', error);
               // Set basic user data even if there's an error
                               // Fetch user stats
                 const { data: reviewsData } = await supabase
@@ -275,14 +276,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Session restoration check:', session?.user?.id);
+      logger.debug('Session restoration check:', session?.user?.id);
       if (session) {
         setSession(session);
         // The auth state change listener will handle the rest and set isSessionRestoring to false
       } else {
         // No session found, mark restoration as complete after a small delay
         setTimeout(() => {
-          console.log('No session found, marking restoration complete');
+          logger.debug('No session found, marking restoration complete');
           setIsSessionRestoring(false);
         }, 500); // Small delay to ensure auth state is stable
       }
@@ -395,13 +396,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const logout = async () => {
     try {
-      console.log('Logout function called');
+      logger.debug('Logout function called');
       const { error } = await supabase.auth.signOut();
       if (error) {
-        console.error('Error during logout:', error);
+        logger.error('Error during logout:', error);
         throw error;
       } else {
-        console.log('Logout successful');
+        logger.debug('Logout successful');
       }
       
       // Clear local state immediately
@@ -412,9 +413,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       // Wait a bit to ensure auth state is updated
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      console.log('Logout completed, state cleared');
+      logger.debug('Logout completed, state cleared');
     } catch (error) {
-      console.error('Unexpected error during logout:', error);
+      logger.error('Unexpected error during logout:', error);
       // Still clear state even if there's an error
       setUser(null);
       setSession(null);
@@ -425,7 +426,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const updateUser = async (updates: Partial<User>) => {
     if (user && session) {
-      console.log('Updating user with:', updates);
+      logger.debug('Updating user with:', updates);
       
       // Update local state
       const updatedUser = { ...user, ...updates };
@@ -450,7 +451,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         .eq('id', user.id);
 
       if (error) {
-        console.error('Profile update error:', error);
+        logger.error('Profile update error:', error);
         console.error('Error details:', {
           code: error.code,
           message: error.message,
@@ -459,7 +460,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         });
         throw error;
       } else {
-        console.log('Profile updated successfully in database');
+        logger.debug('Profile updated successfully in database');
       }
     }
   };

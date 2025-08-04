@@ -10,6 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { notificationService } from '@/services/notificationService';
+import { logger } from '@/utils/logger';
 
 
 interface LearningRequest {
@@ -63,7 +64,7 @@ export const ResponseModal = ({ isOpen, onClose, request, onResponseSubmitted }:
       });
 
       // Submit response to database using type assertion
-      console.log('Submitting response to database...');
+      logger.debug('Submitting response to database...');
       
       try {
         // Insert response into learning_responses table using type assertion
@@ -79,7 +80,7 @@ export const ResponseModal = ({ isOpen, onClose, request, onResponseSubmitted }:
           .single();
 
         if (insertError) {
-          console.error('Error inserting response:', insertError);
+          logger.error('Error inserting response:', insertError);
           console.error('Error details:', {
             code: insertError.code,
             message: insertError.message,
@@ -98,10 +99,10 @@ export const ResponseModal = ({ isOpen, onClose, request, onResponseSubmitted }:
           return;
         }
 
-        console.log('Response saved successfully to database:', response);
+        logger.debug('Response saved successfully to database:', response);
       } catch (error) {
-        console.error('Error saving response:', error);
-        console.error('Full error object:', error);
+        logger.error('Error saving response:', error);
+        logger.error('Full error object:', error);
         toast.error("Failed to save response - please try again");
         return;
       }
@@ -138,7 +139,7 @@ export const ResponseModal = ({ isOpen, onClose, request, onResponseSubmitted }:
           }
         });
       } catch (notificationError) {
-        console.error('Failed to create response notification:', notificationError);
+        logger.error('Failed to create response notification:', notificationError);
         // Don't fail the response submission if notification creation fails
       }
 
@@ -155,7 +156,7 @@ export const ResponseModal = ({ isOpen, onClose, request, onResponseSubmitted }:
       }
       
     } catch (error) {
-      console.error('Error submitting response:', error);
+      logger.error('Error submitting response:', error);
       toast.error("Failed to submit response. Please try again.");
     } finally {
       setIsSubmitting(false);

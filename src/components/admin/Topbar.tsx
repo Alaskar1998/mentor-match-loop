@@ -3,6 +3,7 @@ import { LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+import { logger } from '@/utils/logger';
 
 interface TopbarProps {
   title: string;
@@ -18,7 +19,7 @@ export const Topbar = ({ title }: TopbarProps) => {
       await logout();
       navigate("/");
     } catch (error) {
-      console.error("Logout failed:", error);
+      logger.error('Logout failed:', error);
     }
   };
 

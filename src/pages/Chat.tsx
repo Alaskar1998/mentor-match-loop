@@ -18,6 +18,7 @@ import { useTranslation } from 'react-i18next';
 import { useLanguage } from '@/hooks/useLanguage';
 import { transliterateName } from '@/utils/translationUtils';
 import { 
+import { logger } from '@/utils/logger';
   Send, 
   ArrowLeft, 
   Play, 
@@ -185,7 +186,7 @@ const Chat = React.memo(() => {
         .single();
 
       if (error && error.code !== 'PGRST116') {
-        console.error('Error checking exchange notification:', error);
+        logger.error('Error checking exchange notification:', error);
         return;
       }
 
@@ -206,7 +207,7 @@ const Chat = React.memo(() => {
         }
       }
     } catch (error) {
-      console.error('Error in checkExchangeNotification:', error);
+      logger.error('Error in checkExchangeNotification:', error);
     }
   }, [chatId, currentUserId, isExchangeActive]);
 
@@ -265,7 +266,7 @@ const Chat = React.memo(() => {
         });
 
       if (error) {
-        console.error('Error sending message:', error);
+        logger.error('Error sending message:', error);
         toast.error('Failed to send message');
         // Remove optimistic update on error
         setMessages(prev => prev.filter(msg => msg.id !== newMsg.id));
@@ -287,12 +288,12 @@ const Chat = React.memo(() => {
               }
             });
           } catch (error) {
-            console.error('Error sending notification:', error);
+            logger.error('Error sending notification:', error);
           }
         }
       }
     } catch (error) {
-      console.error('Error in handleSendMessage:', error);
+      logger.error('Error in handleSendMessage:', error);
       toast.error('Failed to send message');
     } finally {
       setSending(false);
@@ -335,7 +336,7 @@ const Chat = React.memo(() => {
         .upsert(contractData, { onConflict: 'chat_id' });
 
       if (error) {
-        console.error('Error creating exchange contract:', error);
+        logger.error('Error creating exchange contract:', error);
         toast.error('Failed to start exchange');
         return;
       }
@@ -359,14 +360,14 @@ const Chat = React.memo(() => {
           }
         });
       } catch (error) {
-        console.error('Error sending notification:', error);
+        logger.error('Error sending notification:', error);
       }
 
       setShowExchangeModal(false);
       toast.success('Exchange proposal sent!');
 
     } catch (error) {
-      console.error('Error in handleExchangeAgreed:', error);
+      logger.error('Error in handleExchangeAgreed:', error);
       toast.error('Failed to start exchange');
     }
   }, [chatId, currentUserId, otherUser?.id, chatData, currentUserName, createNotification]);
@@ -375,7 +376,7 @@ const Chat = React.memo(() => {
     if (!user || !chatData || !otherUser || !contractData) return;
 
     try {
-      console.log('🤝 Agreeing to final contract');
+      logger.debug('🤝 Agreeing to final contract');
       setIsUpdatingState(true); // Prevent polling interference
       
       // Mark current user as agreed
@@ -388,7 +389,7 @@ const Chat = React.memo(() => {
         .eq('chat_id', chatId);
 
       if (agreeError) {
-        console.error('Error updating agreement:', agreeError);
+        logger.error('Error updating agreement:', agreeError);
         toast.error("Failed to agree to contract");
         return;
       }
@@ -455,7 +456,7 @@ const Chat = React.memo(() => {
             }
           });
         } catch (notificationError) {
-          console.error('Failed to create activation notification:', notificationError);
+          logger.error('Failed to create activation notification:', notificationError);
         }
 
         toast.success("Exchange is now active! Start your learning session.");
@@ -479,7 +480,7 @@ const Chat = React.memo(() => {
             }
           });
         } catch (notificationError) {
-          console.error('Failed to create contract review notification:', notificationError);
+          logger.error('Failed to create contract review notification:', notificationError);
         }
         
         toast.success("You agreed to the exchange. Waiting for the other person to agree.");
@@ -490,11 +491,11 @@ const Chat = React.memo(() => {
 
       // Add a small delay to ensure state updates are processed
       setTimeout(() => {
-        console.log('✅ Contract agreement modal closed and state updated');
+        logger.debug('✅ Contract agreement modal closed and state updated');
       }, 100);
 
     } catch (error) {
-      console.error('Error in handleAgreeToContract:', error);
+      logger.error('Error in handleAgreeToContract:', error);
       toast.error("Failed to agree to contract");
     } finally {
       setIsUpdatingState(false); // Re-enable polling
@@ -505,7 +506,7 @@ const Chat = React.memo(() => {
     if (!user || !chatData || !otherUser) return;
 
     try {
-      console.log('❌ Declining contract');
+      logger.debug('❌ Declining contract');
       setIsUpdatingState(true); // Prevent polling interference
       
       // Delete the contract completely to start fresh
@@ -568,7 +569,7 @@ const Chat = React.memo(() => {
           }
         });
       } catch (notificationError) {
-        console.error('Failed to create decline notification:', notificationError);
+        logger.error('Failed to create decline notification:', notificationError);
       }
 
       toast.success("Exchange declined. You can discuss and start a new exchange anytime.");
@@ -577,7 +578,7 @@ const Chat = React.memo(() => {
       setShowExchangeModal(false);
 
     } catch (error) {
-      console.error('Error in handleDeclineContract:', error);
+      logger.error('Error in handleDeclineContract:', error);
       toast.error("Failed to decline contract");
     } finally {
       setIsUpdatingState(false); // Re-enable polling
@@ -588,15 +589,15 @@ const Chat = React.memo(() => {
     if (!contractData || !user || !chatData || !otherUser) return;
 
     try {
-      console.log('🏁 Marking exchange as finished');
+      logger.debug('🏁 Marking exchange as finished');
       setIsUpdatingState(true); // Prevent polling interference
       
       // Mark current user as finished
       const isUser1 = chatData.user1_id === user.id;
       const finishData = isUser1 ? { user1_finished: true } : { user2_finished: true };
 
-      console.log('🏁 Attempting to update contract with finish data:', finishData);
-      console.log('🏁 Chat ID:', chatId);
+      logger.debug('🏁 Attempting to update contract with finish data:', finishData);
+      logger.debug('🏁 Chat ID:', chatId);
       
       const { data: updateResult, error: finishError } = await supabase
         .from('exchange_contracts')
@@ -604,11 +605,11 @@ const Chat = React.memo(() => {
         .eq('chat_id', chatId)
         .select();
 
-      console.log('🏁 Update result:', updateResult);
-      console.log('🏁 Update error:', finishError);
+      logger.debug('🏁 Update result:', updateResult);
+      logger.debug('🏁 Update error:', finishError);
 
       if (finishError) {
-        console.error('Error marking exchange as finished:', finishError);
+        logger.error('Error marking exchange as finished:', finishError);
         toast.error(`Failed to mark exchange as finished: ${finishError.message}`);
         return;
       }
@@ -683,7 +684,7 @@ const Chat = React.memo(() => {
             }
           });
         } catch (notificationError) {
-          console.error('Failed to create completion notification:', notificationError);
+          logger.error('Failed to create completion notification:', notificationError);
         }
 
         toast.success("Exchange completed! Please leave a review for your learning partner.");
@@ -734,7 +735,7 @@ const Chat = React.memo(() => {
             }
           });
         } catch (notificationError) {
-          console.error('Failed to create finish notification:', notificationError);
+          logger.error('Failed to create finish notification:', notificationError);
         }
 
         toast.success("You marked the exchange as finished. Waiting for the other person to finish.");
@@ -744,7 +745,7 @@ const Chat = React.memo(() => {
       setShowFinishModal(false);
 
     } catch (error) {
-      console.error('Error in handleExchangeFinished:', error);
+      logger.error('Error in handleExchangeFinished:', error);
       toast.error("Failed to mark exchange as finished");
     } finally {
       setIsUpdatingState(false); // Re-enable polling
@@ -801,7 +802,7 @@ const Chat = React.memo(() => {
   }, [user?.id, otherUser?.avatar_url, otherUser?.display_name]);
 
   if (loading) {
-    console.log('⏳ Showing loading state');
+    logger.debug('⏳ Showing loading state');
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex items-center gap-2">
@@ -813,13 +814,13 @@ const Chat = React.memo(() => {
   }
 
   if (!user) {
-    console.log('❌ No user found, redirecting to login');
+    logger.debug('❌ No user found, redirecting to login');
     navigate('/');
     return null;
   }
 
   if (!otherUser || !chatData) {
-    console.log('❌ Missing data, showing not found:', { otherUser: !!otherUser, chatData: !!chatData });
+    logger.debug('❌ Missing data, showing not found:', { otherUser: !!otherUser, chatData: !!chatData });
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -962,7 +963,7 @@ const Chat = React.memo(() => {
         <ExchangeModal
           isOpen={showExchangeModal}
           onClose={() => {
-            console.log('🚪 ExchangeModal onClose called');
+            logger.debug('🚪 ExchangeModal onClose called');
             setShowExchangeModal(false);
           }}
           onAgree={handleExchangeAgreed}
@@ -972,7 +973,7 @@ const Chat = React.memo(() => {
           otherUserName={otherUser?.display_name || 'User'}
           currentUserSkills={(() => {
             const skills = user?.skillsToTeach || [];
-            console.log('🎓 Current user skills being passed to modal:', skills);
+            logger.debug('🎓 Current user skills being passed to modal:', skills);
             return skills;
           })()}
           exchangeState={exchangeState}
@@ -1010,7 +1011,7 @@ const Chat = React.memo(() => {
       </div>
     );
   } catch (error) {
-    console.error('Error rendering Chat component:', error);
+    logger.error('Error rendering Chat component:', error);
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">

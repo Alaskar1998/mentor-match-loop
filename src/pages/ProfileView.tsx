@@ -14,6 +14,7 @@ import { notificationService } from '@/services/notificationService';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useTranslation } from 'react-i18next';
 import { translateCountry } from '@/utils/translationUtils';
+import { logger } from '@/utils/logger';
 
 interface UserProfile {
   id: string;
@@ -80,7 +81,7 @@ export default function ProfileView() {
         .single();
 
       if (profileError) {
-        console.error('Error fetching profile:', profileError);
+        logger.error('Error fetching profile:', profileError);
         toast.error(t('actions.userProfileNotFound'));
         navigate('/');
         return;
@@ -106,7 +107,7 @@ export default function ProfileView() {
         .order('created_at', { ascending: false });
 
       if (reviewsError) {
-        console.error('Error fetching reviews:', reviewsError);
+        logger.error('Error fetching reviews:', reviewsError);
       } else {
         setReviews(reviewsData || []);
       }
@@ -128,7 +129,7 @@ export default function ProfileView() {
         .limit(5);
 
       if (exchangesError) {
-        console.error('Error fetching exchanges:', exchangesError);
+        logger.error('Error fetching exchanges:', exchangesError);
       } else {
         // Transform exchanges to include partner names
         const transformedExchanges = await Promise.all(
@@ -163,7 +164,7 @@ export default function ProfileView() {
       });
 
     } catch (error) {
-      console.error('Error:', error);
+      logger.error('Error:', error);
               toast.error(t('actions.failedToLoadProfile'));
       navigate('/');
     } finally {
@@ -197,7 +198,7 @@ export default function ProfileView() {
         }
       });
     } catch (error) {
-      console.error('Failed to create profile view notification:', error);
+      logger.error('Failed to create profile view notification:', error);
       // Don't show error to user as this is a background operation
     }
   };
@@ -265,7 +266,7 @@ export default function ProfileView() {
   };
 
   const handleAuthComplete = async (userData?: any) => {
-    console.log('Auth completed:', userData);
+    logger.debug('Auth completed:', userData);
     setShowSignupModal(false);
     setShowInvitationModal(true);
   };

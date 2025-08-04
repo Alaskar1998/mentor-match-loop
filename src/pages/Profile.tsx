@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '@/hooks/useLanguage';
 import { translateSkill, translateName, translateDescription, translateStatus, translateDate, translateSkillCategory, translateSkillLevel, translateCountry } from '@/utils/translationUtils';
+import { logger } from '@/utils/logger';
 
 // Age ranges constant
 const AGE_RANGES = [
@@ -135,7 +136,7 @@ export default function Profile() {
             upsert: false
           });
       } catch (bucketError) {
-        console.log('avatars bucket not found, trying profile-images');
+        logger.debug('avatars bucket not found, trying profile-images');
         bucketName = 'profile-images';
         uploadResult = await supabase.storage
           .from(bucketName)
@@ -146,7 +147,7 @@ export default function Profile() {
       }
 
       if (uploadResult.error) {
-        console.error('Upload error details:', uploadResult.error);
+        logger.error('Upload error details:', uploadResult.error);
         throw new Error(uploadResult.error.message || t('actions.uploadFailed'));
       }
 
@@ -162,7 +163,7 @@ export default function Profile() {
         description: "Your profile picture has been updated.",
       });
     } catch (error) {
-      console.error('Error uploading avatar:', error);
+      logger.error('Error uploading avatar:', error);
       toast({
         title: t('actions.uploadFailed'),
         description: error instanceof Error ? error.message : t('actions.failedToUploadAvatar'),
@@ -226,7 +227,7 @@ export default function Profile() {
       setIsEditing(false);
     } catch (error) {
       clearTimeout(timeoutId);
-      console.error('Error updating profile:', error);
+      logger.error('Error updating profile:', error);
       toast({
         title: "Update failed",
         description: "Failed to update profile. Please try again.",
@@ -265,7 +266,7 @@ export default function Profile() {
         .single();
 
       if (fetchError) {
-        console.error('Error fetching current skills:', fetchError);
+        logger.error('Error fetching current skills:', fetchError);
         toast({
           title: t('actions.error'),
           description: t('actions.failedToFetchSkills'),
@@ -290,7 +291,7 @@ export default function Profile() {
         .eq('id', user.id);
 
       if (error) {
-        console.error('Error adding skill:', error);
+        logger.error('Error adding skill:', error);
         toast({
           title: t('actions.error'),
           description: t('actions.failedToAddSkill'),
@@ -311,7 +312,7 @@ export default function Profile() {
       });
     } catch (error) {
       clearTimeout(timeoutId);
-      console.error('Error adding skill:', error);
+      logger.error('Error adding skill:', error);
       toast({
         title: t('actions.error'),
         description: t('actions.failedToAddSkill'),
@@ -336,7 +337,7 @@ export default function Profile() {
         .eq('id', user.id);
 
       if (error) {
-        console.error('Error removing skill:', error);
+        logger.error('Error removing skill:', error);
         toast({
           title: t('actions.error'),
           description: t('actions.failedToRemoveSkill'),
@@ -354,7 +355,7 @@ export default function Profile() {
         description: t('actions.skillRemovedSuccessfully')
       });
     } catch (error) {
-      console.error('Error removing skill:', error);
+      logger.error('Error removing skill:', error);
       toast({
         title: t('actions.error'),
         description: t('actions.failedToRemoveSkill'),

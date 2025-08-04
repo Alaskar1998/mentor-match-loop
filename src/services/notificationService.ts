@@ -1,5 +1,6 @@
 import { Notification, NotificationCounts, NotificationService, ChatNotification } from "@/types/notifications";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
 
 // Real notification service using Supabase
 class RealNotificationService implements NotificationService {
@@ -7,7 +8,7 @@ class RealNotificationService implements NotificationService {
     try {
       // Only log in development mode
       if (process.env.NODE_ENV === 'development') {
-        console.log('🔍 Fetching notifications for user:', userId, 'type:', type);
+        logger.debug('🔍 Fetching notifications for user:', userId, 'type:', type);
       }
       
       let query = (supabase as any)
@@ -26,12 +27,12 @@ class RealNotificationService implements NotificationService {
 
       // Only log in development mode
       if (process.env.NODE_ENV === 'development') {
-        console.log('📧 Notifications query result:', { data, error, count: data?.length || 0 });
+        logger.debug('📧 Notifications query result:', { data, error, count: data?.length || 0 });
       }
 
       if (error) {
-        console.error('❌ Error fetching notifications:', error);
-        console.error('❌ Error details:', JSON.stringify(error, null, 2));
+        logger.error('❌ Error fetching notifications:', error);
+        logger.error('❌ Error details:', JSON.stringify(error, null, 2));
         // Return empty array instead of throwing
         return [];
       }
@@ -53,12 +54,12 @@ class RealNotificationService implements NotificationService {
 
       // Only log in development mode
       if (process.env.NODE_ENV === 'development') {
-        console.log('✅ Processed notifications:', notifications.length, notifications);
+        logger.debug('✅ Processed notifications:', notifications.length, notifications);
       }
       return notifications;
     } catch (error) {
-      console.error('❌ Error fetching notifications:', error);
-      console.error('❌ Catch block error details:', JSON.stringify(error, null, 2));
+      logger.error('❌ Error fetching notifications:', error);
+      logger.error('❌ Catch block error details:', JSON.stringify(error, null, 2));
       // Return empty array instead of throwing
       return [];
     }
@@ -72,10 +73,10 @@ class RealNotificationService implements NotificationService {
         .eq('id', notificationId);
 
       if (error) {
-        console.error('Error marking notification as read:', error);
+        logger.error('Error marking notification as read:', error);
       }
     } catch (error) {
-      console.error('Error marking notification as read:', error);
+      logger.error('Error marking notification as read:', error);
     }
   }
 
@@ -95,10 +96,10 @@ class RealNotificationService implements NotificationService {
       const { error } = await query;
 
       if (error) {
-        console.error('Error marking all notifications as read:', error);
+        logger.error('Error marking all notifications as read:', error);
       }
     } catch (error) {
-      console.error('Error marking all notifications as read:', error);
+      logger.error('Error marking all notifications as read:', error);
     }
   }
 
@@ -110,10 +111,10 @@ class RealNotificationService implements NotificationService {
         .eq('id', notificationId);
 
       if (error) {
-        console.error('Error deleting notification:', error);
+        logger.error('Error deleting notification:', error);
       }
     } catch (error) {
-      console.error('Error deleting notification:', error);
+      logger.error('Error deleting notification:', error);
     }
   }
 
@@ -133,10 +134,10 @@ class RealNotificationService implements NotificationService {
       const { error } = await query;
 
       if (error) {
-        console.error('Error clearing notifications:', error);
+        logger.error('Error clearing notifications:', error);
       }
     } catch (error) {
-      console.error('Error clearing notifications:', error);
+      logger.error('Error clearing notifications:', error);
     }
   }
 
@@ -157,7 +158,7 @@ class RealNotificationService implements NotificationService {
         .in('type', ['new_message', 'new_chat']);
 
       if (generalError || chatError) {
-        console.error('Error fetching unread counts:', { generalError, chatError });
+        logger.error('Error fetching unread counts:', { generalError, chatError });
         // Return zero counts instead of throwing
         return { general: 0, chat: 0, total: 0 };
       }
@@ -171,7 +172,7 @@ class RealNotificationService implements NotificationService {
         total: general + chat
       };
     } catch (error) {
-      console.error('Error fetching unread counts:', error);
+      logger.error('Error fetching unread counts:', error);
       // Return zero counts instead of throwing
       return { general: 0, chat: 0, total: 0 };
     }
@@ -179,7 +180,7 @@ class RealNotificationService implements NotificationService {
 
   async createNotification(notification: Omit<Notification, 'id' | 'createdAt'>): Promise<Notification> {
     try {
-      console.log('📝 Creating notification:', notification);
+      logger.debug('📝 Creating notification:', notification);
       
       const notificationData: any = {
         user_id: notification.userId,
@@ -199,7 +200,7 @@ class RealNotificationService implements NotificationService {
         notificationData.sender_name = chatNotification.senderName;
       }
 
-      console.log('💾 Inserting notification data:', notificationData);
+      logger.debug('💾 Inserting notification data:', notificationData);
 
       const { data, error } = await (supabase as any)
         .from('notifications')
@@ -207,11 +208,11 @@ class RealNotificationService implements NotificationService {
         .select()
         .single();
 
-      console.log('📧 Notification creation result:', { data, error });
+      logger.debug('📧 Notification creation result:', { data, error });
 
       if (error) {
-        console.error('❌ Error creating notification:', error);
-        console.error('❌ Error details:', JSON.stringify(error, null, 2));
+        logger.error('❌ Error creating notification:', error);
+        logger.error('❌ Error details:', JSON.stringify(error, null, 2));
         throw error;
       }
 
@@ -230,11 +231,11 @@ class RealNotificationService implements NotificationService {
         senderName: data.sender_name
       };
 
-      console.log('✅ Notification created successfully:', createdNotification);
+      logger.debug('✅ Notification created successfully:', createdNotification);
       return createdNotification;
     } catch (error) {
-      console.error('❌ Error creating notification:', error);
-      console.error('❌ Catch block error details:', JSON.stringify(error, null, 2));
+      logger.error('❌ Error creating notification:', error);
+      logger.error('❌ Catch block error details:', JSON.stringify(error, null, 2));
       throw error;
     }
   }

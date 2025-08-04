@@ -8,22 +8,23 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
       .then((registration) => {
-        console.log('SW registered: ', registration);
+        logger.debug('SW registered: ', registration);
       })
       .catch((registrationError) => {
-        console.log('SW registration failed: ', registrationError);
+        logger.debug('SW registration failed: ', registrationError);
       });
   });
 }
 
 // Add global error handler for development
 if (import.meta.env.DEV) {
+import { logger } from '@/utils/logger';
   window.addEventListener('error', (event) => {
-    console.error('Global error:', event.error);
+    logger.error('Global error:', event.error);
   });
   
   window.addEventListener('unhandledrejection', (event) => {
-    console.error('Unhandled promise rejection:', event.reason);
+    logger.error('Unhandled promise rejection:', event.reason);
   });
 }
 

@@ -15,6 +15,7 @@ import { useGamification } from "@/hooks/useGamification";
 import { useMonetization } from "@/hooks/useMonetization";
 import { useAuth } from "@/hooks/useAuth";
 import { 
+import { logger } from '@/utils/logger';
   Coins, 
   Gift, 
   Star, 
@@ -155,7 +156,7 @@ export const CoinShopModal = ({ isOpen, onClose }: CoinShopModalProps) => {
     const success = spendCoins(item.price, item.name);
     if (success) {
       // Handle the purchase logic here
-      console.log('Purchased:', item.name);
+      logger.debug('Purchased:', item.name);
     }
   };
 

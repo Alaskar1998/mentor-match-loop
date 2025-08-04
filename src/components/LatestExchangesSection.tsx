@@ -6,6 +6,7 @@ import { useOptimizedPolling } from "@/hooks/useOptimizedPolling";
 import { getLatestExchanges, getExchangeCount, LatestExchange } from "@/services/exchangeService";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/hooks/useLanguage";
+import { logger } from '@/utils/logger';
 
 export const LatestExchangesSection = React.memo(() => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -30,7 +31,7 @@ export const LatestExchangesSection = React.memo(() => {
         setExchanges(exchangeData);
         setCounter(countData);
       } catch (error) {
-        console.error('Error fetching exchange data:', error);
+        logger.error('Error fetching exchange data:', error);
         // Fallback to default data is handled in the service
       } finally {
         setIsLoading(false);

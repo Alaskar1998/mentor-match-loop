@@ -6,6 +6,7 @@ import { useGamification } from "@/hooks/useGamification";
 import { coinEconomyService } from "@/services/coinEconomyService";
 import { CoinTransaction } from "@/types/coin-economy";
 import { 
+import { logger } from '@/utils/logger';
   Coins, 
   TrendingUp, 
   TrendingDown, 
@@ -32,12 +33,12 @@ export const CoinEconomyDashboard = () => {
 
   const loadTransactionHistory = async () => {
     // In a real app, this would fetch from the service
-    console.log('Loading transaction history...');
+    logger.debug('Loading transaction history...');
   };
 
   const validateEconomy = async () => {
     const isValid = await coinEconomyService.validateEconomyBalance();
-    console.log('Economy validation result:', isValid);
+    logger.debug('Economy validation result:', isValid);
   };
 
   const getTransactionIcon = (type: string) => {

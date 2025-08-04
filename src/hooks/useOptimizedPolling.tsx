@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
+import { logger } from '@/utils/logger';
 
 interface PollingOptions {
   interval: number;
@@ -25,10 +26,10 @@ export const useOptimizedPolling = (
       retryCountRef.current = 0; // Reset retry count on success
     } catch (error) {
       retryCountRef.current++;
-      console.error('Polling error:', error);
+      logger.error('Polling error:', error);
       
       if (retryCountRef.current >= maxRetries) {
-        console.warn('Max retries reached, stopping polling');
+        logger.warn('Max retries reached, stopping polling');
         if (onError) onError(error);
         return;
       }

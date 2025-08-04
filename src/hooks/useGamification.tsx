@@ -3,6 +3,7 @@ import { useAuth } from "./useAuth";
 import { useToast } from "./use-toast";
 import { coinEconomyService } from "@/services/coinEconomyService";
 import { CoinTransaction } from "@/types/coin-economy";
+import { logger } from '@/utils/logger';
 
 interface Badge {
   id: string;
@@ -242,7 +243,7 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
     //     }
     //   }
     // } catch (error) {
-    //   console.error('Daily login bonus error:', error);
+    //   logger.error('Daily login bonus error:', error);
     // }
   };
 
@@ -303,7 +304,7 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
     //     awardBadge('profile-complete');
     //   }
     // } catch (error) {
-    //   console.error('Profile completion error:', error);
+    //   logger.error('Profile completion error:', error);
     // }
   };
 
@@ -328,7 +329,7 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
     //     });
     //   }
     // } catch (error) {
-    //   console.error('Ad watching error:', error);
+    //   logger.error('Ad watching error:', error);
     // }
   };
 
@@ -359,7 +360,7 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
     //     });
     //   }
     // } catch (error) {
-    //   console.error('Exchange completion error:', error);
+    //   logger.error('Exchange completion error:', error);
     // }
   };
 
@@ -410,13 +411,13 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
         appCoins: balance
       }));
     } catch (error) {
-      console.error('Balance refresh error:', error);
+      logger.error('Balance refresh error:', error);
     }
   };
 
   const purchaseCoins = (pack: string) => {
     // This will be implemented with Stripe integration
-    console.log('Purchase coins pack:', pack);
+    logger.debug('Purchase coins pack:', pack);
     toast({
       title: "Payment Integration Required",
       description: "Stripe integration needed for coin purchases.",

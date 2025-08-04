@@ -11,6 +11,7 @@ import { POPULAR_SKILLS, getSkillTranslation } from "@/data/skills";
 import { isSearchDisabled } from "@/utils/userValidation";
 import { getPopularSkillsFromDatabase, getCategoryEmoji, DatabaseSkill } from "@/services/skillService";
 import { useLanguage } from "@/hooks/useLanguage";
+import { logger } from '@/utils/logger';
 
 export const HeroSection = () => {
   const navigate = useNavigate();
@@ -33,7 +34,7 @@ export const HeroSection = () => {
         const skills = await getPopularSkillsFromDatabase(20);
         setPopularSkills(skills);
       } catch (error) {
-        console.error('Error fetching popular skills:', error);
+        logger.error('Error fetching popular skills:', error);
         // Fallback to static skills if database fetch fails
         setPopularSkills(POPULAR_SKILLS.map(skill => ({
           name: skill.name,

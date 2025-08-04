@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
+import { logger } from '@/utils/logger';
 
 interface ContactForm {
   name: string;
@@ -83,7 +84,7 @@ const ContactSupport = () => {
       // - Netlify Forms
       // - Your own backend API
       
-      console.log("Contact form submitted:", contactForm);
+      logger.debug('Contact form submitted:', contactForm);
       
       toast({
         title: t('contactSupport.form.success'),

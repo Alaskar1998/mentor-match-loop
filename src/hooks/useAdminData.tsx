@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
 
 // Real Supabase queries to replace mock data
 const getRealDashboardStats = async () => {
@@ -40,7 +41,7 @@ const getRealDashboardStats = async () => {
       averageRating = reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
     }
   } catch (error) {
-    console.warn('Could not fetch reviews data:', error);
+    logger.warn('Could not fetch reviews data:', error);
     // Continue with default value
   }
 
@@ -154,7 +155,7 @@ const getRealUsers = async () => {
       reviews = reviewsData;
     }
   } catch (error) {
-    console.warn('Could not fetch reviews data for users:', error);
+    logger.warn('Could not fetch reviews data for users:', error);
     // Continue with empty reviews array
   }
 
@@ -288,7 +289,7 @@ const getRealChatStats = async () => {
 
 const getRealReviews = async () => {
   try {
-    console.log('🔍 Fetching reviews data...');
+    logger.debug('🔍 Fetching reviews data...');
     
     // Get all reviews with user names
     const { data: reviews, error } = await supabase
@@ -306,10 +307,10 @@ const getRealReviews = async () => {
       `)
       .order('created_at', { ascending: false });
 
-    console.log('📊 Reviews query result:', { reviews, error });
+    logger.debug('📊 Reviews query result:', { reviews, error });
 
     if (error) {
-      console.warn('❌ Could not fetch reviews data:', error);
+      logger.warn('❌ Could not fetch reviews data:', error);
       // Return default values if table doesn't exist or has no data
       return {
         averageRating: 0,
@@ -368,10 +369,10 @@ const getRealReviews = async () => {
       recentReviews,
     };
     
-    console.log('✅ Reviews data processed:', result);
+    logger.debug('✅ Reviews data processed:', result);
     return result;
   } catch (error) {
-    console.warn('❌ Error fetching reviews data:', error);
+    logger.warn('❌ Error fetching reviews data:', error);
     // Return default values on any error
     return {
       averageRating: 0,

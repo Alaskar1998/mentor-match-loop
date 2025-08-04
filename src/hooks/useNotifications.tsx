@@ -4,6 +4,7 @@ import { notificationService } from "@/services/notificationService";
 import { useAuth } from "./useAuth";
 import { useToast } from "./use-toast";
 import { useOptimizedPolling } from "./useOptimizedPolling";
+import { logger } from '@/utils/logger';
 
 interface NotificationContextType {
   generalNotifications: Notification[];
@@ -53,7 +54,7 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
       
       // Only log in development mode
       if (process.env.NODE_ENV === 'development') {
-        console.log('🔄 Loading notifications for user:', user.id);
+        logger.debug('🔄 Loading notifications for user:', user.id);
       }
       
       const [generalNotificationsData, chatNotificationsData] = await Promise.all([
@@ -83,7 +84,7 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
         });
       }
     } catch (error) {
-      console.error('Failed to load notifications:', error);
+      logger.error('Failed to load notifications:', error);
     } finally {
       setIsLoading(false);
     }
@@ -94,7 +95,7 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
       await notificationService.markAsRead(notificationId);
       await loadNotifications(); // Refresh to update counts
     } catch (error) {
-      console.error('Failed to mark notification as read:', error);
+      logger.error('Failed to mark notification as read:', error);
     }
   };
 
@@ -110,7 +111,7 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
         description: type ? `All ${type} notifications marked as read` : "All notifications marked as read"
       });
     } catch (error) {
-      console.error('Failed to mark all notifications as read:', error);
+      logger.error('Failed to mark all notifications as read:', error);
     }
   };
 
@@ -119,7 +120,7 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
       await notificationService.deleteNotification(notificationId);
       await loadNotifications();
     } catch (error) {
-      console.error('Failed to delete notification:', error);
+      logger.error('Failed to delete notification:', error);
     }
   };
 
@@ -135,7 +136,7 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
         description: type ? `All ${type} notifications cleared` : "All notifications cleared"
       });
     } catch (error) {
-      console.error('Failed to clear notifications:', error);
+      logger.error('Failed to clear notifications:', error);
     }
   };
 
@@ -149,7 +150,7 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
       await loadNotifications(); // Refresh to update counts
       return createdNotification;
     } catch (error) {
-      console.error('Failed to create notification:', error);
+      logger.error('Failed to create notification:', error);
       throw error;
     }
   };

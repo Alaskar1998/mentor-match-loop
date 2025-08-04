@@ -10,6 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { notificationService } from '@/services/notificationService';
+import { logger } from '@/utils/logger';
 
 interface ExchangeReviewModalProps {
   isOpen: boolean;
@@ -88,7 +89,7 @@ export const ExchangeReviewModal = ({
         });
 
       if (error) {
-        console.error('Error submitting review:', error);
+        logger.error('Error submitting review:', error);
         throw error;
       }
 
@@ -110,7 +111,7 @@ export const ExchangeReviewModal = ({
           }
         });
       } catch (notificationError) {
-        console.error('Failed to create review notification:', notificationError);
+        logger.error('Failed to create review notification:', notificationError);
       }
 
       // Show success message
@@ -127,7 +128,7 @@ export const ExchangeReviewModal = ({
       onClose();
 
     } catch (error) {
-      console.error('Error submitting review:', error);
+      logger.error('Error submitting review:', error);
       toast({
         title: "Error",
         description: "Failed to submit review. Please try again.",

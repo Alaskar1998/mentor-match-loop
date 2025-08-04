@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useMonetization } from "@/hooks/useMonetization";
 import { 
+import { logger } from '@/utils/logger';
   Crown, 
   Check, 
   X, 
@@ -39,10 +40,10 @@ export const PremiumUpgradeModal = ({ isOpen, onClose }: PremiumUpgradeModalProp
     setIsLoading(true);
     try {
       // This will integrate with Stripe subscription checkout
-      console.log('Upgrading to Premium...');
+      logger.debug('Upgrading to Premium...');
       // Implement Stripe checkout integration here
     } catch (error) {
-      console.error('Upgrade failed:', error);
+      logger.error('Upgrade failed:', error);
     } finally {
       setIsLoading(false);
     }

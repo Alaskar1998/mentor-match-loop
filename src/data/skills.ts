@@ -4,6 +4,7 @@
  * This is the SINGLE SOURCE OF TRUTH for all skills and categories across the entire website.
  * 
  * IMPORTANT: All components must import skills from this file only.
+import { logger } from '@/utils/logger';
  * Do not create duplicate skill lists in other files.
  * 
  * To add new skills or categories:
@@ -538,13 +539,13 @@ export const searchSkillsBilingual = (query: string): string[] => {
   const normalizedQuery = query.toLowerCase().trim();
   const results: string[] = [];
   
-  console.log('searchSkillsBilingual: Searching for query:', query, 'normalized:', normalizedQuery);
+  logger.debug('searchSkillsBilingual: Searching for query:', query, 'normalized:', normalizedQuery);
   
   // Search in English skills
   for (const skill of getAllSkills()) {
     if (skill.toLowerCase().includes(normalizedQuery)) {
       results.push(skill);
-      console.log('searchSkillsBilingual: Found English match:', skill);
+      logger.debug('searchSkillsBilingual: Found English match:', skill);
     }
   }
   
@@ -553,12 +554,12 @@ export const searchSkillsBilingual = (query: string): string[] => {
     if (arabicTranslation.toLowerCase().includes(normalizedQuery)) {
       if (!results.includes(englishSkill)) {
         results.push(englishSkill);
-        console.log('searchSkillsBilingual: Found Arabic match:', arabicTranslation, '->', englishSkill);
+        logger.debug('searchSkillsBilingual: Found Arabic match:', arabicTranslation, '->', englishSkill);
       }
     }
   }
   
-  console.log('searchSkillsBilingual: Final results:', results);
+  logger.debug('searchSkillsBilingual: Final results:', results);
   return results;
 };
 

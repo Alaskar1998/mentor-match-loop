@@ -2,6 +2,7 @@ import { ArrowRight, Users, BookOpen, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTranslation } from "react-i18next";
+import { logger } from '@/utils/logger';
 
 export const JoinCommunitySection = () => {
   const { t } = useTranslation();
@@ -25,7 +26,7 @@ export const JoinCommunitySection = () => {
   ];
 
   const handleSignUp = () => {
-    console.log("Navigate to signup flow");
+    logger.debug('Navigate to signup flow');
     // Navigation logic would go here
   };
 

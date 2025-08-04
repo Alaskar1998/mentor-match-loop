@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translateSkill, translateName, translateStatus, translateDate } from "@/utils/translationUtils";
+import { logger } from '@/utils/logger';
 
 interface Chat {
   id: string;
@@ -47,7 +48,7 @@ export default function Messages() {
     
     // Only fetch if it's been more than 5 seconds since last fetch
     if (timeSinceLastFetch < 5000) {
-      console.log('⏱️ Skipping fetch - too soon since last fetch');
+      logger.debug('⏱️ Skipping fetch - too soon since last fetch');
       return;
     }
     
@@ -58,14 +59,14 @@ export default function Messages() {
   useEffect(() => {
     // Wait for auth to be ready and user to be loaded
     if (isAuthenticated && user?.id && !authLoading && !isSessionRestoring) {
-      console.log('✅ Auth ready, fetching chats for user:', user.id);
+      logger.debug('✅ Auth ready, fetching chats for user:', user.id);
       // Add a small delay to ensure user object is fully populated
       setTimeout(() => {
         debouncedFetchChats();
       }, 200);
     } else if (!isAuthenticated && !user && !authLoading && !isSessionRestoring) {
       // If not authenticated and auth is done loading, stop loading
-      console.log('❌ Not authenticated, stopping loading');
+      logger.debug('❌ Not authenticated, stopping loading');
       setLoading(false);
     } else {
       console.log('⏳ Auth state:', { 
@@ -84,7 +85,7 @@ export default function Messages() {
   useEffect(() => {
     // If we have a user with ID but no chats loaded yet, fetch them
     if (isAuthenticated && user?.id && !authLoading && !isSessionRestoring && chats.length === 0 && !loading) {
-      console.log('🔄 User became available, fetching chats for user:', user.id);
+      logger.debug('🔄 User became available, fetching chats for user:', user.id);
       // Add a small delay to ensure user object is fully populated
       setTimeout(() => {
         debouncedFetchChats();
@@ -109,17 +110,17 @@ export default function Messages() {
 
   const fetchChats = async () => {
     try {
-      console.log('🔄 fetchChats called with user:', user);
+      logger.debug('🔄 fetchChats called with user:', user);
       setLoading(true);
       
       // Check if user ID exists before making the query
       if (!user?.id) {
-        console.log("❌ Waiting for user ID to be available...", { user });
+        logger.debug('❌ Waiting for user ID to be available...', { user });
         setLoading(false);
         return;
       }
       
-      console.log("🔄 Fetching chats for user:", user.id);
+      logger.debug('🔄 Fetching chats for user:', user.id);
       
       const { data: chatsData, error } = await supabase
         .from("chats")
@@ -135,13 +136,13 @@ export default function Messages() {
         .order("updated_at", { ascending: false });
 
       if (error) {
-        console.error("Error fetching chats:", error);
+        logger.error('Error fetching chats:', error);
         toast.error(t('actions.failedToLoadConversations'));
         setLoading(false);
         return;
       }
 
-      console.log("📋 Found chats:", chatsData?.length || 0, chatsData);
+      logger.debug('📋 Found chats:', chatsData?.length || 0, chatsData);
 
       // For each chat, get the last message and recipient info
       const chatsWithDetails = await Promise.all(
@@ -186,9 +187,9 @@ export default function Messages() {
       );
 
       setChats(chatsWithDetails);
-      console.log("✅ Chats loaded successfully:", chatsWithDetails.length);
+      logger.debug('✅ Chats loaded successfully:', chatsWithDetails.length);
     } catch (error) {
-      console.error("Error fetching chats:", error);
+      logger.error('Error fetching chats:', error);
       toast.error(t('actions.failedToLoadConversations'));
     } finally {
       setLoading(false);
@@ -199,7 +200,7 @@ export default function Messages() {
     try {
       // Check if user ID exists before making the query
       if (!user?.id) {
-        console.error("No user ID available for marking messages as read");
+        logger.error('No user ID available for marking messages as read');
         return;
       }
       
@@ -211,18 +212,18 @@ export default function Messages() {
         .neq("sender_id", user.id);
 
       if (error) {
-        console.error("Error marking messages as read:", error);
+        logger.error('Error marking messages as read:', error);
       } else {
-        console.log("✅ Messages marked as read for chat:", chatId);
+        logger.debug('✅ Messages marked as read for chat:', chatId);
         // Only refresh the chats list if there were unread messages
         const chat = chats.find(c => c.id === chatId);
         if (chat && chat.unreadCount > 0) {
-          console.log('🔄 Refreshing chats list due to unread messages being marked as read');
+          logger.debug('🔄 Refreshing chats list due to unread messages being marked as read');
           await debouncedFetchChats();
         }
       }
     } catch (error) {
-      console.error("Error in handleChatClick:", error);
+      logger.error('Error in handleChatClick:', error);
     }
     
     // Navigate to the chat
@@ -253,7 +254,7 @@ export default function Messages() {
     });
     
     if (!isAuthenticated && !authLoading && !isSessionRestoring && user === null) {
-      console.log('User not authenticated, redirecting to home');
+      logger.debug('User not authenticated, redirecting to home');
       navigate('/');
     }
   }, [isAuthenticated, authLoading, isSessionRestoring, user, navigate]);

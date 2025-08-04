@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { notificationService } from "@/services/notificationService";
+import { logger } from '@/utils/logger';
 
 interface InvitationFlowProps {
   isOpen: boolean;
@@ -60,7 +61,7 @@ export const InvitationFlow = ({
     
     setIsLoading(true);
     try {
-      console.log('💾 Inserting invitation into database...');
+      logger.debug('💾 Inserting invitation into database...');
       const { error } = await supabase
         .from('invitations')
         .insert({
@@ -71,15 +72,15 @@ export const InvitationFlow = ({
           status: 'pending'
         });
       if (error) {
-        console.error('❌ Failed to insert invitation:', error);
+        logger.error('❌ Failed to insert invitation:', error);
         toast.error("Failed to send invitation");
-        console.error('Invitation error:', error);
+        logger.error('Invitation error:', error);
         return;
       }
       
-      console.log('✅ Invitation inserted successfully');
+      logger.debug('✅ Invitation inserted successfully');
       
-      console.log('👤 Fetching sender profile...');
+      logger.debug('👤 Fetching sender profile...');
       const { data: senderProfile } = await supabase
         .from('profiles')
         .select('display_name')
@@ -87,7 +88,7 @@ export const InvitationFlow = ({
         .single();
       const senderName = senderProfile?.display_name || user.email || 'Someone';
       
-      console.log('📧 Sender profile fetched:', { senderName });
+      logger.debug('📧 Sender profile fetched:', { senderName });
       
       try {
         console.log('🔍 Creating notification with data:', {
@@ -110,24 +111,24 @@ export const InvitationFlow = ({
             skill: selectedSkill
           }
         });
-        console.log('✅ Notification created successfully for recipient:', recipientId);
+        logger.debug('✅ Notification created successfully for recipient:', recipientId);
       } catch (notificationError) {
-        console.error('❌ Failed to create notification:', notificationError);
-        console.error('❌ Notification error details:', JSON.stringify(notificationError, null, 2));
+        logger.error('❌ Failed to create notification:', notificationError);
+        logger.error('❌ Notification error details:', JSON.stringify(notificationError, null, 2));
         // Don't fail the invitation if notification fails
       }
       
-             console.log('🎉 Invitation process completed successfully');
+             logger.debug('🎉 Invitation process completed successfully');
        toast.success('Invitation sent successfully!');
        setMessage("");
        setSelectedSkill("");
        onClose();
        onInviteSent?.(); // Call the callback after successful invitation
     } catch (error) {
-      console.error('❌ Overall invitation error:', error);
-      console.error('❌ Overall error details:', JSON.stringify(error, null, 2));
+      logger.error('❌ Overall invitation error:', error);
+      logger.error('❌ Overall error details:', JSON.stringify(error, null, 2));
       toast.error("Failed to send invitation");
-      console.error('Invitation error:', error);
+      logger.error('Invitation error:', error);
     } finally {
       setIsLoading(false);
     }

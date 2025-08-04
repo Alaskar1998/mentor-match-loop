@@ -1,5 +1,6 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
+import { logger } from '@/utils/logger';
 
 interface AnalyticsEvent {
   event: string;
@@ -75,7 +76,7 @@ class AnalyticsService {
         body: JSON.stringify(event),
       });
     } catch (error) {
-      console.error('Failed to send analytics event:', error);
+      logger.error('Failed to send analytics event:', error);
     }
   }
 
@@ -94,7 +95,7 @@ class AnalyticsService {
         body: JSON.stringify(eventsToSend),
       });
     } catch (error) {
-      console.error('Failed to flush analytics events:', error);
+      logger.error('Failed to flush analytics events:', error);
       // Restore events if flush failed
       this.events = [...eventsToSend, ...this.events];
     }
