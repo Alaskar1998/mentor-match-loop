@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { notificationService } from '@/services/notificationService';
 import { useLanguage } from '@/hooks/useLanguage';
+import { useTranslation } from 'react-i18next';
 import { translateCountry } from '@/utils/translationUtils';
 
 interface UserProfile {
@@ -44,6 +45,7 @@ export default function ProfileView() {
   const navigate = useNavigate();
   const { isAuthenticated, user: currentUser } = useAuth();
   const { language } = useLanguage();
+  const { t } = useTranslation();
   const [showSignupModal, setShowSignupModal] = useState(false);
   const [showInvitationModal, setShowInvitationModal] = useState(false);
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -90,8 +92,9 @@ export default function ProfileView() {
       const { data: reviewsData, error: reviewsError } = await supabase
         .from('reviews')
         .select(`
-          rating,
-          comment,
+          skill_rating,
+          communication_rating,
+          review_text,
           skill,
           created_at,
           profiles!reviewer_id (
@@ -99,7 +102,7 @@ export default function ProfileView() {
             avatar_url
           )
         `)
-        .eq('reviewee_id', id)
+        .eq('reviewed_user_id', id)
         .order('created_at', { ascending: false });
 
       if (reviewsError) {
@@ -114,13 +117,13 @@ export default function ProfileView() {
         .select(`
           id,
           skill,
-          status,
+          exchange_state,
           created_at,
           user1_id,
           user2_id
         `)
         .or(`user1_id.eq.${id},user2_id.eq.${id}`)
-        .eq('status', 'completed')
+        .eq('exchange_state', 'completed')
         .order('created_at', { ascending: false })
         .limit(5);
 
@@ -149,7 +152,7 @@ export default function ProfileView() {
       // Calculate stats
       const totalExchanges = exchangesData?.length || 0;
       const averageRating = reviewsData && reviewsData.length > 0 
-        ? reviewsData.reduce((sum, r) => sum + r.rating, 0) / reviewsData.length 
+        ? reviewsData.reduce((sum, r) => sum + r.skill_rating, 0) / reviewsData.length 
         : 0;
       const totalReviews = reviewsData?.length || 0;
 
@@ -487,13 +490,13 @@ export default function ProfileView() {
                             {review.profiles?.display_name || 'Anonymous'}
                           </span>
                           <div className="flex items-center gap-2">
-                            {renderStars(review.rating)}
+                            {renderStars(review.skill_rating)}
                             <span className="text-sm text-gray-500 font-medium">
-                              {review.rating}/5
+                              {review.skill_rating}/5
                             </span>
                           </div>
                         </div>
-                        <p className="text-gray-700 leading-relaxed text-base mb-3">{review.comment}</p>
+                        <p className="text-gray-700 leading-relaxed text-base mb-3">{review.review_text}</p>
                         {review.skill && (
                           <Badge variant="outline" className="text-xs bg-yellow-50 border-yellow-200 text-yellow-700">
                             {review.skill}

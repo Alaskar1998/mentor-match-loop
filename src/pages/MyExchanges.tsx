@@ -947,6 +947,9 @@ const MyExchanges = () => {
       // Track this invitation as accepted
       setAcceptedInvitations(prev => new Set([...prev, invite.id]));
       
+      // Navigate to the chat
+      navigate(`/chat/${chatData.id}`);
+      
       // Refresh data without showing loading state
       await fetchData(true); // Pass isPolling = true to avoid loading state
     } catch (error) {

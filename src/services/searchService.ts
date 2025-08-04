@@ -118,6 +118,35 @@ class SearchService {
     // Perform bilingual search
     const results = this.performBilingualSearch(users, term);
     
+    // DEBUG: For "Advertising" search, show all users to debug
+    if (term === 'advertising') {
+      console.log('🔍 DEBUG: Searching for "advertising" - showing all users for debugging');
+      const debugResults = users.map(user => ({
+        user,
+        matchedSkills: user.skills,
+        matchType: 'debug' as any
+      }));
+      console.log('🔍 DEBUG: All users for advertising search:', debugResults);
+      
+      // Also check what the popular skills function would see
+      console.log('🔍 DEBUG: Checking what popular skills function sees...');
+      const skillCounts: { [key: string]: number } = {};
+      users.forEach(user => {
+        if (Array.isArray(user.skills)) {
+          user.skills.forEach((skill: string) => {
+            if (skill && typeof skill === 'string') {
+              const normalizedSkillName = skill.trim();
+              if (normalizedSkillName) {
+                skillCounts[normalizedSkillName] = (skillCounts[normalizedSkillName] || 0) + 1;
+              }
+            }
+          });
+        }
+      });
+      console.log('🔍 DEBUG: Skill counts from search users:', skillCounts);
+      console.log('🔍 DEBUG: "Advertising" count in search users:', skillCounts['Advertising'] || 0);
+    }
+    
     // Generate suggestion ONLY if no results found
     const suggestion = results.length === 0 ? this.generateSuggestion(term) : undefined;
     
@@ -142,9 +171,21 @@ class SearchService {
     console.log('SearchService: Searching for term:', searchTerm);
     console.log('SearchService: Bilingual search found skills:', matchingEnglishSkills);
     console.log('SearchService: Total users to search:', users.length);
+    
+    // Debug: Check if "Advertising" is in the skills list
+    const allSkills = getAllSkills();
+    console.log('SearchService: "Advertising" in skills list:', allSkills.includes('Advertising'));
+    console.log('SearchService: All skills containing "advertising":', allSkills.filter(skill => skill.toLowerCase().includes('advertising')));
 
-    users.forEach(user => {
-      if (!Array.isArray(user.skills)) return;
+    console.log('🔍 DEBUG: Starting to process', users.length, 'users');
+    console.log('🔍 DEBUG: Users array:', users.map(u => ({ name: u.name, skillsCount: Array.isArray(u.skills) ? u.skills.length : 'not array' })));
+    
+    users.forEach((user, index) => {
+      console.log(`🔍 DEBUG: Processing user ${index + 1}/${users.length}:`, user.name, 'with skills:', user.skills);
+      if (!Array.isArray(user.skills)) {
+        console.log('🔍 DEBUG: User', user.name, 'has no skills array, skipping');
+        return;
+      }
 
       const matchedSkills: string[] = [];
       let matchType: SearchResult['matchType'] = 'partial';
@@ -152,38 +193,55 @@ class SearchService {
       // Debug: Log user skills
       if (user.skills.length > 0) {
         console.log('SearchService: User', user.name, 'has skills:', user.skills);
+      } else {
+        console.log('SearchService: User', user.name, 'has NO skills');
       }
 
-      user.skills.forEach((skill: string) => {
-        if (!skill || typeof skill !== 'string') return;
-        
-        const skillLower = skill.toLowerCase();
-        
-        // Check for exact match in English
-        if (skillLower === searchTerm) {
-          matchedSkills.push(skill);
-          matchType = 'exact';
+      user.skills.forEach((skill: any) => {
+        // Handle both string and object skill formats
+        let skillName = '';
+        if (typeof skill === 'string') {
+          skillName = skill;
+        } else if (skill && typeof skill === 'object' && skill.name) {
+          skillName = skill.name;
+        } else {
+          return; // Skip invalid skill format
         }
-        // Check for prefix match in English
-        else if (skillLower.startsWith(searchTerm)) {
-          matchedSkills.push(skill);
+        
+        if (!skillName) return;
+        
+        const skillLower = skillName.toLowerCase().trim();
+        const searchTermLower = searchTerm.toLowerCase().trim();
+        
+        console.log('🔍 DEBUG: Skill comparison - Original:', skillName, 'Lowercase:', skillLower, 'Search term:', searchTermLower);
+        console.log('🔍 DEBUG: Exact match check:', skillLower === searchTermLower, 'for skill:', skillName);
+        
+        // Check for exact match first (case-insensitive)
+        if (skillLower === searchTermLower) {
+          matchedSkills.push(skillName);
+          matchType = 'exact';
+          console.log('🔍 DEBUG: Exact match found:', skillName, 'for term:', searchTerm);
+        }
+        // Check for prefix match
+        else if (skillLower.startsWith(searchTermLower)) {
+          matchedSkills.push(skillName);
           if (matchType !== 'exact') matchType = 'prefix';
         }
-        // Check for suffix match in English
-        else if (skillLower.endsWith(searchTerm)) {
-          matchedSkills.push(skill);
+        // Check for suffix match
+        else if (skillLower.endsWith(searchTermLower)) {
+          matchedSkills.push(skillName);
           if (matchType !== 'exact') matchType = 'suffix';
         }
-        // Check for partial match in English
-        else if (skillLower.includes(searchTerm)) {
-          matchedSkills.push(skill);
+        // Check for partial match
+        else if (skillLower.includes(searchTermLower)) {
+          matchedSkills.push(skillName);
           if (matchType !== 'exact' && matchType !== 'prefix' && matchType !== 'suffix') {
             matchType = 'partial';
           }
         }
         // Check if this skill matches any of the bilingual search results
-        else if (matchingEnglishSkills.includes(skill)) {
-          matchedSkills.push(skill);
+        else if (matchingEnglishSkills.includes(skillName)) {
+          matchedSkills.push(skillName);
           if (matchType !== 'exact' && matchType !== 'prefix' && matchType !== 'suffix') {
             matchType = 'partial';
           }
@@ -192,11 +250,14 @@ class SearchService {
 
       // Only add user if they have matched skills
       if (matchedSkills.length > 0) {
+        console.log('🔍 DEBUG: Adding user to results:', user.name, 'with matched skills:', matchedSkills, 'match type:', matchType);
         results.push({
           user,
           matchedSkills: [...new Set(matchedSkills)], // Remove duplicates
           matchType
         });
+      } else {
+        console.log('🔍 DEBUG: User', user.name, 'has no matched skills, skipping');
       }
     });
 

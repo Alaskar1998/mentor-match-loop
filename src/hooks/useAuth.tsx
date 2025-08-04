@@ -121,6 +121,24 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               if (error) {
                 console.error('Error fetching user profile after all attempts:', error);
                 // Set basic user data even if profile fetch fails
+                // Fetch user stats even in error case
+                const { data: reviewsData } = await supabase
+                  .from('reviews')
+                  .select('skill_rating')
+                  .eq('reviewed_user_id', session.user.id);
+
+                const { data: exchangesData } = await supabase
+                  .from('chats')
+                  .select('id')
+                  .or(`user1_id.eq.${session.user.id},user2_id.eq.${session.user.id}`)
+                  .eq('exchange_state', 'completed');
+
+                const averageRating = reviewsData && reviewsData.length > 0 
+                  ? reviewsData.reduce((sum, r) => sum + r.skill_rating, 0) / reviewsData.length 
+                  : 0;
+
+                const successfulExchanges = exchangesData?.length || 0;
+
                 const userData: User = {
                   id: session.user.id,
                   email: session.user.email || '',
@@ -140,8 +158,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                   remainingInvites: 3,
                   appCoins: 50,
                   phoneVerified: false,
-                  successfulExchanges: 0,
-                  rating: 5.0
+                  successfulExchanges: successfulExchanges,
+                  rating: averageRating || 0
                 };
                 setUser(userData);
                 setIsAuthenticated(true);
@@ -151,6 +169,24 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
               if (profile) {
                 console.log('Fetched profile from database:', profile);
+                // Fetch user stats
+                const { data: reviewsData } = await supabase
+                  .from('reviews')
+                  .select('skill_rating')
+                  .eq('reviewed_user_id', profile.id);
+
+                const { data: exchangesData } = await supabase
+                  .from('chats')
+                  .select('id')
+                  .or(`user1_id.eq.${profile.id},user2_id.eq.${profile.id}`)
+                  .eq('exchange_state', 'completed');
+
+                const averageRating = reviewsData && reviewsData.length > 0 
+                  ? reviewsData.reduce((sum, r) => sum + r.skill_rating, 0) / reviewsData.length 
+                  : 0;
+
+                const successfulExchanges = exchangesData?.length || 0;
+
                 const userData: User = {
                   id: profile.id,
                   email: profile.email || session.user.email || '',
@@ -170,8 +206,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                   remainingInvites: 3,
                   appCoins: 50,
                   phoneVerified: false,
-                  successfulExchanges: 0,
-                  rating: 5.0
+                  successfulExchanges: successfulExchanges,
+                  rating: averageRating || 0
                 };
                 console.log('🔍 User type from database:', profile.user_type, '→ Mapped to:', userData.userType);
                 console.log('Mapped user data:', userData);
@@ -182,28 +218,46 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             } catch (error) {
               console.error('Error in auth state change handler:', error);
               // Set basic user data even if there's an error
-              const userData: User = {
-                id: session.user.id,
-                email: session.user.email || '',
-                name: session.user.user_metadata?.full_name || '',
-                profilePicture: '',
-                bio: '',
-                country: '',
-                age: undefined,
-                age_range: '',
-                gender: '',
-                phone: '',
-                role: 'user',
-                skillsToTeach: [],
-                skillsToLearn: [],
-                willingToTeachWithoutReturn: false,
-                userType: "free",
-                remainingInvites: 3,
-                appCoins: 50,
-                phoneVerified: false,
-                successfulExchanges: 0,
-                rating: 5.0
-              };
+                              // Fetch user stats
+                const { data: reviewsData } = await supabase
+                  .from('reviews')
+                  .select('skill_rating')
+                  .eq('reviewed_user_id', session.user.id);
+
+                const { data: exchangesData } = await supabase
+                  .from('chats')
+                  .select('id')
+                  .or(`user1_id.eq.${session.user.id},user2_id.eq.${session.user.id}`)
+                  .eq('exchange_state', 'completed');
+
+                const averageRating = reviewsData && reviewsData.length > 0 
+                  ? reviewsData.reduce((sum, r) => sum + r.skill_rating, 0) / reviewsData.length 
+                  : 0;
+
+                const successfulExchanges = exchangesData?.length || 0;
+
+                const userData: User = {
+                  id: session.user.id,
+                  email: session.user.email || '',
+                  name: session.user.user_metadata?.full_name || '',
+                  profilePicture: '',
+                  bio: '',
+                  country: '',
+                  age: undefined,
+                  age_range: '',
+                  gender: '',
+                  phone: '',
+                  role: 'user',
+                  skillsToTeach: [],
+                  skillsToLearn: [],
+                  willingToTeachWithoutReturn: false,
+                  userType: "free",
+                  remainingInvites: 3,
+                  appCoins: 50,
+                  phoneVerified: false,
+                  successfulExchanges: successfulExchanges,
+                  rating: averageRating || 0
+                };
               setUser(userData);
               setIsAuthenticated(true);
               setIsSessionRestoring(false); // Mark session restoration as complete

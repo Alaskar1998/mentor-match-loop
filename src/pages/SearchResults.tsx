@@ -79,7 +79,7 @@ const SearchResultsPage = () => {
     clearCache
   } = useOptimizedSearch({
     debounceMs: 300,
-    cacheResults: true,
+    cacheResults: false, // Temporarily disable cache to fix the issue
     maxCacheSize: 50
   });
 
@@ -103,7 +103,9 @@ const SearchResultsPage = () => {
       try {
         setLoading(true);
         
-        // Fetch profiles from Supabase
+        console.log('🔍 DEBUG: Starting to fetch users from Supabase...');
+        
+        // Fetch profiles from Supabase with reviews and exchanges data
         const { data: profiles, error } = await supabase
           .from('profiles')
           .select(`
@@ -124,42 +126,96 @@ const SearchResultsPage = () => {
           return;
         }
 
-        // Transform Supabase data to UserProfile format and filter out current user
-        const transformedUsers: UserProfile[] = profiles
-          ?.filter(profile => profile.id !== user?.id) // Filter out current user's profile
-          .map(profile => ({
-            id: profile.id,
-            name: profile.display_name || t('actions.anonymousUser'),
-            profilePicture: profile.avatar_url && profile.avatar_url.startsWith('http') ? profile.avatar_url : '👤',
-            isMentor: profile.willing_to_teach_without_return || false, // Use this as mentor indicator
-            rating: 4.5, // Default rating since it's not in the schema
-            successfulExchanges: 0, // Default since it's not in the schema
-            skillLevel: 'Intermediate' as const, // Default since it's not in the schema
-            bio: profile.bio || '',
-            skills: Array.isArray(profile.skills_to_teach) 
-              ? profile.skills_to_teach.map((skill: any) => {
-                  // Handle different skill formats
-                  if (typeof skill === 'string') return skill;
-                  if (skill && typeof skill === 'object') {
-                    return skill.name || skill.skill || skill.title || JSON.stringify(skill);
-                  }
-                  return String(skill);
-                })
-              : [],
-            country: profile.country || t('actions.unknown'),
-            gender: (profile.gender === 'Female' ? 'Female' : 'Male') as 'Male' | 'Female',
-            willingToTeachWithoutReturn: profile.willing_to_teach_without_return || false
-          })) || [];
+        console.log('🔍 DEBUG: Raw profiles from Supabase:', profiles?.length || 0);
 
-        console.log('Loaded users with skills and avatars:', transformedUsers.map(user => ({
-          name: user.name,
-          skills: user.skills,
-          bio: user.bio,
-          avatar: user.profilePicture
+        // Transform Supabase data to UserProfile format and filter out current user
+        const transformedUsers: UserProfile[] = await Promise.all(
+          profiles
+            ?.filter(profile => profile.id !== user?.id) // Filter out current user's profile
+            .map(async (profile) => {
+              // Fetch reviews for this user
+              const { data: reviewsData } = await supabase
+                .from('reviews')
+                .select('skill_rating')
+                .eq('reviewed_user_id', profile.id);
+
+              // Fetch completed exchanges for this user
+              const { data: exchangesData } = await supabase
+                .from('chats')
+                .select('id')
+                .or(`user1_id.eq.${profile.id},user2_id.eq.${profile.id}`)
+                .eq('exchange_state', 'completed');
+
+              // Calculate average rating
+              const averageRating = reviewsData && reviewsData.length > 0 
+                ? reviewsData.reduce((sum, r) => sum + r.skill_rating, 0) / reviewsData.length 
+                : 0;
+
+              // Count completed exchanges
+              const successfulExchanges = exchangesData?.length || 0;
+
+              return {
+                id: profile.id,
+                name: profile.display_name || t('actions.anonymousUser'),
+                profilePicture: profile.avatar_url && profile.avatar_url.startsWith('http') ? profile.avatar_url : '👤',
+                isMentor: profile.willing_to_teach_without_return || false, // Use this as mentor indicator
+                rating: averageRating || 0, // Use actual average rating
+                successfulExchanges: successfulExchanges, // Use actual exchange count
+                skillLevel: 'Intermediate' as const, // Default since it's not in the schema
+                bio: profile.bio || '',
+                skills: Array.isArray(profile.skills_to_teach) 
+                  ? profile.skills_to_teach.map((skill: any) => {
+                      // Handle different skill formats
+                      if (typeof skill === 'string') return skill;
+                      if (skill && typeof skill === 'object') {
+                        return skill.name || skill.skill || skill.title || JSON.stringify(skill);
+                      }
+                      return String(skill);
+                    })
+                  : [],
+                country: profile.country || t('actions.unknown'),
+                gender: (profile.gender === 'Female' ? 'Female' : 'Male') as 'Male' | 'Female',
+                willingToTeachWithoutReturn: profile.willing_to_teach_without_return || false
+              };
+            }) || []
+        );
+
+        console.log('🔍 DEBUG: Transformed users:', transformedUsers.length);
+        console.log('🔍 DEBUG: Sample users with skills:');
+        transformedUsers.slice(0, 5).forEach(user => {
+          console.log(`  - ${user.name}: [${user.skills.join(', ')}]`);
+        });
+        
+        // Debug: Log raw skills data from database
+        console.log('🔍 DEBUG: Raw skills data from database:', profiles?.map(profile => ({
+          name: profile.display_name,
+          skills_to_teach: profile.skills_to_teach
         })));
         
+        // Debug: Show all users regardless of search term for testing
+        console.log('🔍 DEBUG: All users available for search:', transformedUsers.length);
+        transformedUsers.forEach((user, index) => {
+          console.log(`User ${index + 1}: ${user.name} - Skills: [${user.skills.join(', ')}]`);
+        });
+        
+        // Debug: Check for "Accounting" specifically
+        const accountingUsers = transformedUsers.filter(user => 
+          user.skills.some(skill => skill.toLowerCase().includes('accounting'))
+        );
+        console.log('🔍 DEBUG: Users with "Accounting" skill:', accountingUsers.length);
+        accountingUsers.forEach((user, index) => {
+          console.log(`Accounting User ${index + 1}: ${user.name} - Skills: [${user.skills.join(', ')}]`);
+        });
+        
+        console.log('🔍 DEBUG: Setting users in SearchResults:', transformedUsers.length);
         setUsers(transformedUsers);
         setSearchUsers(transformedUsers); // Update optimized search hook
+        
+        // Force search service initialization with the new users
+        if (searchQuery && transformedUsers.length > 0) {
+          console.log('🔍 DEBUG: Forcing search service initialization with', transformedUsers.length, 'users');
+          // The search will be triggered by the useEffect that watches searchQuery
+        }
       } catch (error) {
         console.error('Error fetching users:', error);
         setUsers([]);
@@ -170,12 +226,24 @@ const SearchResultsPage = () => {
     };
 
     fetchUsers();
-  }, []);
+  }, [user?.id, t]);
 
   // Update search term when URL changes
   useEffect(() => {
+    console.log('🔍 DEBUG: Search query changed to:', searchQuery);
     updateSearchTerm(searchQuery);
-  }, [searchQuery, updateSearchTerm]);
+    // Clear cache when search query changes to ensure fresh results
+    clearCache();
+  }, [searchQuery, updateSearchTerm, clearCache]);
+
+  // Ensure search service is initialized when users are loaded
+  useEffect(() => {
+    if (users.length > 0 && searchQuery) {
+      console.log('🔍 DEBUG: Users loaded, re-triggering search for:', searchQuery);
+      // Force a fresh search with the loaded users
+      updateSearchTerm(searchQuery);
+    }
+  }, [users.length, searchQuery, updateSearchTerm]);
 
   // Apply filters to search results and limit for free users
   useEffect(() => {
