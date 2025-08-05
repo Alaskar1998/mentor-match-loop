@@ -1,15 +1,15 @@
-import { 
-import { logger } from '@/utils/logger';
-  CoinTransaction, 
-  CoinTransactionType, 
-  DailyStreak, 
-  ReferralTracker, 
-  WeeklyMission, 
+import {
+  CoinTransaction,
+  CoinTransactionType,
+  DailyStreak,
+  ReferralTracker,
+  WeeklyMission,
   UserMissionProgress,
   AdWatchingSession,
   ProfileCompletionTracker,
-  MentorMilestone
+  MentorMilestone,
 } from '@/types/coin-economy';
+import { logger } from '@/utils/logger';
 
 interface CoinEarningRules {
   dailyLoginBonus: {
@@ -66,12 +66,12 @@ interface CoinPackRules {
 
 class CoinEconomyService {
   private static instance: CoinEconomyService;
-  
+
   private readonly EARNING_RULES: CoinEarningRules = {
     dailyLoginBonus: {
       minCoins: 5,
       maxCoins: 30,
-      streakMultiplier: 5
+      streakMultiplier: 5,
     },
     profileCompletion: 50,
     exchangeCompletion: 20,
@@ -79,16 +79,16 @@ class CoinEconomyService {
     referralReward: 100,
     adWatching: {
       coinsPerAd: 10,
-      dailyLimit: 5
+      dailyLimit: 5,
     },
     weeklyMission: {
       min: 50,
-      max: 100
+      max: 100,
     },
     mentorMilestone: 50,
     monthlyStipend: {
-      premium: 300
-    }
+      premium: 300,
+    },
   };
 
   private readonly SPENDING_RULES: CoinSpendingRules = {
@@ -98,14 +98,14 @@ class CoinEconomyService {
     profileBoost: { free: 150, premium: 100 },
     pinnedReview: 200,
     skillVerification: 500,
-    customTheme: 100
+    customTheme: 100,
   };
 
   private readonly COIN_PACKS: CoinPackRules = {
     starter: { price: 0.99, coins: 100 },
     learner: { price: 4.99, coins: 600 },
     pro: { price: 9.99, coins: 1400 },
-    mega: { price: 19.99, coins: 3200 }
+    mega: { price: 19.99, coins: 3200 },
   };
 
   public static getInstance(): CoinEconomyService {
@@ -117,10 +117,12 @@ class CoinEconomyService {
 
   // ===== EARNING COINS =====
 
-  async processDailyLoginBonus(userId: string): Promise<CoinTransaction | null> {
+  async processDailyLoginBonus(
+    userId: string
+  ): Promise<CoinTransaction | null> {
     const streak = await this.getDailyStreak(userId);
     const today = new Date().toDateString();
-    
+
     if (streak.lastLoginDate === today) {
       return null; // Already claimed today
     }
@@ -128,10 +130,12 @@ class CoinEconomyService {
     const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toDateString();
     const isConsecutive = streak.lastLoginDate === yesterday;
     const newStreakDay = isConsecutive ? streak.currentStreak + 1 : 1;
-    
+
     // Calculate coins based on streak
     const streakBonus = Math.min(
-      this.EARNING_RULES.dailyLoginBonus.minCoins + (newStreakDay - 1) * this.EARNING_RULES.dailyLoginBonus.streakMultiplier,
+      this.EARNING_RULES.dailyLoginBonus.minCoins +
+        (newStreakDay - 1) *
+          this.EARNING_RULES.dailyLoginBonus.streakMultiplier,
       this.EARNING_RULES.dailyLoginBonus.maxCoins
     );
 
@@ -141,50 +145,64 @@ class CoinEconomyService {
       lastLoginDate: today,
       longestStreak: Math.max(streak.longestStreak, newStreakDay),
       totalLogins: streak.totalLogins + 1,
-      streakResetCount: isConsecutive ? streak.streakResetCount : streak.streakResetCount + 1
+      streakResetCount: isConsecutive
+        ? streak.streakResetCount
+        : streak.streakResetCount + 1,
     });
 
-    return await this.createCoinTransaction(userId, 'daily_login_bonus', streakBonus, {
-      streakDay: newStreakDay
-    });
+    return await this.createCoinTransaction(
+      userId,
+      'daily_login_bonus',
+      streakBonus,
+      {
+        streakDay: newStreakDay,
+      }
+    );
   }
 
-  async processProfileCompletion(userId: string, completionPercentage: number): Promise<CoinTransaction | null> {
+  async processProfileCompletion(
+    userId: string,
+    completionPercentage: number
+  ): Promise<CoinTransaction | null> {
     const tracker = await this.getProfileCompletionTracker(userId);
-    
+
     if (completionPercentage === 100 && !tracker.rewardClaimed) {
       await this.updateProfileCompletionTracker(userId, {
         completionPercentage: 100,
         rewardClaimed: true,
-        lastCalculatedAt: new Date()
+        lastCalculatedAt: new Date(),
       });
 
-      return await this.createCoinTransaction(userId, 'profile_completion', this.EARNING_RULES.profileCompletion);
+      return await this.createCoinTransaction(
+        userId,
+        'profile_completion',
+        this.EARNING_RULES.profileCompletion
+      );
     }
 
     return null;
   }
 
   async processExchangeCompletion(
-    userId: string, 
-    partnerId: string, 
-    exchangeId: string, 
+    userId: string,
+    partnerId: string,
+    exchangeId: string,
     isMentor: boolean
   ): Promise<CoinTransaction[]> {
     const transactions: CoinTransaction[] = [];
-    
+
     // Base reward for both users
     const userTransaction = await this.createCoinTransaction(
-      userId, 
-      'exchange_completion', 
+      userId,
+      'exchange_completion',
       this.EARNING_RULES.exchangeCompletion,
       { exchangeId }
     );
     transactions.push(userTransaction);
 
     const partnerTransaction = await this.createCoinTransaction(
-      partnerId, 
-      'exchange_completion', 
+      partnerId,
+      'exchange_completion',
       this.EARNING_RULES.exchangeCompletion,
       { exchangeId }
     );
@@ -193,8 +211,8 @@ class CoinEconomyService {
     // Mentor bonus for user if applicable
     if (isMentor) {
       const mentorTransaction = await this.createCoinTransaction(
-        userId, 
-        'mentor_bonus', 
+        userId,
+        'mentor_bonus',
         this.EARNING_RULES.mentorBonus,
         { exchangeId }
       );
@@ -214,7 +232,10 @@ class CoinEconomyService {
     return transactions;
   }
 
-  async processAdWatching(userId: string, userTier: 'free' | 'premium'): Promise<CoinTransaction | null> {
+  async processAdWatching(
+    userId: string,
+    userTier: 'free' | 'premium'
+  ): Promise<CoinTransaction | null> {
     if (userTier !== 'free') {
       throw new Error('Only free users can watch ads for coins');
     }
@@ -228,7 +249,7 @@ class CoinEconomyService {
         date: today,
         watchedCount: 0,
         dailyLimit: this.EARNING_RULES.adWatching.dailyLimit,
-        lastWatchedAt: new Date()
+        lastWatchedAt: new Date(),
       });
     }
 
@@ -240,18 +261,21 @@ class CoinEconomyService {
     await this.updateAdWatchingSession(userId, {
       ...session,
       watchedCount: session.watchedCount + 1,
-      lastWatchedAt: new Date()
+      lastWatchedAt: new Date(),
     });
 
     return await this.createCoinTransaction(
-      userId, 
-      'ad_watched', 
+      userId,
+      'ad_watched',
       this.EARNING_RULES.adWatching.coinsPerAd,
       { adProvider: 'google_ads' }
     );
   }
 
-  async processMonthlyStipend(userId: string, userTier: 'free' | 'premium'): Promise<CoinTransaction | null> {
+  async processMonthlyStipend(
+    userId: string,
+    userTier: 'free' | 'premium'
+  ): Promise<CoinTransaction | null> {
     if (userTier !== 'premium') {
       return null;
     }
@@ -259,7 +283,7 @@ class CoinEconomyService {
     // Check if already claimed this month
     const thisMonth = new Date().toISOString().substring(0, 7); // YYYY-MM
     const lastStipend = await this.getLastStipendDate(userId);
-    
+
     if (lastStipend?.startsWith(thisMonth)) {
       return null; // Already claimed this month
     }
@@ -267,8 +291,8 @@ class CoinEconomyService {
     await this.updateLastStipendDate(userId, new Date().toISOString());
 
     return await this.createCoinTransaction(
-      userId, 
-      'monthly_stipend', 
+      userId,
+      'monthly_stipend',
       this.EARNING_RULES.monthlyStipend.premium
     );
   }
@@ -276,16 +300,17 @@ class CoinEconomyService {
   async checkMentorMilestone(userId: string): Promise<CoinTransaction | null> {
     const milestone = await this.getMentorMilestone(userId);
     const currentMilestone = Math.floor(milestone.totalMentorExchanges / 10);
-    
+
     if (currentMilestone > milestone.lastMilestoneReached) {
       await this.updateMentorMilestone(userId, {
         lastMilestoneReached: currentMilestone,
-        totalBonusEarned: milestone.totalBonusEarned + this.EARNING_RULES.mentorMilestone
+        totalBonusEarned:
+          milestone.totalBonusEarned + this.EARNING_RULES.mentorMilestone,
       });
 
       return await this.createCoinTransaction(
-        userId, 
-        'mentor_milestone', 
+        userId,
+        'mentor_milestone',
         this.EARNING_RULES.mentorMilestone,
         { missionId: `mentor_milestone_${currentMilestone}` }
       );
@@ -297,35 +322,37 @@ class CoinEconomyService {
   // ===== SPENDING COINS =====
 
   async purchaseItem(
-    userId: string, 
-    itemType: keyof CoinSpendingRules, 
+    userId: string,
+    itemType: keyof CoinSpendingRules,
     userTier: 'free' | 'premium'
   ): Promise<CoinTransaction> {
     const cost = this.getItemCost(itemType, userTier);
     const currentBalance = await this.getCoinBalance(userId);
 
     if (currentBalance < cost) {
-      throw new Error(`Insufficient coins. Required: ${cost}, Available: ${currentBalance}`);
+      throw new Error(
+        `Insufficient coins. Required: ${cost}, Available: ${currentBalance}`
+      );
     }
 
     return await this.createCoinTransaction(
-      userId, 
-      `${itemType}_purchase` as CoinTransactionType, 
+      userId,
+      `${itemType}_purchase` as CoinTransactionType,
       -cost,
       { itemId: itemType }
     );
   }
 
   async purchaseCoinPack(
-    userId: string, 
-    packType: keyof CoinPackRules, 
+    userId: string,
+    packType: keyof CoinPackRules,
     paymentTransactionId: string
   ): Promise<CoinTransaction> {
     const pack = this.COIN_PACKS[packType];
-    
+
     return await this.createCoinTransaction(
-      userId, 
-      'coin_pack_purchase', 
+      userId,
+      'coin_pack_purchase',
       pack.coins,
       { coinPackId: packType }
     );
@@ -333,13 +360,16 @@ class CoinEconomyService {
 
   // ===== UTILITY METHODS =====
 
-  getItemCost(itemType: keyof CoinSpendingRules, userTier: 'free' | 'premium'): number {
+  getItemCost(
+    itemType: keyof CoinSpendingRules,
+    userTier: 'free' | 'premium'
+  ): number {
     const rule = this.SPENDING_RULES[itemType];
-    
+
     if (typeof rule === 'number') {
       return rule;
     }
-    
+
     return rule[userTier];
   }
 
@@ -355,26 +385,30 @@ class CoinEconomyService {
     const freeUserExchangeEarnings = this.EARNING_RULES.exchangeCompletion * 3; // 60 coins
     const twoInvitesCost = this.SPENDING_RULES.extraInvite.free * 2; // 100 coins
     const starterPackCoins = this.COIN_PACKS.starter.coins; // 100 coins
-    
+
     logger.debug('Economy Validation:');
     logger.debug('3 exchanges earn: ${freeUserExchangeEarnings} coins');
     logger.debug('2 invites cost: ${twoInvitesCost} coins');
     logger.debug('$0.99 pack gives: ${starterPackCoins} coins');
-    
+
     const profileBoostCost = this.SPENDING_RULES.profileBoost.free; // 150 coins
-    const exchangesForBoost = Math.ceil(profileBoostCost / this.EARNING_RULES.exchangeCompletion); // 8 exchanges
-    
-    logger.debug('Profile boost costs: ${profileBoostCost} coins (~${exchangesForBoost} exchanges)');
-    
+    const exchangesForBoost = Math.ceil(
+      profileBoostCost / this.EARNING_RULES.exchangeCompletion
+    ); // 8 exchanges
+
+    logger.debug(
+      'Profile boost costs: ${profileBoostCost} coins (~${exchangesForBoost} exchanges)'
+    );
+
     return true;
   }
 
   // ===== PRIVATE HELPER METHODS =====
 
   private async createCoinTransaction(
-    userId: string, 
-    type: CoinTransactionType, 
-    amount: number, 
+    userId: string,
+    type: CoinTransactionType,
+    amount: number,
     metadata?: any
   ): Promise<CoinTransaction> {
     const currentBalance = await this.getCoinBalance(userId);
@@ -387,7 +421,7 @@ class CoinEconomyService {
       balanceAfter: currentBalance + amount,
       timestamp: new Date(),
       metadata,
-      status: 'completed'
+      status: 'completed',
     };
 
     await this.saveTransaction(transaction);
@@ -404,7 +438,9 @@ class CoinEconomyService {
     localStorage.setItem(key, JSON.stringify(existing));
   }
 
-  private async getUserTransactions(userId: string): Promise<CoinTransaction[]> {
+  private async getUserTransactions(
+    userId: string
+  ): Promise<CoinTransaction[]> {
     const key = `transactions_${userId}`;
     return JSON.parse(localStorage.getItem(key) || '[]');
   }
@@ -417,48 +453,67 @@ class CoinEconomyService {
       lastLoginDate: '',
       longestStreak: 0,
       totalLogins: 0,
-      streakResetCount: 0
+      streakResetCount: 0,
     };
-    return JSON.parse(localStorage.getItem(key) || JSON.stringify(defaultStreak));
+    return JSON.parse(
+      localStorage.getItem(key) || JSON.stringify(defaultStreak)
+    );
   }
 
-  private async updateDailyStreak(userId: string, streak: Partial<DailyStreak>): Promise<void> {
+  private async updateDailyStreak(
+    userId: string,
+    streak: Partial<DailyStreak>
+  ): Promise<void> {
     const key = `streak_${userId}`;
     const current = await this.getDailyStreak(userId);
     localStorage.setItem(key, JSON.stringify({ ...current, ...streak }));
   }
 
-  private async getProfileCompletionTracker(userId: string): Promise<ProfileCompletionTracker> {
+  private async getProfileCompletionTracker(
+    userId: string
+  ): Promise<ProfileCompletionTracker> {
     const key = `profile_completion_${userId}`;
     const defaultTracker: ProfileCompletionTracker = {
       userId,
       completionPercentage: 0,
       rewardClaimed: false,
       lastCalculatedAt: new Date(),
-      completedFields: []
+      completedFields: [],
     };
-    return JSON.parse(localStorage.getItem(key) || JSON.stringify(defaultTracker));
+    return JSON.parse(
+      localStorage.getItem(key) || JSON.stringify(defaultTracker)
+    );
   }
 
-  private async updateProfileCompletionTracker(userId: string, tracker: Partial<ProfileCompletionTracker>): Promise<void> {
+  private async updateProfileCompletionTracker(
+    userId: string,
+    tracker: Partial<ProfileCompletionTracker>
+  ): Promise<void> {
     const key = `profile_completion_${userId}`;
     const current = await this.getProfileCompletionTracker(userId);
     localStorage.setItem(key, JSON.stringify({ ...current, ...tracker }));
   }
 
-  private async getAdWatchingSession(userId: string): Promise<AdWatchingSession> {
+  private async getAdWatchingSession(
+    userId: string
+  ): Promise<AdWatchingSession> {
     const key = `ad_session_${userId}`;
     const defaultSession: AdWatchingSession = {
       userId,
       date: new Date().toDateString(),
       watchedCount: 0,
       dailyLimit: this.EARNING_RULES.adWatching.dailyLimit,
-      lastWatchedAt: new Date()
+      lastWatchedAt: new Date(),
     };
-    return JSON.parse(localStorage.getItem(key) || JSON.stringify(defaultSession));
+    return JSON.parse(
+      localStorage.getItem(key) || JSON.stringify(defaultSession)
+    );
   }
 
-  private async updateAdWatchingSession(userId: string, session: Partial<AdWatchingSession>): Promise<void> {
+  private async updateAdWatchingSession(
+    userId: string,
+    session: Partial<AdWatchingSession>
+  ): Promise<void> {
     const key = `ad_session_${userId}`;
     const current = await this.getAdWatchingSession(userId);
     localStorage.setItem(key, JSON.stringify({ ...current, ...session }));
@@ -470,12 +525,17 @@ class CoinEconomyService {
       userId,
       totalMentorExchanges: 0,
       lastMilestoneReached: 0,
-      totalBonusEarned: 0
+      totalBonusEarned: 0,
     };
-    return JSON.parse(localStorage.getItem(key) || JSON.stringify(defaultMilestone));
+    return JSON.parse(
+      localStorage.getItem(key) || JSON.stringify(defaultMilestone)
+    );
   }
 
-  private async updateMentorMilestone(userId: string, milestone: Partial<MentorMilestone>): Promise<void> {
+  private async updateMentorMilestone(
+    userId: string,
+    milestone: Partial<MentorMilestone>
+  ): Promise<void> {
     const key = `mentor_milestone_${userId}`;
     const current = await this.getMentorMilestone(userId);
     localStorage.setItem(key, JSON.stringify({ ...current, ...milestone }));
@@ -485,7 +545,10 @@ class CoinEconomyService {
     return localStorage.getItem(`last_stipend_${userId}`);
   }
 
-  private async updateLastStipendDate(userId: string, date: string): Promise<void> {
+  private async updateLastStipendDate(
+    userId: string,
+    date: string
+  ): Promise<void> {
     localStorage.setItem(`last_stipend_${userId}`, date);
   }
 

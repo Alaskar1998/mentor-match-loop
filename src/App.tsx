@@ -1,44 +1,51 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { AuthProvider } from "@/hooks/useAuth";
-import { GamificationProvider } from "@/hooks/useGamification";
-import { MonetizationProvider } from "@/hooks/useMonetization";
-import { NotificationProvider } from "@/hooks/useNotifications";
-import { LanguageProvider } from "@/hooks/useLanguage";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { Suspense, lazy } from "react";
+import { Toaster } from '@/components/ui/toaster';
+import { Toaster as Sonner } from '@/components/ui/sonner';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from 'react-router-dom';
+import { AuthProvider } from '@/hooks/useAuth';
+import { GamificationProvider } from '@/hooks/useGamification';
+import { MonetizationProvider } from '@/hooks/useMonetization';
+import { NotificationProvider } from '@/hooks/useNotifications';
+import { LanguageProvider } from '@/hooks/useLanguage';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { Suspense, lazy, useState, useEffect } from 'react';
 import '@/i18n'; // Import to initialize i18n
 
 // Lazy load pages for better performance
-const Index = lazy(() => import("./pages/Index"));
-const Pricing = lazy(() => import("./pages/Pricing"));
-const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
-const TermsOfUse = lazy(() => import("./pages/TermsOfUse"));
-const Settings = lazy(() => import("./pages/Settings"));
-const Help = lazy(() => import("./pages/Help"));
-const SearchResults = lazy(() => import("./pages/SearchResults"));
-const RequestsFeed = lazy(() => import("./pages/RequestsFeed"));
-const Chat = lazy(() => import("./pages/Chat"));
-const Profile = lazy(() => import("./pages/Profile"));
-const Messages = lazy(() => import("./pages/Messages"));
-const ProfileView = lazy(() => import("./pages/ProfileView"));
-const MyExchanges = lazy(() => import("./pages/MyExchanges"));
-const Gamification = lazy(() => import("./pages/Gamification"));
-const ContactSupport = lazy(() => import("./pages/ContactSupport"));
-const NotFound = lazy(() => import("./pages/NotFound"));
+const Index = lazy(() => import('./pages/Index'));
+const Pricing = lazy(() => import('./pages/Pricing'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const TermsOfUse = lazy(() => import('./pages/TermsOfUse'));
+const Settings = lazy(() => import('./pages/Settings'));
+const Help = lazy(() => import('./pages/Help'));
+const SearchResults = lazy(() => import('./pages/SearchResults'));
+const RequestsFeed = lazy(() => import('./pages/RequestsFeed'));
+const Chat = lazy(() => import('./pages/Chat'));
+const Profile = lazy(() => import('./pages/Profile'));
+const Messages = lazy(() => import('./pages/Messages'));
+const ProfileView = lazy(() => import('./pages/ProfileView'));
+const MyExchanges = lazy(() => import('./pages/MyExchanges'));
+const Gamification = lazy(() => import('./pages/Gamification'));
+const ContactSupport = lazy(() => import('./pages/ContactSupport'));
+const NotFound = lazy(() => import('./pages/NotFound'));
+const TestPage = lazy(() => import('./pages/TestPage'));
 
 // Admin pages
-const AdminLayout = lazy(() => import("./components/admin/AdminLayout"));
-const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
-const AdminUsers = lazy(() => import("./pages/admin/Users"));
-const AdminInvitations = lazy(() => import("./pages/admin/Invitations"));
-const AdminChats = lazy(() => import("./pages/admin/Chats"));
-const AdminReviews = lazy(() => import("./pages/admin/Reviews"));
+const AdminLayout = lazy(() => import('./components/admin/AdminLayout'));
+const AdminDashboard = lazy(() => import('./pages/admin/Dashboard'));
+const AdminUsers = lazy(() => import('./pages/admin/Users'));
+const AdminInvitations = lazy(() => import('./pages/admin/Invitations'));
+const AdminChats = lazy(() => import('./pages/admin/Chats'));
+const AdminReviews = lazy(() => import('./pages/admin/Reviews'));
 
-import { Header } from "./components/Header";
-import { Footer } from "./components/Footer";
+import { Header } from './components/Header';
+import { Footer } from './components/Footer';
 
 // Loading component
 const PageLoader = () => (
@@ -53,8 +60,8 @@ const PageLoader = () => (
 function DashboardInvitesRedirect() {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
-  const tab = params.get("tab");
-  let to = "/my-exchanges";
+  const tab = params.get('tab');
+  let to = '/my-exchanges';
   if (tab) {
     to += `?tab=${tab}`;
   }
@@ -80,61 +87,109 @@ const queryClient = new QueryClient({
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <LanguageProvider>
+      <BrowserRouter>
         <AuthProvider>
-          <NotificationProvider>
-            <MonetizationProvider>
-              <BrowserRouter>
-                <ErrorBoundary>
-                  <div className="min-h-screen flex flex-col overflow-x-hidden">
-                    <Header />
-                    <main className="flex-1 overflow-x-hidden">
-                      <Suspense fallback={<PageLoader />}>
-                        <Routes>
-                          <Route path="/" element={<Index />} />
-                          <Route path="/pricing" element={<Pricing />} />
-                          <Route path="/privacy" element={<PrivacyPolicy />} />
-                          <Route path="/terms" element={<TermsOfUse />} />
-                          <Route path="/settings" element={<Settings />} />
-                          <Route path="/help" element={<Help />} />
-                          <Route path="/contact" element={<ContactSupport />} />
-                          <Route path="/search" element={<SearchResults />} />
-                          <Route path="/requests-feed" element={<RequestsFeed />} />
-                          <Route path="/chat/:chatId" element={<Chat />} />
-                          <Route path="/messages" element={<Messages />} />
-                          <Route path="/my-exchanges" element={<MyExchanges />} />
-                          <Route path="/profile" element={<Profile />} />
-                          <Route path="/profile/:id" element={<ProfileView />} />
-                          <Route path="/gamification" element={<Gamification />} />
-                          
-                          {/* Admin routes */}
-                          <Route path="/admin" element={<AdminLayout title="Admin Dashboard" />}>
-                            <Route index element={<AdminDashboard />} />
-                            <Route path="users" element={<AdminUsers />} />
-                            <Route path="invitations" element={<AdminInvitations />} />
-                            <Route path="chats" element={<AdminChats />} />
-                            <Route path="reviews" element={<AdminReviews />} />
-                          </Route>
-                          
-                          {/* Redirect old dashboard/invites?tab=... to /my-exchanges?tab=... */}
-                          <Route path="/dashboard/invites" element={<DashboardInvitesRedirect />} />
-                          <Route path="/dashboard/messages" element={<MyExchanges />} />
-                          <Route path="/dashboard" element={<MyExchanges />} />
-                          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                          <Route path="*" element={<NotFound />} />
-                        </Routes>
-                      </Suspense>
-                    </main>
-                    <Footer />
-                  </div>
-                  <Toaster />
-                  <Sonner />
-                </ErrorBoundary>
-              </BrowserRouter>
-            </MonetizationProvider>
-          </NotificationProvider>
+          <LanguageProvider>
+            <GamificationProvider>
+              <MonetizationProvider>
+                <NotificationProvider>
+                  <ErrorBoundary>
+                    <div className="min-h-screen flex flex-col overflow-x-hidden">
+                      <Header />
+                      <main className="flex-1 overflow-x-hidden">
+                        <Suspense fallback={<PageLoader />}>
+                          <Routes>
+                            {/* Public routes */}
+                            <Route path="/" element={<Index />} />
+                            <Route path="/test" element={<TestPage />} />
+                            <Route path="/pricing" element={<Pricing />} />
+                            <Route
+                              path="/privacy-policy"
+                              element={<PrivacyPolicy />}
+                            />
+                            <Route
+                              path="/terms-of-use"
+                              element={<TermsOfUse />}
+                            />
+                            <Route path="/help" element={<Help />} />
+                            <Route
+                              path="/contact-support"
+                              element={<ContactSupport />}
+                            />
+
+                            {/* Search and discovery */}
+                            <Route path="/search" element={<SearchResults />} />
+                            <Route
+                              path="/requests-feed"
+                              element={<RequestsFeed />}
+                            />
+
+                            {/* User profile and settings */}
+                            <Route path="/profile" element={<Profile />} />
+                            <Route
+                              path="/profile/:id"
+                              element={<ProfileView />}
+                            />
+                            <Route path="/settings" element={<Settings />} />
+
+                            {/* Messaging and exchanges */}
+                            <Route
+                              path="/chat/:exchangeId"
+                              element={<Chat />}
+                            />
+                            <Route path="/messages" element={<Messages />} />
+                            <Route
+                              path="/my-exchanges"
+                              element={<MyExchanges />}
+                            />
+
+                            {/* Gamification */}
+                            <Route
+                              path="/gamification"
+                              element={<Gamification />}
+                            />
+
+                            {/* Legacy redirects */}
+                            <Route
+                              path="/dashboard"
+                              element={<DashboardInvitesRedirect />}
+                            />
+                            <Route
+                              path="/dashboard/invites"
+                              element={<DashboardInvitesRedirect />}
+                            />
+
+                            {/* Admin routes */}
+                            <Route path="/admin" element={<AdminLayout />}>
+                              <Route index element={<AdminDashboard />} />
+                              <Route path="users" element={<AdminUsers />} />
+                              <Route
+                                path="invitations"
+                                element={<AdminInvitations />}
+                              />
+                              <Route path="chats" element={<AdminChats />} />
+                              <Route
+                                path="reviews"
+                                element={<AdminReviews />}
+                              />
+                            </Route>
+
+                            {/* Catch all route */}
+                            <Route path="*" element={<NotFound />} />
+                          </Routes>
+                        </Suspense>
+                      </main>
+                      <Footer />
+                    </div>
+                    <Toaster />
+                    <Sonner />
+                  </ErrorBoundary>
+                </NotificationProvider>
+              </MonetizationProvider>
+            </GamificationProvider>
+          </LanguageProvider>
         </AuthProvider>
-      </LanguageProvider>
+      </BrowserRouter>
     </QueryClientProvider>
   );
 };

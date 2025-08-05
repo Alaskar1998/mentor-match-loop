@@ -1,8 +1,14 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { useAuth } from "./useAuth";
-import { useToast } from "./use-toast";
-import { coinEconomyService } from "@/services/coinEconomyService";
-import { CoinTransaction } from "@/types/coin-economy";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react';
+import { useAuth } from './useAuth';
+import { useToast } from './use-toast';
+import { coinEconomyService } from '@/services/coinEconomyService';
+import { CoinTransaction } from '@/types/coin-economy';
 import { logger } from '@/utils/logger';
 
 interface Badge {
@@ -44,7 +50,11 @@ interface GamificationContextType {
   awardBadge: (badgeId: string) => void;
   updateProfileCompletion: () => Promise<void>;
   watchAd: () => Promise<void>;
-  completeExchange: (isMentor: boolean, exchangeId?: string, partnerId?: string) => Promise<void>;
+  completeExchange: (
+    isMentor: boolean,
+    exchangeId?: string,
+    partnerId?: string
+  ) => Promise<void>;
   purchaseCoins: (pack: string) => void;
   purchaseItem: (itemType: string) => Promise<boolean>;
   getTransactionHistory: () => Promise<CoinTransaction[]>;
@@ -66,7 +76,7 @@ export const useGamification = () => {
         badges: [],
         totalExchanges: 0,
         dailyAdsWatched: 0,
-        challenges: []
+        challenges: [],
       },
       earnCoins: () => {}, // No-op
       spendCoins: () => false, // No-op
@@ -78,7 +88,7 @@ export const useGamification = () => {
       purchaseCoins: () => {}, // No-op
       purchaseItem: async () => false, // No-op
       getTransactionHistory: async () => [], // No-op
-      refreshBalance: async () => {} // No-op
+      refreshBalance: async () => {}, // No-op
     };
   }
   return context;
@@ -90,42 +100,42 @@ const DEFAULT_BADGES: Badge[] = [
     name: '🌟 Mentor',
     icon: '🌟',
     description: 'Willing to teach without expecting something in return',
-    type: 'mentor'
+    type: 'mentor',
   },
   {
     id: 'teacher-of-month',
     name: 'Teacher of the Month',
     icon: '🏆',
     description: 'Top-rated teacher this month',
-    type: 'achievement'
+    type: 'achievement',
   },
   {
     id: 'most-helpful',
     name: 'Most Helpful',
     icon: '🤝',
     description: 'Received highest helpfulness ratings',
-    type: 'achievement'
+    type: 'achievement',
   },
   {
     id: 'profile-complete',
     name: 'Profile Master',
     icon: '✅',
     description: 'Completed 100% of profile',
-    type: 'achievement'
+    type: 'achievement',
   },
   {
     id: 'streak-warrior',
     name: 'Streak Warrior',
     icon: '🔥',
     description: '7-day login streak achieved',
-    type: 'achievement'
-  }
+    type: 'achievement',
+  },
 ];
 
 export const GamificationProvider = ({ children }: { children: ReactNode }) => {
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
-  
+
   const [state, setState] = useState<GamificationState>({
     appCoins: 0,
     loginStreak: 0,
@@ -143,51 +153,89 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
         progress: 0,
         target: 3,
         isCompleted: false,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-      }
-    ]
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      },
+    ],
   });
 
   // Load user gamification data
   useEffect(() => {
-    if (user) {
-      const savedState = localStorage.getItem(`gamification_${user.id}`);
-      if (savedState) {
-        const parsed = JSON.parse(savedState);
-        setState({
-          ...parsed,
-          badges: parsed.badges.map((b: any) => ({
-            ...b,
-            earnedAt: b.earnedAt ? new Date(b.earnedAt) : undefined
-          }))
-        });
-      } else {
-        // Initialize with user's current coins
-        setState(prev => ({
-          ...prev,
-          appCoins: user.appCoins || 0
-        }));
-      }
-    }
-  }, [user]);
+    if (!user) return;
 
-  // Save state to localStorage
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem(`gamification_${user.id}`, JSON.stringify(state));
-      // Sync coins with user profile only if different to avoid infinite loop
-      if (user.appCoins !== state.appCoins) {
-        updateUser({ appCoins: state.appCoins });
+    let isMounted = true;
+
+    const loadGamificationData = () => {
+      try {
+        const savedState = localStorage.getItem(`gamification_${user.id}`);
+        if (savedState && isMounted) {
+          const parsed = JSON.parse(savedState);
+          setState({
+            ...parsed,
+            badges: parsed.badges.map((b: any) => ({
+              ...b,
+              earnedAt: b.earnedAt ? new Date(b.earnedAt) : undefined,
+            })),
+          });
+        } else if (isMounted) {
+          // Initialize with user's current coins
+          setState(prev => ({
+            ...prev,
+            appCoins: user.appCoins || 0,
+          }));
+        }
+      } catch (error) {
+        logger.error('Error loading gamification data:', error);
+        if (isMounted) {
+          // Initialize with user's current coins as fallback
+          setState(prev => ({
+            ...prev,
+            appCoins: user.appCoins || 0,
+          }));
+        }
       }
-    }
+    };
+
+    loadGamificationData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.id]); // Only depend on user ID to prevent unnecessary re-runs
+
+  // Save state to localStorage with debouncing
+  useEffect(() => {
+    if (!user) return;
+
+    let isMounted = true;
+    const timeoutId = setTimeout(() => {
+      if (isMounted) {
+        try {
+          localStorage.setItem(
+            `gamification_${user.id}`,
+            JSON.stringify(state)
+          );
+          // Sync coins with user profile only if different to avoid infinite loop
+          if (user.appCoins !== state.appCoins) {
+            updateUser({ appCoins: state.appCoins });
+          }
+        } catch (error) {
+          logger.error('Error saving gamification data:', error);
+        }
+      }
+    }, 100); // Debounce localStorage writes
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+    };
   }, [state.appCoins, user?.id]); // Only depend on specific values to prevent infinite loop
 
   const earnCoins = (amount: number, source: string) => {
     setState(prev => ({
       ...prev,
-      appCoins: prev.appCoins + amount
+      appCoins: prev.appCoins + amount,
     }));
-    
+
     toast({
       title: `+${amount} coins earned!`,
       description: `From: ${source}`,
@@ -198,9 +246,9 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
     if (state.appCoins >= amount) {
       setState(prev => ({
         ...prev,
-        appCoins: prev.appCoins - amount
+        appCoins: prev.appCoins - amount,
       }));
-      
+
       toast({
         title: `${amount} coins spent`,
         description: `On: ${item}`,
@@ -208,9 +256,9 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
       return true;
     } else {
       toast({
-        title: "Insufficient coins",
+        title: 'Insufficient coins',
         description: `You need ${amount - state.appCoins} more coins.`,
-        variant: "destructive"
+        variant: 'destructive',
       });
       return false;
     }
@@ -219,9 +267,9 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
   const checkDailyLogin = async () => {
     // DISABLED: Coin notifications causing freezes
     return;
-    
+
     // if (!user) return;
-    
+
     // try {
     //   const transaction = await coinEconomyService.processDailyLoginBonus(user.id);
     //   if (transaction) {
@@ -231,7 +279,7 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
     //       loginStreak: transaction.metadata?.streakDay || prev.loginStreak + 1,
     //       lastLoginDate: new Date().toDateString()
     //     }));
-    //     
+    //
     //     toast({
     //       title: `+${transaction.amount} coins earned!`,
     //       description: `Day ${transaction.metadata?.streakDay} login bonus`,
@@ -250,15 +298,15 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
   const awardBadge = (badgeId: string) => {
     const badge = DEFAULT_BADGES.find(b => b.id === badgeId);
     const alreadyHas = state.badges.some(b => b.id === badgeId);
-    
+
     if (badge && !alreadyHas) {
       setState(prev => ({
         ...prev,
-        badges: [...prev.badges, { ...badge, earnedAt: new Date() }]
+        badges: [...prev.badges, { ...badge, earnedAt: new Date() }],
       }));
-      
+
       toast({
-        title: "New Badge Earned!",
+        title: 'New Badge Earned!',
         description: `🏆 ${badge.name}: ${badge.description}`,
       });
     }
@@ -267,9 +315,9 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
   const updateProfileCompletion = async () => {
     // DISABLED: Coin notifications causing freezes
     return;
-    
+
     // if (!user) return;
-    
+
     // let completion = 0;
     // const fields = [
     //   user.name,
@@ -280,14 +328,14 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
     //   user.skillsToLearn?.length > 0,
     //   user.profilePicture && user.profilePicture !== '👤'
     // ];
-    
+
     // completion = (fields.filter(Boolean).length / fields.length) * 100;
-    
+
     // setState(prev => ({
     //   ...prev,
     //   profileCompletion: completion
     // }));
-    
+
     // try {
     //   const transaction = await coinEconomyService.processProfileCompletion(user.id, completion);
     //   if (transaction) {
@@ -295,12 +343,12 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
     //       ...prev,
     //       appCoins: transaction.balanceAfter
     //     }));
-    //     
+    //
     //     toast({
     //       title: `+${transaction.amount} coins earned!`,
     //       description: "Profile 100% complete!",
     //     });
-    //     
+    //
     //     awardBadge('profile-complete');
     //   }
     // } catch (error) {
@@ -311,9 +359,9 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
   const watchAd = async () => {
     // DISABLED: Coin notifications causing freezes
     return;
-    
+
     // if (!user) return;
-    
+
     // try {
     //   const transaction = await coinEconomyService.processAdWatching(user.id, user.userType);
     //   if (transaction) {
@@ -322,7 +370,7 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
     //       appCoins: transaction.balanceAfter,
     //       dailyAdsWatched: prev.dailyAdsWatched + 1
     //     }));
-    //     
+    //
     //     toast({
     //       title: `+${transaction.amount} coins earned!`,
     //       description: "Ad watched successfully",
@@ -333,27 +381,31 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
     // }
   };
 
-  const completeExchange = async (isMentor: boolean, exchangeId: string = '', partnerId: string = '') => {
+  const completeExchange = async (
+    isMentor: boolean,
+    exchangeId: string = '',
+    partnerId: string = ''
+  ) => {
     // DISABLED: Coin notifications causing freezes
     return;
-    
+
     // if (!user) return;
-    
+
     // try {
     //   const transaction = await coinEconomyService.processExchangeCompletion(
-    //     user.id, 
-    //     isMentor, 
-    //     exchangeId, 
+    //     user.id,
+    //     isMentor,
+    //     exchangeId,
     //     partnerId
     //   );
-    //   
+    //
     //   if (transaction) {
     //     setState(prev => ({
     //       ...prev,
     //       appCoins: transaction.balanceAfter,
     //       totalExchanges: prev.totalExchanges + 1
     //     }));
-    //     
+    //
     //     toast({
     //       title: `+${transaction.amount} coins earned!`,
     //       description: `Exchange completed successfully`,
@@ -366,30 +418,31 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
 
   const purchaseItem = async (itemType: string): Promise<boolean> => {
     if (!user) return false;
-    
+
     try {
       const transaction = await coinEconomyService.purchaseItem(
-        user.id, 
-        itemType as any, 
+        user.id,
+        itemType as any,
         user.userType
       );
-      
+
       setState(prev => ({
         ...prev,
-        appCoins: transaction.balanceAfter
+        appCoins: transaction.balanceAfter,
       }));
-      
+
       toast({
-        title: "Purchase successful!",
+        title: 'Purchase successful!',
         description: `${itemType.replace('_', ' ')} purchased`,
       });
-      
+
       return true;
     } catch (error) {
       toast({
-        title: "Purchase failed",
-        description: error instanceof Error ? error.message : "Please try again",
-        variant: "destructive"
+        title: 'Purchase failed',
+        description:
+          error instanceof Error ? error.message : 'Please try again',
+        variant: 'destructive',
       });
       return false;
     }
@@ -403,12 +456,12 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
 
   const refreshBalance = async () => {
     if (!user) return;
-    
+
     try {
       const balance = await coinEconomyService.getCoinBalance(user.id);
       setState(prev => ({
         ...prev,
-        appCoins: balance
+        appCoins: balance,
       }));
     } catch (error) {
       logger.error('Balance refresh error:', error);
@@ -419,8 +472,8 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
     // This will be implemented with Stripe integration
     logger.debug('Purchase coins pack:', pack);
     toast({
-      title: "Payment Integration Required",
-      description: "Stripe integration needed for coin purchases.",
+      title: 'Payment Integration Required',
+      description: 'Stripe integration needed for coin purchases.',
     });
   };
 
@@ -432,7 +485,7 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
     //   const timer = setTimeout(() => {
     //     checkDailyLogin();
     //     updateProfileCompletion();
-    //     
+    //
     //     // Check monthly stipend for premium users
     //     if (user.userType === 'premium') {
     //       coinEconomyService.processMonthlyStipend(user.id, user.userType)
@@ -442,7 +495,7 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
     //               ...prev,
     //               appCoins: transaction.balanceAfter
     //             }));
-    //             
+    //
     //             toast({
     //               title: `+${transaction.amount} coins!`,
     //               description: "Monthly premium stipend received",
@@ -452,26 +505,28 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
     //         .catch(console.error);
     //     }
     //   }, 2000); // 2 second delay to ensure signup is complete
-    //   
+    //
     //   return () => clearTimeout(timer);
     // }
   }, [user]);
 
   return (
-    <GamificationContext.Provider value={{
-      state,
-      earnCoins,
-      spendCoins,
-      checkDailyLogin,
-      awardBadge,
-      updateProfileCompletion,
-      watchAd,
-      completeExchange,
-      purchaseCoins,
-      purchaseItem,
-      getTransactionHistory,
-      refreshBalance
-    }}>
+    <GamificationContext.Provider
+      value={{
+        state,
+        earnCoins,
+        spendCoins,
+        checkDailyLogin,
+        awardBadge,
+        updateProfileCompletion,
+        watchAd,
+        completeExchange,
+        purchaseCoins,
+        purchaseItem,
+        getTransactionHistory,
+        refreshBalance,
+      }}
+    >
       {children}
     </GamificationContext.Provider>
   );

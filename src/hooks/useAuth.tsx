@@ -1,5 +1,11 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { logger } from '@/utils/logger';
 
@@ -23,7 +29,7 @@ interface User {
   }>;
   skillsToLearn: string[];
   willingToTeachWithoutReturn: boolean;
-  userType: "free" | "premium";
+  userType: 'free' | 'premium';
   remainingInvites: number;
   appCoins: number;
   phoneVerified: boolean;
@@ -51,7 +57,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };
@@ -69,240 +75,242 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   // Set up auth state listener and check for existing session
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        logger.debug('Auth state change:', event, session?.user?.id);
-        setSession(session);
-        if (session?.user) {
-          // Prevent multiple simultaneous profile fetches
-          if (isLoadingProfile) {
-            logger.debug('⏱️ Profile fetch already in progress, skipping...');
-            return;
-          }
-          
-          // Use setTimeout to prevent auth deadlock and allow profile updates to complete
-          setTimeout(async () => {
-            try {
-              setIsLoadingProfile(true);
-              
-              // Check if we already have the user data for this session
-              if (user?.id === session.user.id) {
-                logger.debug('✅ User data already loaded for this session');
-                setIsLoadingProfile(false);
-                return;
-              }
-              
-              // Fetch user profile from database with retry mechanism
-              let profile = null;
-              let error = null;
-              
-              // Try up to 3 times with increasing delays
-              for (let attempt = 0; attempt < 3; attempt++) {
-                const delay = attempt * 500; // 0ms, 500ms, 1000ms
-                if (delay > 0) {
-                  await new Promise(resolve => setTimeout(resolve, delay));
-                }
-                
-                const result = await supabase
-                  .from('profiles')
-                  .select('*')
-                  .eq('id', session.user.id)
-                  .single();
-                
-                if (!result.error) {
-                  profile = result.data;
-                  break;
-                } else {
-                  error = result.error;
-                  logger.debug('Profile fetch attempt ${attempt + 1} failed:', result.error);
-                }
-              }
+    let isMounted = true;
+    let subscription: any = null;
 
-              if (error) {
-                logger.error('Error fetching user profile after all attempts:', error);
-                // Set basic user data even if profile fetch fails
-                // Fetch user stats even in error case
-                const { data: reviewsData } = await supabase
-                  .from('reviews')
-                  .select('skill_rating')
-                  .eq('reviewed_user_id', session.user.id);
+    const setupAuthListener = async () => {
+      // Set up auth state listener FIRST
+      const { data } = supabase.auth.onAuthStateChange(
+        async (event, session) => {
+          if (!isMounted) return;
 
-                const { data: exchangesData } = await supabase
-                  .from('chats')
-                  .select('id')
-                  .or(`user1_id.eq.${session.user.id},user2_id.eq.${session.user.id}`)
-                  .eq('exchange_state', 'completed');
+          logger.debug('Auth state change:', event, session?.user?.id);
+          setSession(session);
 
-                const averageRating = reviewsData && reviewsData.length > 0 
-                  ? reviewsData.reduce((sum, r) => sum + r.skill_rating, 0) / reviewsData.length 
-                  : 0;
-
-                const successfulExchanges = exchangesData?.length || 0;
-
-                const userData: User = {
-                  id: session.user.id,
-                  email: session.user.email || '',
-                  name: session.user.user_metadata?.full_name || '',
-                  profilePicture: '',
-                  bio: '',
-                  country: '',
-                  age: undefined,
-                  age_range: '',
-                  gender: '',
-                  phone: '',
-                  role: 'user',
-                  skillsToTeach: [],
-                  skillsToLearn: [],
-                  willingToTeachWithoutReturn: false,
-                  userType: "free", // Default for error cases
-                  remainingInvites: 3,
-                  appCoins: 50,
-                  phoneVerified: false,
-                  successfulExchanges: successfulExchanges,
-                  rating: averageRating || 0
-                };
-                setUser(userData);
-                setIsAuthenticated(true);
-                setIsSessionRestoring(false); // Mark session restoration as complete
-                return;
-              }
-
-              if (profile) {
-                logger.debug('Fetched profile from database:', profile);
-                // Fetch user stats
-                const { data: reviewsData } = await supabase
-                  .from('reviews')
-                  .select('skill_rating')
-                  .eq('reviewed_user_id', profile.id);
-
-                const { data: exchangesData } = await supabase
-                  .from('chats')
-                  .select('id')
-                  .or(`user1_id.eq.${profile.id},user2_id.eq.${profile.id}`)
-                  .eq('exchange_state', 'completed');
-
-                const averageRating = reviewsData && reviewsData.length > 0 
-                  ? reviewsData.reduce((sum, r) => sum + r.skill_rating, 0) / reviewsData.length 
-                  : 0;
-
-                const successfulExchanges = exchangesData?.length || 0;
-
-                const userData: User = {
-                  id: profile.id,
-                  email: profile.email || session.user.email || '',
-                  name: profile.display_name || '',
-                  profilePicture: profile.avatar_url,
-                  bio: profile.bio,
-                  country: profile.country,
-                  age: profile.age,
-                  age_range: (profile as any).age_range, // Type assertion for age_range
-                  gender: profile.gender,
-                  phone: profile.phone,
-                  role: profile.role,
-                  skillsToTeach: Array.isArray(profile.skills_to_teach) ? profile.skills_to_teach as Array<{name: string; level: string; description: string; category?: string}> : [],
-                  skillsToLearn: profile.skills_to_learn || [],
-                  willingToTeachWithoutReturn: profile.willing_to_teach_without_return || false,
-                  userType: profile.user_type || "free", // Read user_type from database
-                  remainingInvites: 3,
-                  appCoins: 50,
-                  phoneVerified: false,
-                  successfulExchanges: successfulExchanges,
-                  rating: averageRating || 0
-                };
-                logger.debug('🔍 User type from database:', profile.user_type, '→ Mapped to:', userData.userType);
-                logger.debug('Mapped user data:', userData);
-                setUser(userData);
-                setIsAuthenticated(true);
-                setIsSessionRestoring(false); // Mark session restoration as complete
-              }
-            } catch (error) {
-              logger.error('Error in auth state change handler:', error);
-              // Set basic user data even if there's an error
-                              // Fetch user stats
-                const { data: reviewsData } = await supabase
-                  .from('reviews')
-                  .select('skill_rating')
-                  .eq('reviewed_user_id', session.user.id);
-
-                const { data: exchangesData } = await supabase
-                  .from('chats')
-                  .select('id')
-                  .or(`user1_id.eq.${session.user.id},user2_id.eq.${session.user.id}`)
-                  .eq('exchange_state', 'completed');
-
-                const averageRating = reviewsData && reviewsData.length > 0 
-                  ? reviewsData.reduce((sum, r) => sum + r.skill_rating, 0) / reviewsData.length 
-                  : 0;
-
-                const successfulExchanges = exchangesData?.length || 0;
-
-                const userData: User = {
-                  id: session.user.id,
-                  email: session.user.email || '',
-                  name: session.user.user_metadata?.full_name || '',
-                  profilePicture: '',
-                  bio: '',
-                  country: '',
-                  age: undefined,
-                  age_range: '',
-                  gender: '',
-                  phone: '',
-                  role: 'user',
-                  skillsToTeach: [],
-                  skillsToLearn: [],
-                  willingToTeachWithoutReturn: false,
-                  userType: "free",
-                  remainingInvites: 3,
-                  appCoins: 50,
-                  phoneVerified: false,
-                  successfulExchanges: successfulExchanges,
-                  rating: averageRating || 0
-                };
-              setUser(userData);
-              setIsAuthenticated(true);
-              setIsSessionRestoring(false); // Mark session restoration as complete
-            } finally {
-              setIsLoadingProfile(false);
+          if (session?.user) {
+            // Prevent multiple simultaneous profile fetches
+            if (isLoadingProfile) {
+              logger.debug('⏱️ Profile fetch already in progress, skipping...');
+              return;
             }
-          }, 100); // Small delay to allow profile updates to complete
-        } else {
-          setUser(null);
-          setIsAuthenticated(false);
-          setIsSessionRestoring(false); // Mark session restoration as complete when no session
+
+            // Use setTimeout to prevent auth deadlock and allow profile updates to complete
+            setTimeout(async () => {
+              if (!isMounted) return;
+
+              try {
+                setIsLoadingProfile(true);
+
+                // Check if we already have the user data for this session
+                if (user?.id === session.user.id) {
+                  logger.debug('✅ User data already loaded for this session');
+                  setIsLoadingProfile(false);
+                  return;
+                }
+
+                // Fetch user profile from database with retry mechanism
+                let profile = null;
+                let error = null;
+
+                // Try up to 3 times with increasing delays
+                for (let attempt = 0; attempt < 3; attempt++) {
+                  if (!isMounted) return;
+
+                  const delay = attempt * 500; // 0ms, 500ms, 1000ms
+                  if (delay > 0) {
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                  }
+
+                  const result = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', session.user.id)
+                    .single();
+
+                  if (!result.error) {
+                    profile = result.data;
+                    break;
+                  } else {
+                    error = result.error;
+                    logger.debug(
+                      `Profile fetch attempt ${attempt + 1} failed:`,
+                      result.error
+                    );
+                  }
+                }
+
+                if (!isMounted) return;
+
+                if (error) {
+                  logger.error(
+                    'Error fetching user profile after all attempts:',
+                    error
+                  );
+                  // Set basic user data even if profile fetch fails
+                  // Fetch user stats even in error case
+                  const { data: reviewsData } = await supabase
+                    .from('reviews')
+                    .select('skill_rating')
+                    .eq('reviewed_user_id', session.user.id);
+
+                  const { data: exchangesData } = await supabase
+                    .from('chats')
+                    .select('id')
+                    .or(
+                      `user1_id.eq.${session.user.id},user2_id.eq.${session.user.id}`
+                    )
+                    .eq('exchange_state', 'completed');
+
+                  const averageRating =
+                    reviewsData && reviewsData.length > 0
+                      ? reviewsData.reduce(
+                          (sum, r) => sum + r.skill_rating,
+                          0
+                        ) / reviewsData.length
+                      : 0;
+
+                  const successfulExchanges = exchangesData?.length || 0;
+
+                  const userData: User = {
+                    id: session.user.id,
+                    email: session.user.email || '',
+                    name: session.user.user_metadata?.full_name || '',
+                    profilePicture: '',
+                    bio: '',
+                    country: '',
+                    age: undefined,
+                    age_range: '',
+                    gender: '',
+                    phone: '',
+                    role: 'user',
+                    skillsToTeach: [],
+                    skillsToLearn: [],
+                    willingToTeachWithoutReturn: false,
+                    userType: 'free', // Default for error cases
+                    remainingInvites: 3,
+                    appCoins: 50,
+                    phoneVerified: false,
+                    successfulExchanges: successfulExchanges,
+                    rating: averageRating || 0,
+                  };
+                  setUser(userData);
+                  setIsAuthenticated(true);
+                  setIsSessionRestoring(false); // Mark session restoration as complete
+                  return;
+                }
+
+                if (profile) {
+                  logger.debug('Fetched profile from database:', profile);
+                  // Fetch user stats
+                  const { data: reviewsData } = await supabase
+                    .from('reviews')
+                    .select('skill_rating')
+                    .eq('reviewed_user_id', profile.id);
+
+                  const { data: exchangesData } = await supabase
+                    .from('chats')
+                    .select('id')
+                    .or(`user1_id.eq.${profile.id},user2_id.eq.${profile.id}`)
+                    .eq('exchange_state', 'completed');
+
+                  const averageRating =
+                    reviewsData && reviewsData.length > 0
+                      ? reviewsData.reduce(
+                          (sum, r) => sum + r.skill_rating,
+                          0
+                        ) / reviewsData.length
+                      : 0;
+
+                  const successfulExchanges = exchangesData?.length || 0;
+
+                  const userData: User = {
+                    id: profile.id,
+                    email: profile.email || session.user.email || '',
+                    name: profile.display_name || '',
+                    profilePicture: profile.avatar_url,
+                    bio: profile.bio,
+                    country: profile.country,
+                    age: profile.age,
+                    age_range: (profile as any).age_range, // Type assertion for age_range
+                    gender: profile.gender,
+                    phone: profile.phone,
+                    role: profile.role,
+                    skillsToTeach: Array.isArray(profile.skills_to_teach)
+                      ? (profile.skills_to_teach as Array<{
+                          name: string;
+                          level: string;
+                          description: string;
+                          category?: string;
+                        }>)
+                      : [],
+                    skillsToLearn: profile.skills_to_learn || [],
+                    willingToTeachWithoutReturn:
+                      profile.willing_to_teach_without_return || false,
+                    userType: profile.user_type || 'free', // Read user_type from database
+                    remainingInvites: 3,
+                    appCoins: 50,
+                    phoneVerified: false,
+                    successfulExchanges: successfulExchanges,
+                    rating: averageRating || 0,
+                  };
+                  logger.debug(
+                    '🔍 User type from database:',
+                    profile.user_type,
+                    '→ Mapped to:',
+                    userData.userType
+                  );
+                  logger.debug('Mapped user data:', userData);
+                  setUser(userData);
+                  setIsAuthenticated(true);
+                  setIsSessionRestoring(false); // Mark session restoration as complete
+                }
+              } catch (error) {
+                if (isMounted) {
+                  logger.error('Error in auth state change handler:', error);
+                  setIsLoadingProfile(false);
+                }
+              } finally {
+                if (isMounted) {
+                  setIsLoadingProfile(false);
+                }
+              }
+            }, 100);
+          } else {
+            // No session, clear user data
+            if (isMounted) {
+              setUser(null);
+              setIsAuthenticated(false);
+              setIsSessionRestoring(false);
+            }
+          }
         }
-      }
-    );
+      );
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      logger.debug('Session restoration check:', session?.user?.id);
-      if (session) {
-        setSession(session);
-        // The auth state change listener will handle the rest and set isSessionRestoring to false
-      } else {
-        // No session found, mark restoration as complete after a small delay
-        setTimeout(() => {
-          logger.debug('No session found, marking restoration complete');
-          setIsSessionRestoring(false);
-        }, 500); // Small delay to ensure auth state is stable
-      }
-    });
+      subscription = data.subscription;
+    };
 
-    return () => subscription.unsubscribe();
-  }, [user, isLoadingProfile]); // Add user and isLoadingProfile to dependencies
+    setupAuthListener();
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+      if (subscription) {
+        subscription.unsubscribe();
+      }
+    };
+  }, []); // Empty dependency array to run only once
 
   const login = async (email: string, password: string) => {
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
-        password
+        password,
       });
-      
+
       if (error) {
         return { error: error.message };
       }
-      
+
       return {};
     } catch (error) {
       return { error: 'An unexpected error occurred' };
@@ -312,25 +320,25 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const signup = async (userData: any) => {
     try {
       const redirectUrl = `${window.location.origin}/`;
-      
+
       const { error } = await supabase.auth.signUp({
         email: userData.email,
         password: userData.password,
         options: {
           emailRedirectTo: redirectUrl,
           data: {
-            full_name: userData.name
-          }
-        }
+            full_name: userData.name,
+          },
+        },
       });
-      
+
       if (error) {
         return { error: error.message };
       }
 
       // Note: Profile will be created by the trigger
       // We can update it with additional info if needed
-      
+
       return {};
     } catch (error) {
       return { error: 'An unexpected error occurred' };
@@ -342,14 +350,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`
-        }
+          redirectTo: `${window.location.origin}/`,
+        },
       });
-      
+
       if (error) {
         return { error: error.message };
       }
-      
+
       return {};
     } catch (error) {
       return { error: 'An unexpected error occurred' };
@@ -361,14 +369,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'facebook',
         options: {
-          redirectTo: `${window.location.origin}/`
-        }
+          redirectTo: `${window.location.origin}/`,
+        },
       });
-      
+
       if (error) {
         return { error: error.message };
       }
-      
+
       return {};
     } catch (error) {
       return { error: 'An unexpected error occurred' };
@@ -380,14 +388,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'apple',
         options: {
-          redirectTo: `${window.location.origin}/`
-        }
+          redirectTo: `${window.location.origin}/`,
+        },
       });
-      
+
       if (error) {
         return { error: error.message };
       }
-      
+
       return {};
     } catch (error) {
       return { error: 'An unexpected error occurred' };
@@ -404,15 +412,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       } else {
         logger.debug('Logout successful');
       }
-      
+
       // Clear local state immediately
       setUser(null);
       setSession(null);
       setIsAuthenticated(false);
-      
+
       // Wait a bit to ensure auth state is updated
       await new Promise(resolve => setTimeout(resolve, 100));
-      
+
       logger.debug('Logout completed, state cleared');
     } catch (error) {
       logger.error('Unexpected error during logout:', error);
@@ -427,7 +435,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const updateUser = async (updates: Partial<User>) => {
     if (user && session) {
       logger.debug('Updating user with:', updates);
-      
+
       // Update local state
       const updatedUser = { ...user, ...updates };
       setUser(updatedUser);
@@ -446,7 +454,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           avatar_url: updatedUser.profilePicture,
           skills_to_teach: updatedUser.skillsToTeach,
           skills_to_learn: updatedUser.skillsToLearn,
-          willing_to_teach_without_return: updatedUser.willingToTeachWithoutReturn
+          willing_to_teach_without_return:
+            updatedUser.willingToTeachWithoutReturn,
         })
         .eq('id', user.id);
 
@@ -456,7 +465,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           code: error.code,
           message: error.message,
           details: error.details,
-          hint: error.hint
+          hint: error.hint,
         });
         throw error;
       } else {
@@ -466,20 +475,22 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      session,
-      isAuthenticated,
-      isLoading: isLoadingProfile, // Expose isLoadingProfile to the context
-      isSessionRestoring, // Expose isSessionRestoring to the context
-      login,
-      signup,
-      signInWithGoogle,
-      signInWithFacebook,
-      signInWithApple,
-      logout,
-      updateUser
-    }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        session,
+        isAuthenticated,
+        isLoading: isLoadingProfile, // Expose isLoadingProfile to the context
+        isSessionRestoring, // Expose isSessionRestoring to the context
+        login,
+        signup,
+        signInWithGoogle,
+        signInWithFacebook,
+        signInWithApple,
+        logout,
+        updateUser,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
