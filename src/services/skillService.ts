@@ -253,6 +253,8 @@ class SkillService {
 
 export const skillService = new SkillService(); 
 
+
+
 export const getPopularSkillsFromDatabase = async (limit: number = 20): Promise<DatabaseSkill[]> => {
   try {
     logger.debug('Fetching popular skills from database...');
@@ -266,7 +268,7 @@ export const getPopularSkillsFromDatabase = async (limit: number = 20): Promise<
 
     if (error) {
       logger.error('Error fetching skills from database:', error);
-      return getDefaultPopularSkills(limit);
+      return [];
     }
 
     logger.debug('Raw profiles data:', data);
@@ -276,8 +278,6 @@ export const getPopularSkillsFromDatabase = async (limit: number = 20): Promise<
     const skillCounts: { [key: string]: number } = {};
     
     data?.forEach(profile => {
-      logger.debug('Profile skills_to_teach:', profile.skills_to_teach);
-      
       if (profile.skills_to_teach) {
         // Handle jsonb format - could be array of strings or array of objects
         let skills: string[] = [];
@@ -318,7 +318,7 @@ export const getPopularSkillsFromDatabase = async (limit: number = 20): Promise<
 
     logger.debug('Popular skills found:', popularSkills);
 
-    // If no skills found in database, return empty array (no mock data)
+    // If no skills found in database, return empty array
     if (popularSkills.length === 0) {
       logger.debug('No skills found in database, returning empty array');
       return [];
@@ -334,7 +334,7 @@ export const getPopularSkillsFromDatabase = async (limit: number = 20): Promise<
     return skillsWithCategory;
   } catch (error) {
     logger.error('Error in getPopularSkillsFromDatabase:', error);
-    return []; // Return empty array instead of mock data
+    return [];
   }
 };
 

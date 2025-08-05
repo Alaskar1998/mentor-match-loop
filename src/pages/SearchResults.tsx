@@ -127,7 +127,12 @@ const SearchResultsPage = () => {
           return;
         }
 
-        logger.debug('🔍 DEBUG: Raw profiles from Supabase:', profiles?.length || 0);
+        console.log('🔍 DEBUG: Raw profiles from Supabase:', profiles?.length || 0);
+        console.log('🔍 DEBUG: Sample profiles:', profiles?.slice(0, 3).map(p => ({
+          id: p.id,
+          name: p.display_name,
+          skills_to_teach: p.skills_to_teach
+        })));
 
         // Transform Supabase data to UserProfile format and filter out current user
         const transformedUsers: UserProfile[] = await Promise.all(
@@ -155,6 +160,24 @@ const SearchResultsPage = () => {
               // Count completed exchanges
               const successfulExchanges = exchangesData?.length || 0;
 
+              // Debug skill transformation
+              const originalSkills = profile.skills_to_teach;
+              const transformedSkills = Array.isArray(profile.skills_to_teach) 
+                ? profile.skills_to_teach.map((skill: any) => {
+                    // Handle different skill formats - SAME LOGIC AS POPULAR SKILLS
+                    if (typeof skill === 'string') {
+                      return skill;
+                    } else if (skill && typeof skill === 'object' && skill.name) {
+                      return skill.name;
+                    } else if (skill && typeof skill === 'object' && skill.skill) {
+                      return skill.skill;
+                    }
+                    return null;
+                  }).filter(Boolean) // Remove any null/undefined values
+                : [];
+              
+              console.log(`🔍 DEBUG: User ${profile.display_name} - Original skills:`, originalSkills, 'Transformed skills:', transformedSkills);
+
               return {
                 id: profile.id,
                 name: profile.display_name || t('actions.anonymousUser'),
@@ -164,16 +187,7 @@ const SearchResultsPage = () => {
                 successfulExchanges: successfulExchanges, // Use actual exchange count
                 skillLevel: 'Intermediate' as const, // Default since it's not in the schema
                 bio: profile.bio || '',
-                skills: Array.isArray(profile.skills_to_teach) 
-                  ? profile.skills_to_teach.map((skill: any) => {
-                      // Handle different skill formats
-                      if (typeof skill === 'string') return skill;
-                      if (skill && typeof skill === 'object') {
-                        return skill.name || skill.skill || skill.title || JSON.stringify(skill);
-                      }
-                      return String(skill);
-                    })
-                  : [],
+                skills: transformedSkills,
                 country: profile.country || t('actions.unknown'),
                 gender: (profile.gender === 'Female' ? 'Female' : 'Male') as 'Male' | 'Female',
                 willingToTeachWithoutReturn: profile.willing_to_teach_without_return || false
@@ -187,26 +201,7 @@ const SearchResultsPage = () => {
           logger.debug(`  - ${user.name}: [${user.skills.join(', ')}]`);
         });
         
-        // Debug: Log raw skills data from database
-        console.log('🔍 DEBUG: Raw skills data from database:', profiles?.map(profile => ({
-          name: profile.display_name,
-          skills_to_teach: profile.skills_to_teach
-        })));
-        
-        // Debug: Show all users regardless of search term for testing
-        logger.debug('🔍 DEBUG: All users available for search:', transformedUsers.length);
-        transformedUsers.forEach((user, index) => {
-                      logger.debug(`User ${index + 1}: ${user.name} - Skills: [${user.skills.join(', ')}]`);
-        });
-        
-        // Debug: Check for "Accounting" specifically
-        const accountingUsers = transformedUsers.filter(user => 
-          user.skills.some(skill => skill.toLowerCase().includes('accounting'))
-        );
-        console.log('🔍 DEBUG: Users with "Accounting" skill:', accountingUsers.length);
-        accountingUsers.forEach((user, index) => {
-                      logger.debug(`Accounting User ${index + 1}: ${user.name} - Skills: [${user.skills.join(', ')}]`);
-        });
+
         
         logger.debug('🔍 DEBUG: Setting users in SearchResults:', transformedUsers.length);
         setUsers(transformedUsers);
@@ -231,7 +226,9 @@ const SearchResultsPage = () => {
 
   // Update search term when URL changes
   useEffect(() => {
-    logger.debug('🔍 DEBUG: Search query changed to:', searchQuery);
+    console.log('🔍 DEBUG: Search query changed to:', searchQuery);
+    console.log('🔍 DEBUG: updateSearchTerm function:', typeof updateSearchTerm);
+    console.log('🔍 DEBUG: clearCache function:', typeof clearCache);
     updateSearchTerm(searchQuery);
     // Clear cache when search query changes to ensure fresh results
     clearCache();

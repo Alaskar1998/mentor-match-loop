@@ -6,9 +6,13 @@ import { componentTagger } from "lovable-tagger";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
-    host: "::",
+    host: "localhost",
     port: 8081,
-    hmr: { overlay: false }, // Better error handling
+    hmr: { 
+      overlay: false,
+      port: 8081,
+      host: "localhost"
+    },
   },
   plugins: [
     react(),

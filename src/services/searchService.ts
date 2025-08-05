@@ -173,16 +173,22 @@ class SearchService {
     logger.debug('SearchService: Bilingual search found skills:', matchingEnglishSkills);
     logger.debug('SearchService: Total users to search:', users.length);
     
-    // Debug: Check if "Advertising" is in the skills list
+    // Debug: Check if search term is in the skills list
     const allSkills = getAllSkills();
-    console.log('SearchService: "Advertising" in skills list:', allSkills.includes('Advertising'));
-    console.log('SearchService: All skills containing "advertising":', allSkills.filter(skill => skill.toLowerCase().includes('advertising')));
+    console.log(`SearchService: "${searchTerm}" in skills list:`, allSkills.includes(searchTerm));
+    console.log(`SearchService: All skills containing "${searchTerm}":`, allSkills.filter(skill => skill.toLowerCase().includes(searchTerm.toLowerCase())));
 
-    logger.debug('🔍 DEBUG: Starting to process', users.length, 'users');
-    logger.debug('🔍 DEBUG: Users array:', users.map(u => ({ name: u.name, skillsCount: Array.isArray(u.skills) ? u.skills.length : 'not array' })));
+    console.log('🔍 DEBUG: Starting to process', users.length, 'users');
+    console.log('🔍 DEBUG: Users with skills:', users.filter(u => Array.isArray(u.skills) && u.skills.length > 0).length);
+    console.log('🔍 DEBUG: Users without skills:', users.filter(u => !Array.isArray(u.skills) || u.skills.length === 0).length);
+    console.log('🔍 DEBUG: Sample users:', users.slice(0, 3).map(u => ({ 
+      name: u.name, 
+      skillsCount: Array.isArray(u.skills) ? u.skills.length : 'not array',
+      skills: Array.isArray(u.skills) ? u.skills.slice(0, 3) : 'no skills'
+    })));
     
     users.forEach((user, index) => {
-      logger.debug('🔍 DEBUG: Processing user ${index + 1}/${users.length}:', user.name, 'with skills:', user.skills);
+      logger.debug(`🔍 DEBUG: Processing user ${index + 1}/${users.length}:`, user.name, 'with skills:', user.skills);
       if (!Array.isArray(user.skills)) {
         logger.debug('🔍 DEBUG: User', user.name, 'has no skills array, skipping');
         return;
@@ -214,8 +220,8 @@ class SearchService {
         const skillLower = skillName.toLowerCase().trim();
         const searchTermLower = searchTerm.toLowerCase().trim();
         
-        logger.debug('🔍 DEBUG: Skill comparison - Original:', skillName, 'Lowercase:', skillLower, 'Search term:', searchTermLower);
-        logger.debug('🔍 DEBUG: Exact match check:', skillLower === searchTermLower, 'for skill:', skillName);
+        console.log(`🔍 DEBUG: Skill comparison - Original: "${skillName}" Lowercase: "${skillLower}" Search term: "${searchTermLower}"`);
+        console.log(`🔍 DEBUG: Exact match check: ${skillLower === searchTermLower} for skill: "${skillName}"`);
         
         // Check for exact match first (case-insensitive)
         if (skillLower === searchTermLower) {
