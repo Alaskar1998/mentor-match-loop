@@ -16,7 +16,14 @@
     "db:test": "node test-all-systems.js",
     "db:fix": "node fix-database-issues.js",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "test:watch": "vitest --watch",
+    "storybook": "storybook dev -p 6006",
+    "storybook:build": "storybook build",
+    "storybook:preview": "storybook build && npx http-server storybook-static"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -76,7 +83,22 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
+    "@storybook/addon-actions": "^8.0.0",
+    "@storybook/addon-a11y": "^8.0.0",
+    "@storybook/addon-essentials": "^8.0.0",
+    "@storybook/addon-interactions": "^8.0.0",
+    "@storybook/addon-links": "^8.0.0",
+    "@storybook/addon-onboarding": "^1.0.0",
+    "@storybook/addon-themes": "^8.0.0",
+    "@storybook/addon-viewport": "^8.0.0",
+    "@storybook/blocks": "^8.0.0",
+    "@storybook/react": "^8.0.0",
+    "@storybook/react-vite": "^8.0.0",
+    "@storybook/testing-library": "^0.2.0",
     "@tailwindcss/typography": "^0.5.15",
+    "@testing-library/jest-dom": "^6.4.0",
+    "@testing-library/react": "^14.2.0",
+    "@testing-library/user-event": "^14.5.0",
     "@types/node": "^22.5.5",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
@@ -86,12 +108,17 @@
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.9",
     "globals": "^15.9.0",
+    "jsdom": "^24.0.0",
     "lovable-tagger": "^1.1.7",
     "postcss": "^8.4.47",
     "prettier": "^3.0.0",
+    "storybook": "^8.0.0",
     "tailwindcss": "^3.4.11",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
-    "vite": "^5.4.1"
+    "vite": "^5.4.1",
+    "vitest": "^2.0.0",
+    "vitest-dom": "^0.1.0",
+    "vitest-ui": "^1.0.0"
   }
 }
