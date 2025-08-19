@@ -1,73 +1,43 @@
-# Welcome to your Lovable project
+# Maharat Hub - Premium Upgrade System
 
-## Project info
+This guide explains how the premium upgrade system works for Maharat Hub.
 
-**URL**: https://lovable.dev/projects/e3fb1364-6f16-4c39-8d9d-f09fc62ae7b7
+## Overview
 
-## How can I edit this code?
+The current implementation uses a simple upgrade request system that:
 
-There are several ways of editing your application.
+- ✅ **Collects user requests** - Users can request premium upgrades
+- ✅ **Admin dashboard** - Admins can view and manage upgrade requests
+- ✅ **Flexible payment** - Admins can contact users directly to arrange payment
+- ✅ **No upfront costs** - No payment gateway setup fees required
 
-**Use Lovable**
+## How It Works
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/e3fb1364-6f16-4c39-8d9d-f09fc62ae7b7) and start prompting.
+1. **User clicks "Request Upgrade"** on a premium plan
+2. **Request is saved** to the admin dashboard
+3. **Admin reviews** the request and contacts the user
+4. **Payment is arranged** directly between admin and user
+5. **Premium features are activated** once payment is confirmed
 
-Changes made via Lovable will be committed automatically to this repo.
+## Benefits
 
-**Use your preferred IDE**
+- **Simple setup** - No complex payment gateway integration
+- **Flexible payment methods** - Accept any payment method you prefer
+- **Direct communication** - Build relationships with your users
+- **No transaction fees** - Avoid payment processor fees
+- **Full control** - Manage your own payment process
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Admin Dashboard
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+The admin dashboard (`/admin/upgrade-requests`) shows:
+- User information (name, email)
+- Requested plan and billing cycle
+- Request status (pending, approved, rejected, completed)
+- Admin notes and actions
 
-Follow these steps:
+## Next Steps
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/e3fb1364-6f16-4c39-8d9d-f09fc62ae7b7) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+1. ✅ Test the upgrade request system
+2. 🔄 Customize admin dashboard as needed
+3. 🔄 Set up your preferred payment methods
+4. 🔄 Train your team on the admin process

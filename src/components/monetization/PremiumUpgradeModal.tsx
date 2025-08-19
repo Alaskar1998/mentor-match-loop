@@ -66,16 +66,16 @@ export const PremiumUpgradeModal = ({ isOpen, onClose }: PremiumUpgradeModalProp
     },
     {
       icon: <MapPin className="w-5 h-5" />,
-      title: "Worldwide + Map Search",
-      description: "Find teachers globally with interactive map",
-      free: "Country only, no map",
-      premium: "Worldwide + map search"
+      title: "Worldwide Search",
+      description: "Find teachers globally",
+      free: "Country only",
+      premium: "Worldwide search"
     },
     {
       icon: <Filter className="w-5 h-5" />,
       title: "Full Filters",
       description: "Access all filters including Mentor filter",
-      free: "Basic filters only",
+      free: "No filters",
       premium: "Full filters (including Mentor)"
     },
     {
@@ -96,7 +96,7 @@ export const PremiumUpgradeModal = ({ isOpen, onClose }: PremiumUpgradeModalProp
       icon: <MessageSquare className="w-5 h-5" />,
       title: "Invite Messages",
       description: "Send personalized messages with invites",
-      free: "No messages",
+      free: "No invite messages",
       premium: "Up to 3 invite messages"
     }
   ];

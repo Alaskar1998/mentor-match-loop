@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { X, Plus, Upload, Eye, EyeOff } from 'lucide-react';
 import {
@@ -524,7 +524,7 @@ export const SignUpForm = ({ onSignUp, error, isLoading }: SignUpFormProps) => {
       </div>
 
       <div className="flex items-center space-x-2">
-        <Switch
+        <Checkbox
           id="willingToTeachWithoutReturn"
           checked={formData.willingToTeachWithoutReturn}
           onCheckedChange={checked =>

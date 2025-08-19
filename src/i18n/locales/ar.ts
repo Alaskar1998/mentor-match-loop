@@ -101,7 +101,7 @@ export default {
     sidebar: {
       title: "لوحة الإدارة",
       dashboard: "لوحة التحكم",
-      users: "المستخدمون",
+      users: "المستخدمين",
       invitations: "الدعوات",
       chats: "المحادثات",
       reviews: "التقييمات",
@@ -148,6 +148,7 @@ export default {
         exchanges: "التبادلات",
         rating: "التقييم",
         joined: "تاريخ الانضمام",
+        upgradeInterest: "اهتمام الترقية",
       },
       actions: {
         view: "عرض الملف الشخصي",
@@ -328,7 +329,91 @@ export default {
       dataExport: "تصدير البيانات",
       dataExportDesc: "تحميل نسخة من بيانات حسابك بما في ذلك معلومات الملف الشخصي والرسائل وسجل النشاط.",
       requestDataExport: "طلب تصدير البيانات",
-      deleteAccountDesc: "حذف حسابك نهائياً وجميع البيانات المرتبطة به. لا يمكن التراجع عن هذا الإجراء."
+      deleteAccountDesc: "حذف حسابك نهائياً وجميع البيانات المرتبطة به. لا يمكن التراجع عن هذا الإجراء.",
+      updatePassword: "تحديث كلمة المرور",
+      currentPassword: "كلمة المرور الحالية",
+      newPassword: "كلمة المرور الجديدة",
+      confirmPassword: "تأكيد كلمة المرور",
+      
+      // Privacy settings
+      profileVisibility: "رؤية الملف الشخصي",
+      profileVisibilityPublic: "عام - يمكن للجميع رؤية ملفك الشخصي",
+      profileVisibilityMembers: "الأعضاء فقط - يمكن للمستخدمين المسجلين فقط رؤية ملفك الشخصي",
+      profileVisibilityPrivate: "خاص - يمكن للأشخاص الذين تدعوهم فقط رؤية ملفك الشخصي",
+      contactInformation: "معلومات الاتصال",
+      showEmailAddress: "إظهار عنوان البريد الإلكتروني",
+      showEmailAddressDesc: "السماح للآخرين برؤية عنوان بريدك الإلكتروني",
+      showPhoneNumber: "إظهار رقم الهاتف",
+      showPhoneNumberDesc: "السماح للآخرين برؤية رقم هاتفك",
+      changePassword: "تغيير كلمة المرور",
+      // Messages page
+      manageConversations: "إدارة محادثات تبادل المهارات",
+      findNewPartners: "البحث عن شركاء جدد",
+      searchConversations: "البحث في المحادثات...",
+      noConversationsYet: "لا توجد محادثات بعد",
+      startConnectingPartners: "ابدأ بالتواصل مع شركاء تبادل المهارات لبدء المحادثات",
+      noConversationsFound: "لم يتم العثور على محادثات",
+      tryAdjustingSearch: "حاول تعديل مصطلحات البحث",
+      findPartners: "البحث عن شركاء",
+      loadingSession: "جاري تحميل الجلسة...",
+      loadingConversations: "جاري تحميل المحادثات...",
+      redirecting: "جاري إعادة التوجيه...",
+      loadingUserData: "جاري تحميل بيانات المستخدم...",
+
+      // My Exchanges page
+      dashboard: "لوحة التحكم",
+      myExchanges: "تبادلاتي",
+      manageExchanges: "إدارة تبادلات المهارات وأنشطة التعلم",
+      active: "نشطة",
+      request: "مطلوبة",
+      sent: "مرسلة",
+      completed: "مكتملة",
+      noActiveExchanges: "لم يتم العثور على تبادلات نشطة.",
+      findExchangeOpportunities: "البحث عن فرص التبادل",
+      noReceivedInvitations: "لم يتم العثور على دعوات مستلمة.",
+      noSentInvitations: "لم يتم العثور على دعوات مرسلة.",
+      noCompletedExchanges: "لم يتم العثور على تبادلات مكتملة.",
+      loadingMyExchanges: "جاري تحميل تبادلاتك...",
+      chat: "الدردشة",
+      review: "التقييم",
+      reviewed: "تم التقييم",
+      accept: "قبول",
+      decline: "رفض",
+      add: "إضافة",
+      adding: "جاري الإضافة...",
+      cancel: "إلغاء",
+      success: "نجح",
+      validationError: "خطأ في التحقق",
+      sendMessage: "إرسال رسالة",
+      pending: "في الانتظار",
+      accepted: "مقبول",
+      declined: "مرفوض",
+      invitation: "دعوة",
+      exchange: "تبادل",
+      learning: "تعلم",
+      teaching: "تدريس",
+      // Toast messages
+      responsesTabDisabled: "علامة التبويب الردود معطلة مؤقتاً",
+      invalidInvitationData: "بيانات الدعوة غير صالحة",
+      failedToAcceptInvitation: "فشل في قبول الدعوة",
+      failedToCreateChat: "فشل في إنشاء الدردشة",
+      invitationAcceptedToast: "تم قبول الدعوة! تم إخطار المستخدم الآخر.",
+      failedToFindChat: "فشل في العثور على الدردشة",
+      failedToOpenChat: "فشل في فتح الدردشة",
+      failedToDeclineInvitation: "فشل في رفض الدعوة",
+      invitationDeclined: "تم رفض الدعوة",
+      failedToFindInvitationData: "فشل في العثور على بيانات الدعوة",
+      alreadyReviewed: "تم التقييم مسبقاً",
+      alreadyReviewedDescription: "لقد قمت بتقييم هذا التبادل مسبقاً.",
+      // Exchange description strings
+      youTeach: "أنت تعلم",
+      youLearn: "أنت تتعلم",
+      youAreMentee: "أنت متدرب",
+      mentee: "متدرب",
+      locationOnline: "عبر الإنترنت",
+      // Messages page strings
+      failedToLoadConversations: "فشل في تحميل المحادثات",
+      backToMessages: "العودة إلى الرسائل"
     },
     help: {
       title: "مركز المساعدة",
@@ -762,21 +847,7 @@ export default {
     chat: "الدردشة",
     review: "التقييم",
     reviewed: "تم التقييم",
-    accept: "قبول",
-    decline: "رفض",
-    add: "إضافة",
-    adding: "جاري الإضافة...",
-    cancel: "إلغاء",
-    success: "نجح",
-    validationError: "خطأ في التحقق",
-    sendMessage: "إرسال رسالة",
-    pending: "في الانتظار",
-    accepted: "مقبول",
-    declined: "مرفوض",
-    invitation: "دعوة",
-    exchange: "تبادل",
-    learning: "تعلم",
-    teaching: "تدريس",
+    // Toast messages
     // Toast messages
     responsesTabDisabled: "علامة التبويب الردود معطلة مؤقتاً",
     invalidInvitationData: "بيانات الدعوة غير صالحة",
@@ -1124,7 +1195,7 @@ export default {
     billing: {
       monthly: "شهري",
       yearly: "سنوي",
-      saveUpTo: "وفر حتى 20%"
+              saveUpTo: "وفر 17%" // Test pricing: $1/month vs $10/year
     },
     plans: {
       free: {
@@ -1134,15 +1205,7 @@ export default {
         features: [
           "دعوات محدودة",
           "أول 3 نتائج بحث مرئية",
-          "فلاتر أساسية فقط",
-          "بحث محلي فقط",
           "إعلانات مرئية"
-        ],
-        limitations: [
-          "الملفات الشخصية بعد النتيجة الثالثة ضبابية",
-          "لا يوجد بحث بالخريطة",
-          "لا يوجد فلتر للمعلمين",
-          "لا يوجد وصول مبكر للأحداث"
         ],
         cta: "ابدأ مجاناً"
       },
@@ -1151,7 +1214,6 @@ export default {
         description: "أطلق إمكانيات التعلم غير المحدودة",
         features: [
           "دعوات غير محدودة",
-          "بحث عالمي + بحث بالخريطة",
           "فلاتر كاملة (بما في ذلك فلتر المعلمين)",
           "حتى 3 رسائل دعوة",
           "بدون إعلانات",
@@ -1178,7 +1240,7 @@ export default {
         },
         paymentMethods: {
           question: "ما هي طرق الدفع التي تقبلونها؟",
-          answer: "نحن نقبل جميع بطاقات الائتمان الرئيسية، PayPal، والتحويلات المصرفية للخطط المؤسسية."
+          answer: "نحن نقبل جميع بطاقات الائتمان الرئيسية والتحويلات المصرفية للخطط المؤسسية."
         }
       }
     },

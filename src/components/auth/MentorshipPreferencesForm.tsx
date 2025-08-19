@@ -6,7 +6,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { MentorshipPreferencesFormProps } from './AuthModalTypes';
 
 export const MentorshipPreferencesForm = ({
@@ -29,7 +29,7 @@ export const MentorshipPreferencesForm = ({
       <div className="space-y-2">
         <Label>Mentorship Preferences</Label>
         <div className="flex items-center space-x-2">
-          <Switch
+          <Checkbox
             id="willingToTeachWithoutReturn"
             checked={formData.willingToTeachWithoutReturn || false}
             onCheckedChange={handleWillingToTeachChange}

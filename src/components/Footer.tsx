@@ -1,9 +1,11 @@
 import { Link } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
 import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export const Footer = () => {
   const { t } = useTranslation();
+  const { language } = useLanguage();
 
   return (
     <footer className="bg-muted/30 border-t mt-auto">
@@ -70,18 +72,27 @@ export const Footer = () => {
           <div className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
             {t('footer.copyright')}
           </div>
-          <div className="flex items-center gap-3 sm:gap-4 flex-wrap justify-center">
-            <a href="#" className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors">
-              {t('footer.social')}
-            </a>
-            <a href="#" className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Twitter
-            </a>
-            <a href="#" className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors">
+          
+          {/* Social Media Links - Only LinkedIn and Instagram */}
+          <div className="flex items-center gap-4 flex-wrap justify-center">
+            <span className="text-xs sm:text-sm text-muted-foreground">
+              {t('footer.social')}:
+            </span>
+            <a 
+              href="https://www.linkedin.com/company/maharat-hub" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors hover:underline"
+            >
               LinkedIn
             </a>
-            <a href="#" className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors">
-              GitHub
+            <a 
+              href="https://www.instagram.com/maharathub/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors hover:underline"
+            >
+              Instagram
             </a>
           </div>
         </div>

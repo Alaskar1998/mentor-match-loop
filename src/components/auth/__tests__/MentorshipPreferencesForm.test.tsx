@@ -33,14 +33,14 @@ describe('MentorshipPreferencesForm', () => {
     ).toBeInTheDocument();
   });
 
-  it('displays switch in unchecked state by default', () => {
+  it('displays checkbox in unchecked state by default', () => {
     render(<MentorshipPreferencesForm {...mockProps} />);
 
-    const switchElement = screen.getByRole('checkbox');
-    expect(switchElement).not.toBeChecked();
+    const checkboxElement = screen.getByRole('checkbox');
+    expect(checkboxElement).not.toBeChecked();
   });
 
-  it('displays switch in checked state when willingToTeachWithoutReturn is true', () => {
+  it('displays checkbox in checked state when willingToTeachWithoutReturn is true', () => {
     const propsWithChecked = {
       ...mockProps,
       formData: {
@@ -50,15 +50,15 @@ describe('MentorshipPreferencesForm', () => {
 
     render(<MentorshipPreferencesForm {...propsWithChecked} />);
 
-    const switchElement = screen.getByRole('checkbox');
-    expect(switchElement).toBeChecked();
+    const checkboxElement = screen.getByRole('checkbox');
+    expect(checkboxElement).toBeChecked();
   });
 
-  it('calls onFormDataChange when switch is toggled', () => {
+  it('calls onFormDataChange when checkbox is clicked', () => {
     render(<MentorshipPreferencesForm {...mockProps} />);
 
-    const switchElement = screen.getByRole('checkbox');
-    fireEvent.click(switchElement);
+    const checkboxElement = screen.getByRole('checkbox');
+    fireEvent.click(checkboxElement);
 
     expect(mockProps.onFormDataChange).toHaveBeenCalledWith({
       ...mockProps.formData,
@@ -130,11 +130,11 @@ describe('MentorshipPreferencesForm', () => {
     expect(appleButton).toBeDisabled();
   });
 
-  it('maintains switch state when form data changes', () => {
+  it('maintains checkbox state when form data changes', () => {
     const { rerender } = render(<MentorshipPreferencesForm {...mockProps} />);
 
-    let switchElement = screen.getByRole('checkbox');
-    expect(switchElement).not.toBeChecked();
+    let checkboxElement = screen.getByRole('checkbox');
+    expect(checkboxElement).not.toBeChecked();
 
     // Update props with checked state
     const propsWithChecked = {
@@ -146,7 +146,7 @@ describe('MentorshipPreferencesForm', () => {
 
     rerender(<MentorshipPreferencesForm {...propsWithChecked} />);
 
-    switchElement = screen.getByRole('checkbox');
-    expect(switchElement).toBeChecked();
+    checkboxElement = screen.getByRole('checkbox');
+    expect(checkboxElement).toBeChecked();
   });
 });

@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/hooks/useLanguage";
+import { translateSkill } from "@/utils/translationUtils";
 
 export const TopContributorsSection = () => {
   const { t } = useTranslation();
@@ -108,7 +109,7 @@ export const TopContributorsSection = () => {
                         variant="secondary"
                         className="text-xs"
                       >
-                        {skill}
+                        {translateSkill(skill, language)}
                       </Badge>
                     ))}
                   </div>

@@ -7,10 +7,10 @@ import { Topbar } from "./Topbar";
 import { useTranslation } from "react-i18next";
 
 interface AdminLayoutProps {
-  title: string;
+  title?: string;
 }
 
-const AdminLayout = ({ title }: AdminLayoutProps) => {
+const AdminLayout = ({ title = "Admin Dashboard" }: AdminLayoutProps) => {
   const { user, isAuthenticated, isLoading, isSessionRestoring } = useAuth();
   const { t } = useTranslation();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);

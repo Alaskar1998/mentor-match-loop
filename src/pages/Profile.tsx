@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Trash2, Upload, Save, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -572,14 +572,17 @@ export default function Profile() {
                   <CardTitle>{t('pages.profile.mentorshipPreferences')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="willingToTeachWithoutReturn"
-                      checked={formData.willingToTeachWithoutReturn}
-                      onCheckedChange={(checked) => setFormData({...formData, willingToTeachWithoutReturn: checked})}
-                      disabled={!isEditing}
-                    />
-                    <Label htmlFor="willingToTeachWithoutReturn" className="text-sm">
+                                    <div className="flex items-center space-x-3">
+                    {/* Consistent layout: checkbox always on the left, text on the right */}
+                    <div className="w-4 h-4 flex-shrink-0">
+                      <Checkbox
+                        id="willingToTeachWithoutReturn"
+                        checked={formData.willingToTeachWithoutReturn}
+                        onCheckedChange={(checked) => setFormData({...formData, willingToTeachWithoutReturn: checked})}
+                        disabled={!isEditing}
+                      />
+                    </div>
+                    <Label htmlFor="willingToTeachWithoutReturn" className="text-sm leading-relaxed">
                       {t('pages.profile.willingToTeachWithoutReturn')}
                     </Label>
                   </div>

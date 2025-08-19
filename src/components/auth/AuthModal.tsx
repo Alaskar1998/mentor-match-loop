@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -1292,7 +1292,7 @@ export const AuthModal = ({
             <div className="space-y-2">
               <Label>Mentorship Preferences</Label>
               <div className="flex items-center space-x-2">
-                <Switch
+                <Checkbox
                   id="willingToTeachWithoutReturn"
                   checked={formData.willingToTeachWithoutReturn || false}
                   onCheckedChange={checked =>

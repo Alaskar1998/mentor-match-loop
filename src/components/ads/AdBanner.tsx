@@ -33,7 +33,7 @@ export const AdBanner = ({ onClose, onUpgrade }: AdBannerProps) => {
               <span className="text-sm font-medium">Upgrade to Premium</span>
             </div>
             <p className="text-sm text-muted-foreground mb-3">
-              Remove ads and unlock unlimited invites, worldwide search, and all filters!
+              Remove ads and unlock unlimited invites and all filters!
             </p>
             <div className="flex items-center gap-2">
               <Button 

@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from '@/utils/logger';
+import { upgradeInterestService } from '@/services/upgradeInterestService';
 
 // Real Supabase queries to replace mock data
 const getRealDashboardStats = async () => {
@@ -120,29 +121,67 @@ const getRealDashboardStats = async () => {
 };
 
 const getRealUsers = async () => {
-  const { data: profiles, error } = await supabase
-    .from('profiles')
-    .select(`
-      id,
-      display_name,
-      email,
-      country,
-      created_at,
-      skills_to_teach,
-      skills_to_learn,
-      user_type,
-      status
-    `)
-    .order('created_at', { ascending: false });
+  let profiles: any[] = [];
+  try {
+    const { data: profilesData, error } = await supabase
+      .from('profiles')
+      .select(`
+        id,
+        display_name,
+        email,
+        country,
+        created_at,
+        skills_to_teach,
+        skills_to_learn,
+        user_type,
+        status
+      `)
+      .order('created_at', { ascending: false });
 
-  if (error) throw error;
+    if (error) {
+      // Check if it's a rate limit or quota exceeded error
+      if (error.code === 'PGRST116' || error.message?.includes('quota') || error.message?.includes('limit')) {
+        logger.warn('Supabase quota/rate limit exceeded for profiles. Cannot load users.');
+        throw new Error('Supabase quota exceeded. Please upgrade your plan or try again later.');
+      } else {
+        throw error;
+      }
+    } else if (profilesData) {
+      profiles = profilesData;
+    }
+  } catch (error) {
+    logger.error('Could not fetch profiles data:', error);
+    
+    // If it's a quota error, try fallback mode
+    if (error instanceof Error && (error.message.includes('quota') || error.message.includes('limit'))) {
+      logger.warn('Attempting fallback mode...');
+      return await getFallbackUsers();
+    }
+    
+    throw error;
+  }
 
   // Get chat counts for each user
-  const { data: chats, error: chatsError } = await supabase
-    .from('chats')
-    .select('user1_id, user2_id');
+  let chats: any[] = [];
+  try {
+    const { data: chatsData, error: chatsError } = await supabase
+      .from('chats')
+      .select('user1_id, user2_id');
 
-  if (chatsError) throw chatsError;
+    if (chatsError) {
+      // Check if it's a rate limit or quota exceeded error
+      if (chatsError.code === 'PGRST116' || chatsError.message?.includes('quota') || chatsError.message?.includes('limit')) {
+        logger.warn('Supabase quota/rate limit exceeded for chats. Continuing without chat data.');
+      } else {
+        logger.warn('Could not fetch chats data for users:', chatsError);
+      }
+    } else if (chatsData) {
+      chats = chatsData;
+    }
+  } catch (error) {
+    logger.warn('Could not fetch chats data for users:', error);
+    // Continue with empty chats array
+  }
 
   // Get review counts and average ratings - with error handling
   let reviews: any[] = [];
@@ -151,7 +190,14 @@ const getRealUsers = async () => {
       .from('reviews')
       .select('reviewee_id, rating');
 
-    if (!reviewsError && reviewsData) {
+    if (reviewsError) {
+      // Check if it's a rate limit or quota exceeded error
+      if (reviewsError.code === 'PGRST116' || reviewsError.message?.includes('quota') || reviewsError.message?.includes('limit')) {
+        logger.warn('Supabase quota/rate limit exceeded for reviews. Continuing without review data.');
+      } else {
+        logger.warn('Could not fetch reviews data for users:', reviewsError);
+      }
+    } else if (reviewsData) {
       reviews = reviewsData;
     }
   } catch (error) {
@@ -172,6 +218,9 @@ const getRealUsers = async () => {
       ? userReviews.reduce((sum, review) => sum + review.rating, 0) / userReviews.length 
       : 0;
 
+    // Check if user has shown upgrade interest
+    const upgradeInterest = upgradeInterestService.getUserInterest(profile.id);
+    
     return {
       id: profile.id,
       name: profile.display_name || 'Unknown User',
@@ -182,10 +231,44 @@ const getRealUsers = async () => {
       joinedDate: new Date(profile.created_at).toISOString().split('T')[0],
       exchanges: userChats.length,
       rating: Math.round(averageRating * 10) / 10,
+      upgradeInterest: upgradeInterest ? {
+        hasInterest: true,
+        plan: upgradeInterest.plan,
+        date: new Date(upgradeInterest.timestamp).toISOString().split('T')[0]
+      } : {
+        hasInterest: false,
+        plan: null,
+        date: null
+      }
     };
   }) || [];
 
   return users;
+};
+
+// Fallback function for when Supabase is limited
+const getFallbackUsers = async () => {
+  logger.warn('Using fallback mode due to Supabase limitations');
+  
+  // Return minimal user data that we can get from localStorage
+  const upgradeInterests = upgradeInterestService.getInterests();
+  
+  return upgradeInterests.map(interest => ({
+    id: interest.userId,
+    name: interest.userName,
+    email: interest.userEmail,
+    country: 'Unknown',
+    status: 'active',
+    userType: 'free',
+    joinedDate: new Date().toISOString().split('T')[0],
+    exchanges: 0,
+    rating: 0,
+    upgradeInterest: {
+      hasInterest: true,
+      plan: interest.plan,
+      date: new Date(interest.timestamp).toISOString().split('T')[0]
+    }
+  }));
 };
 
 const getRealInvitations = async () => {

@@ -35,13 +35,15 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useAdminUsers } from "@/hooks/useAdminData";
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 const Users = () => {
   const { t } = useTranslation();
   const { data: users, isLoading, error } = useAdminUsers();
+  const queryClient = useQueryClient();
   
   // State for search and filters
   const [searchTerm, setSearchTerm] = useState("");
@@ -62,6 +64,20 @@ const Users = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   
   const { toast } = useToast();
+
+  // Listen for upgrade interest changes and refresh data
+  React.useEffect(() => {
+    const handleUpgradeInterestChange = () => {
+      console.log('Upgrade interest changed, refreshing admin data...');
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+    };
+
+    window.addEventListener('upgradeInterestChanged', handleUpgradeInterestChange);
+    
+    return () => {
+      window.removeEventListener('upgradeInterestChanged', handleUpgradeInterestChange);
+    };
+  }, [queryClient]);
 
   // Filter and search logic - MUST be called before any conditional returns
   const filteredUsers = useMemo(() => {
@@ -203,8 +219,8 @@ const Users = () => {
       setIsEditModalOpen(false);
       setEditingUser(null);
       
-      // Refresh the data
-      window.location.reload();
+      // Refresh the data by invalidating the query cache
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
     } catch (error: any) {
       toast({
         title: "Error",
@@ -237,6 +253,39 @@ const Users = () => {
               <Button variant="outline" size="sm" onClick={handleExport}>
                 <Download className="h-4 w-4 mr-2" />
                 {t('admin.users.export', 'Export')}
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => {
+                  // @ts-ignore - debug method
+                  window.upgradeInterestService?.debugStorage();
+                }}
+                className="ml-2"
+              >
+                Debug Storage
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => {
+                  console.log('Manual refresh triggered');
+                  queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+                }}
+                className="ml-2"
+              >
+                Refresh Data
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => {
+                  // @ts-ignore - test method
+                  window.upgradeInterestService?.triggerRefresh();
+                }}
+                className="ml-2"
+              >
+                Test Event
               </Button>
             </div>
           </div>
@@ -316,6 +365,7 @@ const Users = () => {
                 <TableHead>{t('admin.users.table.exchanges', 'Exchanges')}</TableHead>
                 <TableHead>{t('admin.users.table.rating', 'Rating')}</TableHead>
                 <TableHead>{t('admin.users.table.joined', 'Joined')}</TableHead>
+                <TableHead>{t('admin.users.table.upgradeInterest', 'Upgrade Interest')}</TableHead>
                 <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
@@ -343,6 +393,20 @@ const Users = () => {
                   <TableCell>{user.rating}</TableCell>
                   <TableCell>{user.joinedDate}</TableCell>
                   <TableCell>
+                    {user.upgradeInterest?.hasInterest ? (
+                      <div className="flex flex-col space-y-1">
+                        <Badge variant="default" className="w-fit">
+                          {user.upgradeInterest.plan === 'monthly' ? 'Monthly' : 'Yearly'}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {user.upgradeInterest.date}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">No interest</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="h-8 w-8 p-0">
@@ -366,7 +430,7 @@ const Users = () => {
                 </TableRow>
               )) || (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-8">
+                  <TableCell colSpan={10} className="text-center py-8">
                     <p className="text-muted-foreground">No users found</p>
                   </TableCell>
                 </TableRow>

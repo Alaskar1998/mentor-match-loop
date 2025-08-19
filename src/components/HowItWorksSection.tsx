@@ -1,8 +1,10 @@
 import { Search, Users, BookOpen } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export const HowItWorksSection = () => {
   const { t } = useTranslation();
+  const { language } = useLanguage();
 
   const steps = [
     {
@@ -62,23 +64,7 @@ export const HowItWorksSection = () => {
                 {step.description}
               </p>
 
-              {/* Connection Line (for desktop) */}
-              {index < steps.length - 1 && (
-                <div className="hidden md:block absolute top-10 left-1/2 transform translate-x-full w-full">
-                  <div className="w-full h-0.5 bg-gradient-to-r from-primary/30 to-accent/30 relative">
-                    <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-2 h-2 bg-accent rounded-full" />
-                  </div>
-                </div>
-              )}
-
-              {/* Mobile Connection Arrow */}
-              {index < steps.length - 1 && (
-                <div className="md:hidden flex justify-center mt-6">
-                  <div className="w-0.5 h-8 bg-gradient-to-b from-primary/30 to-accent/30 relative">
-                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-accent rounded-full" />
-                  </div>
-                </div>
-              )}
+                             
             </div>
           ))}
         </div>

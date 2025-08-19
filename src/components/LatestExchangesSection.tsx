@@ -6,6 +6,7 @@ import { useOptimizedPolling } from "@/hooks/useOptimizedPolling";
 import { getLatestExchanges, getExchangeCount, LatestExchange } from "@/services/exchangeService";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/hooks/useLanguage";
+import { translateSkill } from "@/utils/translationUtils";
 import { logger } from '@/utils/logger';
 
 export const LatestExchangesSection = React.memo(() => {
@@ -202,7 +203,7 @@ export const LatestExchangesSection = React.memo(() => {
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 mb-2 text-sm sm:text-base">
                           <span className="font-semibold text-foreground">{exchange.student}</span>
                           <span className="text-muted-foreground">{t(`latestExchanges.cardContent.${exchange.action}`)}</span>
-                          <span className="font-semibold text-primary">{exchange.skill}</span>
+                          <span className="font-semibold text-primary">{translateSkill(exchange.skill, language)}</span>
                         </div>
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-1 text-xs sm:text-sm text-muted-foreground">
                           <span>{t('latestExchanges.with')}</span>

@@ -148,6 +148,7 @@ export default {
         exchanges: "Exchanges",
         rating: "Rating",
         joined: "Joined",
+        upgradeInterest: "Upgrade Interest",
       },
       actions: {
         view: "View Profile",
@@ -1021,7 +1022,7 @@ export default {
     billing: {
       monthly: "Monthly",
       yearly: "Yearly",
-      saveUpTo: "Save up to 20%"
+              saveUpTo: "Save 17%" // Test pricing: $1/month vs $10/year
     },
     plans: {
       free: {
@@ -1031,15 +1032,7 @@ export default {
         features: [
           "Limited invites",
           "First 3 search results visible",
-          "Basic filters only",
-          "Country-only search",
           "Ads visible"
-        ],
-        limitations: [
-          "Profiles beyond 3rd result are blurred",
-          "No map search",
-          "No mentor filter",
-          "No early event access"
         ],
         cta: "Get Started Free"
       },
@@ -1048,7 +1041,6 @@ export default {
         description: "Unlock unlimited learning opportunities",
         features: [
           "Unlimited invites",
-          "Worldwide search + map search",
           "Full filters (including Mentor filter)",
           "Up to 3 invite messages",
           "No ads",
@@ -1075,7 +1067,7 @@ export default {
         },
         paymentMethods: {
           question: "What payment methods do you accept?",
-          answer: "We accept all major credit cards, PayPal, and bank transfers for enterprise plans."
+          answer: "We accept all major credit cards and bank transfers for enterprise plans."
         }
       }
     },
