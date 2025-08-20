@@ -60,13 +60,13 @@ const SearchResultsPage = () => {
   const navigate = useNavigate();
   
   // Debug logging
-  console.log('🔍 Monetization Debug:', {
-    userTier,
-    isPremium,
-    user: user?.id,
-    userTypeFromUser: user?.userType,
-    maxSearchResults: getMaxSearchResults()
-  });
+  // console.log('🔍 Monetization Debug:', {
+  //   userTier,
+  //   isPremium,
+  //   user: user?.id,
+  //   userTypeFromUser: user?.userType,
+  //   maxSearchResults: getMaxSearchResults()
+  // });
 
   const searchQuery = searchParams.get("q") || "";
 
@@ -127,12 +127,12 @@ const SearchResultsPage = () => {
           return;
         }
 
-        console.log('🔍 DEBUG: Raw profiles from Supabase:', profiles?.length || 0);
-        console.log('🔍 DEBUG: Sample profiles:', profiles?.slice(0, 3).map(p => ({
-          id: p.id,
-          name: p.display_name,
-          skills_to_teach: p.skills_to_teach
-        })));
+            // console.log('🔍 DEBUG: Raw profiles from Supabase:', profiles?.length || 0);
+            // console.log('🔍 DEBUG: Sample profiles:', profiles?.slice(0, 3).map(p => ({
+            //   id: p.id,
+            //   name: p.display_name,
+            //   skills_to_teach: p.skills_to_teach
+            // })));
 
         // Transform Supabase data to UserProfile format and filter out current user
         const transformedUsers: UserProfile[] = await Promise.all(
@@ -176,7 +176,7 @@ const SearchResultsPage = () => {
                   }).filter(Boolean) // Remove any null/undefined values
                 : [];
               
-              console.log(`🔍 DEBUG: User ${profile.display_name} - Original skills:`, originalSkills, 'Transformed skills:', transformedSkills);
+              // console.log(`🔍 DEBUG: User ${profile.display_name} - Original skills:`, originalSkills, 'Transformed skills:', transformedSkills);
 
               return {
                 id: profile.id,
@@ -226,9 +226,9 @@ const SearchResultsPage = () => {
 
   // Update search term when URL changes
   useEffect(() => {
-    console.log('🔍 DEBUG: Search query changed to:', searchQuery);
-    console.log('🔍 DEBUG: updateSearchTerm function:', typeof updateSearchTerm);
-    console.log('🔍 DEBUG: clearCache function:', typeof clearCache);
+    // console.log('🔍 DEBUG: Search query changed to:', searchQuery);
+    // console.log('🔍 DEBUG: updateSearchTerm function:', typeof updateSearchTerm);
+    // console.log('🔍 DEBUG: clearCache function:', typeof clearCache);
     updateSearchTerm(searchQuery);
     // Clear cache when search query changes to ensure fresh results
     clearCache();

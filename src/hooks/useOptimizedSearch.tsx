@@ -88,33 +88,33 @@ export const useOptimizedSearch = (options: UseOptimizedSearchOptions = {}) => {
 
   // Debounced search effect
   useEffect(() => {
-    console.log('🔍 DEBUG: Search term changed to:', searchTerm);
-    console.log('🔍 DEBUG: Search term length:', searchTerm.length);
-    console.log('🔍 DEBUG: Debounce delay:', debounceMs, 'ms');
-    console.log('🔍 DEBUG: Users available:', usersRef.current.length);
+    // console.log('🔍 DEBUG: Search term changed to:', searchTerm);
+    // console.log('🔍 DEBUG: Search term length:', searchTerm.length);
+    // console.log('🔍 DEBUG: Debounce delay:', debounceMs, 'ms');
+    // console.log('🔍 DEBUG: Users available:', usersRef.current.length);
     
     // Don't search if no users are loaded yet
     if (usersRef.current.length === 0) {
-      console.log('🔍 DEBUG: No users loaded yet, skipping search');
+      // console.log('🔍 DEBUG: No users loaded yet, skipping search');
       return;
     }
     
     if (debounceRef.current) {
-      console.log('🔍 DEBUG: Clearing previous debounce timer');
+      // console.log('🔍 DEBUG: Clearing previous debounce timer');
       clearTimeout(debounceRef.current);
     }
 
-    console.log('🔍 DEBUG: Setting new debounce timer for:', searchTerm);
+          // console.log('🔍 DEBUG: Setting new debounce timer for:', searchTerm);
     const timerId = setTimeout(() => {
-      console.log('🔍 DEBUG: Debounce timer fired, performing search for:', searchTerm);
+              // console.log('🔍 DEBUG: Debounce timer fired, performing search for:', searchTerm);
       performSearch(searchTerm, usersRef.current);
     }, debounceMs);
     debounceRef.current = timerId;
-    console.log('🔍 DEBUG: Timer ID set:', timerId);
+            // console.log('🔍 DEBUG: Timer ID set:', timerId);
 
     return () => {
       if (debounceRef.current) {
-        console.log('🔍 DEBUG: Cleaning up debounce timer');
+        // console.log('🔍 DEBUG: Cleaning up debounce timer');
         clearTimeout(debounceRef.current);
       }
     };
@@ -127,7 +127,7 @@ export const useOptimizedSearch = (options: UseOptimizedSearchOptions = {}) => {
     
     // If we have a search term and users just loaded, trigger the search
     if (searchTerm && users.length > 0) {
-      console.log('🔍 DEBUG: Users loaded, triggering search for:', searchTerm);
+      // console.log('🔍 DEBUG: Users loaded, triggering search for:', searchTerm);
       performSearch(searchTerm, users);
     }
     
@@ -139,10 +139,10 @@ export const useOptimizedSearch = (options: UseOptimizedSearchOptions = {}) => {
   }, [users, cacheResults, searchTerm, performSearch]);
 
   const updateSearchTerm = useCallback((term: string) => {
-    console.log('🔍 DEBUG: updateSearchTerm called with:', term);
-    console.log('🔍 DEBUG: Setting searchTerm to:', term);
+    // console.log('🔍 DEBUG: updateSearchTerm called with:', term);
+    // console.log('🔍 DEBUG: Setting searchTerm to:', term);
     setSearchTerm(term);
-    console.log('🔍 DEBUG: setSearchTerm called, waiting for state update...');
+    // console.log('🔍 DEBUG: setSearchTerm called, waiting for state update...');
   }, []);
 
   const clearCache = useCallback(() => {

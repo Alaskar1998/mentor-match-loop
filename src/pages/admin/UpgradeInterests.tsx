@@ -29,7 +29,10 @@ const UpgradeInterests = () => {
       setIsLoading(true);
       const interests = upgradeInterestService.getInterests();
       setUpgradeInterests(interests);
-      console.log('Refreshed upgrade interests:', interests);
+      // Only log in development mode
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Refreshed upgrade interests:', interests);
+      }
     } catch (error) {
       console.error('Error refreshing upgrade interests:', error);
       setUpgradeInterests([]);

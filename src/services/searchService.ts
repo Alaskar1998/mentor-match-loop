@@ -121,7 +121,7 @@ class SearchService {
     
     // DEBUG: For "Advertising" search, show all users to debug
     if (term === 'advertising') {
-      console.log('🔍 DEBUG: Searching for "advertising" - showing all users for debugging');
+      // console.log('🔍 DEBUG: Searching for "advertising" - showing all users for debugging');
       const debugResults = users.map(user => ({
         user,
         matchedSkills: user.skills,
@@ -145,7 +145,7 @@ class SearchService {
         }
       });
       logger.debug('🔍 DEBUG: Skill counts from search users:', skillCounts);
-      console.log('🔍 DEBUG: "Advertising" count in search users:', skillCounts['Advertising'] || 0);
+              // console.log('🔍 DEBUG: "Advertising" count in search users:', skillCounts['Advertising'] || 0);
     }
     
     // Generate suggestion ONLY if no results found
@@ -175,17 +175,17 @@ class SearchService {
     
     // Debug: Check if search term is in the skills list
     const allSkills = getAllSkills();
-    console.log(`SearchService: "${searchTerm}" in skills list:`, allSkills.includes(searchTerm));
-    console.log(`SearchService: All skills containing "${searchTerm}":`, allSkills.filter(skill => skill.toLowerCase().includes(searchTerm.toLowerCase())));
+          // console.log(`SearchService: "${searchTerm}" in skills list:`, allSkills.includes(searchTerm));
+      // console.log(`SearchService: All skills containing "${searchTerm}":`, allSkills.filter(skill => skill.toLowerCase().includes(searchTerm.toLowerCase())));
 
-    console.log('🔍 DEBUG: Starting to process', users.length, 'users');
-    console.log('🔍 DEBUG: Users with skills:', users.filter(u => Array.isArray(u.skills) && u.skills.length > 0).length);
-    console.log('🔍 DEBUG: Users without skills:', users.filter(u => !Array.isArray(u.skills) || u.skills.length === 0).length);
-    console.log('🔍 DEBUG: Sample users:', users.slice(0, 3).map(u => ({ 
-      name: u.name, 
-      skillsCount: Array.isArray(u.skills) ? u.skills.length : 'not array',
-      skills: Array.isArray(u.skills) ? u.skills.slice(0, 3) : 'no skills'
-    })));
+          // console.log('🔍 DEBUG: Starting to process', users.length, 'users');
+      // console.log('🔍 DEBUG: Users with skills:', users.filter(u => Array.isArray(u.skills) && u.skills.length > 0).length);
+      // console.log('🔍 DEBUG: Users without skills:', users.filter(u => !Array.isArray(u.skills) || u.skills.length === 0).length);
+      // console.log('🔍 DEBUG: Sample users:', users.slice(0, 3).map(u => ({ 
+      //   name: u.name, 
+      //   skillsCount: Array.isArray(u.skills) ? u.skills.length : 'not array',
+      //   skills: Array.isArray(u.skills) ? u.skills.slice(0, 3) : 'no skills'
+      // })));
     
     users.forEach((user, index) => {
       logger.debug(`🔍 DEBUG: Processing user ${index + 1}/${users.length}:`, user.name, 'with skills:', user.skills);
@@ -220,8 +220,8 @@ class SearchService {
         const skillLower = skillName.toLowerCase().trim();
         const searchTermLower = searchTerm.toLowerCase().trim();
         
-        console.log(`🔍 DEBUG: Skill comparison - Original: "${skillName}" Lowercase: "${skillLower}" Search term: "${searchTermLower}"`);
-        console.log(`🔍 DEBUG: Exact match check: ${skillLower === searchTermLower} for skill: "${skillName}"`);
+        // console.log(`🔍 DEBUG: Skill comparison - Original: "${skillName}" Lowercase: "${skillLower}" Search term: "${searchTermLower}"`);
+        // console.log(`🔍 DEBUG: Exact match check: ${skillLower === searchTermLower} for skill: "${skillName}"`);
         
         // Check for exact match first (case-insensitive)
         if (skillLower === searchTermLower) {
@@ -288,13 +288,13 @@ class SearchService {
     this.allSkills.forEach(skill => {
       const similarity = this.calculateSimilarity(searchTerm, skill);
       
-      console.log(`SearchService: Comparing "${searchTerm}" with "${skill}" - similarity: ${similarity}`);
+              // console.log(`SearchService: Comparing "${searchTerm}" with "${skill}" - similarity: ${similarity}`);
       
       // Only suggest for high-confidence corrections (1-2 letter errors)
       if (similarity > 0.6 && similarity > bestConfidence) {
         bestSuggestion = skill;
         bestConfidence = similarity;
-        console.log(`SearchService: New best suggestion: "${skill}" with confidence ${similarity}`);
+        // console.log(`SearchService: New best suggestion: "${skill}" with confidence ${similarity}`);
       }
     });
 

@@ -52,11 +52,11 @@ export const FilterSidebar = ({ filters, onFiltersChange, isPremium, isOpen, onC
   const navigate = useNavigate();
   
   // Debug logging
-  console.log('🔍 FilterSidebar Debug:', {
-    isPremium,
-    shouldShowUpgradeBanner: !isPremium,
-    isOpen
-  });
+  // console.log('🔍 FilterSidebar Debug:', {
+  //   isPremium,
+  //   shouldShowUpgradeBanner: !isPremium,
+  //   isOpen
+  // });
   
   // Allow filter changes only for premium users
   const updateFilters = (key: keyof SearchFilters, value: any) => {

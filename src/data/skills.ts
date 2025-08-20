@@ -539,13 +539,13 @@ export const searchSkillsBilingual = (query: string): string[] => {
   const normalizedQuery = query.toLowerCase().trim();
   const results: string[] = [];
   
-  console.log('searchSkillsBilingual: Searching for query:', query, 'normalized:', normalizedQuery);
+  // console.log('searchSkillsBilingual: Searching for query:', query, 'normalized:', normalizedQuery);
   
   // Search in English skills
   for (const skill of getAllSkills()) {
     if (skill.toLowerCase().includes(normalizedQuery)) {
       results.push(skill);
-      console.log('searchSkillsBilingual: Found English match:', skill);
+      // console.log('searchSkillsBilingual: Found English match:', skill);
     }
   }
   
@@ -554,12 +554,12 @@ export const searchSkillsBilingual = (query: string): string[] => {
     if (arabicTranslation.toLowerCase().includes(normalizedQuery)) {
       if (!results.includes(englishSkill)) {
         results.push(englishSkill);
-        console.log('searchSkillsBilingual: Found Arabic match:', arabicTranslation, '->', englishSkill);
+        // console.log('searchSkillsBilingual: Found Arabic match:', arabicTranslation, '->', englishSkill);
       }
     }
   }
   
-  console.log('searchSkillsBilingual: Final results:', results);
+  // console.log('searchSkillsBilingual: Final results:', results);
   return results;
 };
 

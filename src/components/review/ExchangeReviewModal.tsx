@@ -66,14 +66,14 @@ export const ExchangeReviewModal = ({
     setIsSubmitting(true);
 
     try {
-      console.log('🔍 Submitting review with data:', {
-        chat_id: exchange.id,
-        reviewer_id: user.id,
-        reviewed_user_id: exchange.otherUser.id,
-        skill_rating: skillRating,
-        communication_rating: communicationRating,
-        review_text: review.trim()
-      });
+      // console.log('🔍 Submitting review with data:', {
+      //   chat_id: exchange.id,
+      //   reviewer_id: user.id,
+      //   reviewed_user_id: exchange.otherUser.id,
+      //   skill_rating: skillRating,
+      //   communication_rating: communicationRating,
+      //   review_text: review.trim()
+      // });
 
       // Save review to database
       const { error } = await supabase

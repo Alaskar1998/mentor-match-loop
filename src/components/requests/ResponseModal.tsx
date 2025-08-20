@@ -57,11 +57,11 @@ export const ResponseModal = ({ isOpen, onClose, request, onResponseSubmitted }:
     setIsSubmitting(true);
 
     try {
-      console.log('Submitting response to database:', {
-        learning_request_id: request.id,
-        responder_id: user.id,
-        message: message.trim()
-      });
+      // console.log('Submitting response to database:', {
+      //   learning_request_id: request.id,
+      //   responder_id: user.id,
+      //   message: message.trim()
+      // });
 
       // Submit response to database using type assertion
       logger.debug('Submitting response to database...');

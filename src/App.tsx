@@ -14,7 +14,7 @@ import { MonetizationProvider } from '@/hooks/useMonetization';
 import { NotificationProvider } from '@/hooks/useNotifications';
 import { LanguageProvider } from '@/hooks/useLanguage';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { Suspense, lazy, useState, useEffect } from 'react';
+import { Suspense, lazy } from 'react';
 import '@/i18n'; // Import to initialize i18n
 
 // Lazy load pages for better performance
@@ -34,7 +34,6 @@ const MyExchanges = lazy(() => import('./pages/MyExchanges'));
 const Gamification = lazy(() => import('./pages/Gamification'));
 const ContactSupport = lazy(() => import('./pages/ContactSupport'));
 const NotFound = lazy(() => import('./pages/NotFound'));
-const TestPage = lazy(() => import('./pages/TestPage'));
 
 // Admin pages
 const AdminLayout = lazy(() => import('./components/admin/AdminLayout'));
@@ -101,7 +100,6 @@ const App = () => {
                           <Routes>
                             {/* Public routes */}
                             <Route path="/" element={<Index />} />
-                            <Route path="/test" element={<TestPage />} />
                             <Route path="/pricing" element={<Pricing />} />
                             <Route
                               path="/privacy-policy"

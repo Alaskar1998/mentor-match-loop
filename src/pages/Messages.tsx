@@ -69,15 +69,15 @@ export default function Messages() {
       logger.debug('❌ Not authenticated, stopping loading');
       setLoading(false);
     } else {
-      console.log('⏳ Auth state:', { 
-        isAuthenticated, 
-        userId: user?.id, 
-        authLoading, 
-        isSessionRestoring,
-        hasUser: !!user,
-        userEmail: user?.email,
-        userObject: user
-      });
+      // console.log('⏳ Auth state:', { 
+      //   isAuthenticated, 
+      //   userId: user?.id, 
+      //   authLoading, 
+      //   isSessionRestoring,
+      //   hasUser: !!user,
+      //   userEmail: user?.email,
+      //   userObject: user
+      // });
     }
   }, [isAuthenticated, user, authLoading, isSessionRestoring, debouncedFetchChats]);
 
@@ -245,13 +245,13 @@ export default function Messages() {
 
   // If not authenticated and auth is done loading, redirect to home
   useEffect(() => {
-    console.log('🔍 Redirect check:', { 
-      isAuthenticated, 
-      authLoading, 
-      isSessionRestoring, 
-      user: !!user,
-      shouldRedirect: !isAuthenticated && !authLoading && !isSessionRestoring && user === null 
-    });
+    // console.log('🔍 Redirect check:', { 
+    //   isAuthenticated, 
+    //   authLoading, 
+    //   isSessionRestoring, 
+    //   user: !!user,
+    //   shouldRedirect: !isAuthenticated && !authLoading && !isSessionRestoring && user === null 
+    // });
     
     if (!isAuthenticated && !authLoading && !isSessionRestoring && user === null) {
       logger.debug('User not authenticated, redirecting to home');

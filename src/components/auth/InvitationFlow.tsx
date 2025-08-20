@@ -48,12 +48,12 @@ export const InvitationFlow = ({
     // Message is now optional for all users (including premium)
     // Premium users can still send personalized messages if they want to
     
-    console.log('🚀 Starting invitation send process...', {
-      sender: user.id,
-      recipient: recipientId,
-      skill: selectedSkill,
-      message: message.trim()
-    });
+    // console.log('🚀 Starting invitation send process...', {
+    //   sender: user.id,
+    //   recipient: recipientId,
+    //   skill: selectedSkill,
+    //   message: message.trim()
+    // });
     
     setIsLoading(true);
     try {
@@ -87,12 +87,12 @@ export const InvitationFlow = ({
       logger.debug('📧 Sender profile fetched:', { senderName });
       
       try {
-        console.log('🔍 Creating notification with data:', {
-          userId: recipientId,
-          senderId: user.id,
-          senderName: senderName,
-          skill: selectedSkill
-        });
+        // console.log('🔍 Creating notification with data:', {
+        //   userId: recipientId,
+        //   senderId: user.id,
+        //   senderName: senderName,
+        //   skill: selectedSkill
+        // });
         
         await notificationService.createNotification({
           userId: recipientId,

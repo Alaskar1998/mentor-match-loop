@@ -29,12 +29,12 @@ export const SearchResults = React.memo(({
   const navigate = useNavigate();
 
   // Debug logging
-  console.log('🔍 SearchResults Debug:', {
-    isPremium,
-    usersCount: users.length,
-    totalResults,
-    shouldShowUpgrade: !isPremium && totalResults > users.length
-  });
+  // console.log('🔍 SearchResults Debug:', {
+  //   isPremium,
+  //   usersCount: users.length,
+  //   totalResults,
+  //   shouldShowUpgrade: !isPremium && totalResults > users.length
+  // });
 
   const handleUpgrade = () => {
     navigate('/pricing');
