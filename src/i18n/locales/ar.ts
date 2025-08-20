@@ -1245,7 +1245,32 @@ export default {
       }
     },
     upgradeError: "يرجى تسجيل الدخول لترقية خطتك",
-    comingSoon: "ترقية خطة {{planName}} قريباً! السعر: ${{price}}/{{cycle}}"
+    comingSoon: "ترقية خطة {{planName}} قريباً! السعر: ${{price}}/{{cycle}}",
+    // Upgrade button and how it works section
+    upgrade: "ترقية",
+    howItWorks: "كيف يعمل:",
+    howItWorksSteps: [
+      "اضغط على زر الترقية",
+      "سنقوم بتسجيل اهتمامك",
+      "سيتصل بك فريقنا",
+      "سنرتب ترقيتك"
+    ],
+    // Toast messages
+    upgradeInterestRecorded: "تم تسجيل اهتمام الترقية! سنتواصل معك قريباً.",
+    teamWillContact: "سيتصل بك فريقنا خلال 24 ساعة لترتيب ترقيتك.",
+    // PayPal upgrade specific translations
+    requestUpgrade: "طلب ترقية",
+    sendingRequest: "جاري إرسال الطلب...",
+    upgradeRequestSent: "تم إرسال طلب الترقية! سنتواصل معك قريباً لترتيب الدفع.",
+    willReachOutEmail: "سنتواصل معك عبر البريد الإلكتروني لمناقشة أفضل طريقة دفع لك.",
+    failedToSendRequest: "فشل في إرسال طلب الترقية. يرجى المحاولة مرة أخرى.",
+    paypalHowItWorks: "كيف يعمل:",
+    paypalHowItWorksSteps: [
+      'اضغط "طلب ترقية"',
+      'سنتواصل معك خلال 24 ساعة',
+      'اختر طريقة الدفع المفضلة لديك',
+      'احصل على الميزات المتميزة مفعلة'
+    ]
   },
 
   // Contact Support

@@ -1072,7 +1072,32 @@ export default {
       }
     },
     upgradeError: "Please sign in to upgrade your plan",
-    comingSoon: "{{planName}} plan upgrade coming soon! Price: ${{price}}/{{cycle}}"
+    comingSoon: "{{planName}} plan upgrade coming soon! Price: ${{price}}/{{cycle}}",
+    // Upgrade button and how it works section
+    upgrade: "Upgrade",
+    howItWorks: "How it works:",
+    howItWorksSteps: [
+      "Click the Upgrade button",
+      "We'll record your interest",
+      "Our team will contact you",
+      "We'll arrange your upgrade"
+    ],
+    // Toast messages
+    upgradeInterestRecorded: "Upgrade interest recorded! We will contact you soon.",
+    teamWillContact: "Our team will reach out to you within 24 hours to arrange your upgrade.",
+    // PayPal upgrade specific translations
+    requestUpgrade: "Request Upgrade",
+    sendingRequest: "Sending Request...",
+    upgradeRequestSent: "Upgrade request sent! We'll contact you soon to arrange payment.",
+    willReachOutEmail: "We'll reach out via email to discuss the best payment method for you.",
+    failedToSendRequest: "Failed to send upgrade request. Please try again.",
+    paypalHowItWorks: "How it works:",
+    paypalHowItWorksSteps: [
+      'Click "Request Upgrade"',
+      'We\'ll contact you within 24 hours',
+      'Choose your preferred payment method',
+      'Get premium features activated'
+    ]
   },
 
   // Contact Support
