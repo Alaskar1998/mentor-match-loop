@@ -45,12 +45,8 @@ export const InvitationFlow = ({
   const sendInvitation = async () => {
     if (!user || !selectedSkill) return;
     
-    // For non-premium users, allow sending without message
-    // For premium users, require a message
-    if (isPremium && !message.trim()) {
-      toast.error("Please enter a message");
-      return;
-    }
+    // Message is now optional for all users (including premium)
+    // Premium users can still send personalized messages if they want to
     
     console.log('🚀 Starting invitation send process...', {
       sender: user.id,
@@ -182,7 +178,7 @@ export const InvitationFlow = ({
             {/* Message Compose */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">Your message to {recipientName}</label>
+                <label className="text-sm font-medium">Your message to {recipientName} (optional)</label>
                 {!isPremium && (
                   <Badge variant="outline" className="text-xs">
                     <Lock className="w-3 h-3 mr-1" />
@@ -192,7 +188,7 @@ export const InvitationFlow = ({
               </div>
               {isPremium ? (
                 <Textarea
-                  placeholder="Hi! I'd love to learn from you. Let's exchange skills!"
+                  placeholder="Hi! I'd love to learn from you. Let's exchange skills! (optional)"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   rows={4}

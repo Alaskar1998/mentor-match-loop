@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { logger } from '@/utils/logger';
 
 interface PerformanceMetrics {
@@ -21,11 +21,15 @@ export const usePerformanceMonitor = (
   const { enabled = true, threshold = 16, onSlowRender } = options;
   const renderStartTime = useRef<number>(0);
   const renderCount = useRef<number>(0);
+  const isFirstRender = useRef(true);
 
-  const startRender = useCallback(() => {
-    if (!enabled) return;
+  // Start render timing on component function entry
+  if (enabled && isFirstRender.current) {
     renderStartTime.current = performance.now();
-  }, [enabled]);
+    isFirstRender.current = false;
+  } else if (enabled) {
+    renderStartTime.current = performance.now();
+  }
 
   const endRender = useCallback(() => {
     if (!enabled) return;
@@ -33,8 +37,8 @@ export const usePerformanceMonitor = (
     const renderTime = performance.now() - renderStartTime.current;
     renderCount.current++;
 
-    // Check if render was slow
-    if (renderTime > threshold) {
+    // Only track actual render performance, not cleanup
+    if (renderTime > threshold && renderTime < 10000) { // Cap at 10s to filter out lifecycle events
       const metrics: PerformanceMetrics = {
         renderTime,
         componentName,
@@ -42,26 +46,33 @@ export const usePerformanceMonitor = (
         memoryUsage: (performance as any).memory?.usedJSHeapSize
       };
 
-      logger.warn('Slow render detected in ${componentName}:', metrics);
+      logger.warn(`⚠️ Slow render detected in ${componentName}:`, metrics);
       onSlowRender?.(metrics);
     }
 
     // Log every 100th render for monitoring
     if (renderCount.current % 100 === 0) {
-      logger.debug('${componentName} render count:', renderCount.current);
+      logger.debug(`${componentName} render count:`, renderCount.current);
     }
   }, [enabled, threshold, componentName, onSlowRender]);
 
-  useEffect(() => {
-    startRender();
-    return () => {
+  // Use layoutEffect to measure after DOM updates but before paint
+  useLayoutEffect(() => {
+    if (enabled) {
       endRender();
-    };
+    }
   });
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (enabled) {
+        logger.debug(`🧹 ${componentName} unmounted after ${renderCount.current} renders`);
+      }
+    };
+  }, [componentName, enabled]);
+
   return {
-    startRender,
-    endRender,
     renderCount: renderCount.current
   };
 }; 
